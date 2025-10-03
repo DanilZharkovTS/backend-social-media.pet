@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@types/express": "^5.0.3",
+    "express": "^5.1.0"
+  },
+  "scripts": {
+    "dev": "npx nodemon app.ts"
+  }
+}
