@@ -1,4 +1,6 @@
 import express from 'express'
+import type { Request, Response } from 'express'
+import pool from './pool.ts'
 const app = express()
 const PORT = 3000
 

@@ -2,7 +2,8 @@
   "type": "module",
   "dependencies": {
     "@types/express": "^5.0.3",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
   },
   "scripts": {
     "dev": "npx nodemon app.ts"
