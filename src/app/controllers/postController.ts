@@ -10,4 +10,12 @@ export const postController = {
       next(err)
     }
   },
+  getAll: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await postService.getAll(req.pagination)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  }
 }
