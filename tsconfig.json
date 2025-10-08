@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "typeRoots": [
+      "./src/app/interfaces",
+      "./node_modules/@types"
+    ],
+    "baseUrl": "./src",
+    "paths": {
+      "*": ["app/*"]
+    },
+    "esModuleInterop": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src"]
+}
