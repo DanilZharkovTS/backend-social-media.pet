@@ -1,5 +1,9 @@
 import pool from '../pool.ts'
-import type { addPostInterface, paginationDTO } from '../interfaces/postInterfaces.ts'
+import type {
+  addPostInterface,
+  paginationDTO,
+  updatePostDTO,
+} from '../interfaces/postInterfaces.ts'
 
 export const postRepo = {
   insert: (id: number, description: string) => {
@@ -16,6 +20,32 @@ export const postRepo = {
        JOIN users ON users.id = posts.user_id
        LIMIT $1 OFFSET $2`,
       [pagination.limit, pagination.offset]
+    )
+  },
+  update: (id: number, data: updatePostDTO) => {
+    return pool.query(
+      `UPDATE posts
+       SET ${data.fields.join(', ')}
+       WHERE id = $1
+       RETURNING *`,
+      [id, ...data.values]
+    )
+  },
+  findById: (id: number) => {
+    return pool.query(
+      `SELECT posts.id, posts.description, users.name
+     FROM posts
+     JOIN users ON posts.user_id = users.id
+     WHERE posts.id = $1`,
+      [id]
+    )
+  },
+  deleteById: (id: number) => {
+    return pool.query(
+      `DELETE FROM posts
+       WHERE id = $1
+       RETURNING *`,
+      [id]
     )
   },
 }
