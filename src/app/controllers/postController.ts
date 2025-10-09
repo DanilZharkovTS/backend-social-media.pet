@@ -10,12 +10,28 @@ export const postController = {
       next(err)
     }
   },
-  getAll: async (req: Request, res: Response, next: NextFunction) => {
+  readAll: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await postService.getAll(req.pagination)
       res.status(200).json(result)
     } catch (err) {
       next(err)
     }
-  }
+  },
+  update: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await postService.update(req.paramsId.id, req.body)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
+  delete: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await postService.delete(req.paramsId.id, req.body.name)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
 }

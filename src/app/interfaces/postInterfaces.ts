@@ -8,3 +8,9 @@ export interface paginationDTO {
   limit: number
   offset: number
 }
+
+export interface updatePostDTO {
+  description?: string
+  fields?: string[]
+  values?: string[]
+}
