@@ -14,3 +14,7 @@ export interface updatePostDTO {
   fields?: string[]
   values?: string[]
 }
+
+export interface findPostDTO {
+  search?: string
+}
