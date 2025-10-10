@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express'
 import {
   validateAddPost,
   validateDeletePost,
+  validateFindPost,
   validateUpdatePost,
 } from '../utils/validators/postValidator.ts'
 import { buildUpdatePostData } from '../utils/helpers/buildUpdatePostData.ts'
@@ -35,6 +36,19 @@ export const postMiddlewares = {
   delete: (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = validateDeletePost.parse(req.body)
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  find: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validated = validateFindPost.parse(req.query)
+      const search = validated.search
+        ? `%${validated.search}%`
+        : null
+      
+      req.querySearch = { search: search }
       next()
     } catch (err) {
       next(err)

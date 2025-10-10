@@ -1,5 +1,6 @@
 import type {
   addPostInterface,
+  findPostDTO,
   paginationDTO,
   updatePostDTO,
 } from '../interfaces/postInterfaces.ts'
@@ -36,5 +37,12 @@ export const postService = {
 
     const result = await postRepo.deleteById(id)
     return { deleted: result.rows[0] }
+  },
+  find: async (query: findPostDTO) => {
+    const result = await postRepo.selectBySearch(query)
+    return {
+      search: query.search,
+      result: result.rows,
+    }
   },
 }

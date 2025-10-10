@@ -1,6 +1,7 @@
 import pool from '../pool.ts'
 import type {
   addPostInterface,
+  findPostDTO,
   paginationDTO,
   updatePostDTO,
 } from '../interfaces/postInterfaces.ts'
@@ -46,6 +47,14 @@ export const postRepo = {
        WHERE id = $1
        RETURNING *`,
       [id]
+    )
+  },
+  selectBySearch: (query: findPostDTO) => {
+    return pool.query(
+      `SELECT * FROM posts
+       WHERE ($1::text IS NULL OR
+       LOWER(description) LIKE LOWER($1))`,
+      [query.search]
     )
   },
 }

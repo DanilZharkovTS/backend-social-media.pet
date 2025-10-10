@@ -34,4 +34,12 @@ export const postController = {
       next(err)
     }
   },
+  find: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await postService.find(req.querySearch)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
 }

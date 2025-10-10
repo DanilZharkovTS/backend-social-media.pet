@@ -10,5 +10,8 @@ declare module 'express-serve-static-core' {
     paramsId?: {
       id: number
     }
+    querySearch?: {
+      search?: string
+    }
   }
 }
