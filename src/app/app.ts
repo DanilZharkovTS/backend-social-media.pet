@@ -1,4 +1,5 @@
 import express, { Router } from 'express'
+import cors from 'cors'
 import type { NextFunction, Request, Response } from 'express'
 import postRoutes from './routes/postRoutes.ts'
 import { errHandler } from './middlewares/errHandler.ts'
@@ -7,6 +8,8 @@ import { jsonMiddleware } from './middlewares/jsonMiddleware.ts'
 const app = express()
 const PORT = 3000
 const router = Router()
+
+app.use(cors())
 
 app.use(
   express.json({

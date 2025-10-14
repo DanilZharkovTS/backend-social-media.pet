@@ -2,11 +2,15 @@
   "type": "module",
   "dependencies": {
     "@types/express": "^5.0.3",
+    "cors": "^2.8.5",
     "express": "^5.1.0",
     "pg": "^8.16.3",
     "zod": "^4.1.12"
   },
   "scripts": {
     "dev": "npx nodemon app.ts"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19"
   }
 }
