@@ -38,8 +38,8 @@ export const postService = {
     const result = await postRepo.deleteById(id)
     return { deleted: result.rows[0] }
   },
-  find: async (query: findPostDTO) => {
-    const result = await postRepo.selectBySearch(query)
+  find: async (query: findPostDTO, pagination: paginationDTO) => {
+    const result = await postRepo.selectBySearch(query, pagination)
     return {
       search: query.search,
       result: result.rows,

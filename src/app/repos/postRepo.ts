@@ -49,12 +49,13 @@ export const postRepo = {
       [id]
     )
   },
-  selectBySearch: (query: findPostDTO) => {
+  selectBySearch: (query: findPostDTO, pagination: paginationDTO) => {
     return pool.query(
       `SELECT * FROM posts
        WHERE ($1::text IS NULL OR
-       LOWER(description) LIKE LOWER($1))`,
-      [query.search]
+       LOWER(description) LIKE LOWER($1))
+       LIMIT $2 OFFSET $3`,
+      [query.search, pagination.limit, pagination.offset]
     )
   },
 }

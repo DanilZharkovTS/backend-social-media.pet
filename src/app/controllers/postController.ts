@@ -36,7 +36,7 @@ export const postController = {
   },
   find: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.find(req.querySearch)
+      const result = await postService.find(req.querySearch, req.pagination)
       res.status(200).json(result)
     } catch (err) {
       next(err)
