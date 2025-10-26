@@ -34,11 +34,12 @@ export const postMiddlewares = {
     }
   },
   delete: (req: Request, res: Response, next: NextFunction) => {
+    console.log('DELETE BODY:', req.body)
     try {
       req.body = validateDeletePost.parse(req.body)
       next()
     } catch (err) {
-      next(err)
+      return next(err)
     }
   },
   find: (req: Request, res: Response, next: NextFunction) => {

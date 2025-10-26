@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from 'express'
 import { ZodError } from 'zod'
 
 export const errHandler = (
-  err: unknown,
+  err: unknown ,
   req: Request,
   res: Response,
   next: NextFunction

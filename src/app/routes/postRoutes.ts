@@ -24,6 +24,6 @@ router.delete(
   postController.delete
 )
 
-router.get('/find', postMiddlewares.find, postController.find)
+router.get('/find', paginate, postMiddlewares.find, postController.find)
 
 export default router
