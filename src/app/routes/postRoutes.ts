@@ -16,14 +16,14 @@ router.get('/getAll', paginate, postController.readAll)
 
 router.patch(
   '/update/:id',
-  setParamsId,
+  setParamsId('id'),
   postMiddlewares.update,
   postController.update
 )
 
 router.delete(
   '/delete/:id',
-  setParamsId,
+  setParamsId('id'),
   postMiddlewares.delete,
   postController.delete
 )
@@ -34,11 +34,11 @@ router.get('/find', paginate, postMiddlewares.find, postController.find)
 
 router.post(
   '/:id/comments/add',
-  setParamsId,
+  setParamsId('id'),
   commentMiddlewares.add,
   commentController.add
 )
 
-router.get('/:id/comments', paginate, setParamsId, commentController.readAll)
+router.get('/:id/comments', paginate, setParamsId('id'), commentController.readAll)
 
 export default router

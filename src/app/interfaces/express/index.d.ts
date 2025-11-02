@@ -7,9 +7,7 @@ declare module 'express-serve-static-core' {
       offset: number
       limit: number
     }
-    paramsId?: {
-      id: number
-    }
+    paramsMap?: Record<string, number>
     querySearch?: {
       search?: string
     }
