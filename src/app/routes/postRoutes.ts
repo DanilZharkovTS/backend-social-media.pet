@@ -39,4 +39,6 @@ router.post(
   commentController.add
 )
 
+router.get('/:id/comments', paginate, setParamsId, commentController.readAll)
+
 export default router
