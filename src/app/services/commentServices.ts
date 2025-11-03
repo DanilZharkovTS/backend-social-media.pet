@@ -1,5 +1,8 @@
 import type { paginationDTO } from 'interfaces/postInterfaces.ts'
-import type { addCommentDTO } from '../interfaces/commentInterfaces.ts'
+import type {
+  addCommentDTO,
+  deleteCommentDTO,
+} from '../interfaces/commentInterfaces.ts'
 import { commentRepo } from '../repos/commentRepo.ts'
 import { userRepo } from '../repos/userRepo.ts'
 
@@ -8,7 +11,7 @@ export const commentServices = {
     const user = await userRepo.insert(data.name)
     const userId = user.rows[0].id
     const result = await commentRepo.insert(data.content, userId, postId)
-    return {result: result.rows[0]}
+    return { result: result.rows[0] }
   },
   getAll: async (postId: number, pagination: paginationDTO) => {
     const result = await commentRepo.selectAll(postId, pagination)
@@ -16,5 +19,14 @@ export const commentServices = {
       pagination: { limit: pagination.limit, page: pagination.page },
       result: result.rows,
     }
+  },
+  delete: async (commentId: number, data: deleteCommentDTO) => {
+    const user = await commentRepo.selectById(commentId)
+    const userName = user.rows[0].name
+    if (data.name !== userName) throw new Error('Not your comment')
+
+    const result = await commentRepo.deleteById(commentId)
+
+    return { deleted: result.rows[0] }
   },
 }
