@@ -33,12 +33,24 @@ router.get('/find', paginate, postMiddlewares.find, postController.find)
 //comments
 
 router.post(
-  '/:id/comments/add',
-  setParamsId('id'),
+  '/:postId/comments/add',
+  setParamsId('postId'),
   commentMiddlewares.add,
   commentController.add
 )
 
-router.get('/:id/comments', paginate, setParamsId('id'), commentController.readAll)
+router.get(
+  '/:postId/comments',
+  paginate,
+  setParamsId('postId'),
+  commentController.readAll
+)
+
+router.delete(
+  '/:postId/comments/:commentId/delete',
+  setParamsId('postId', 'commentId'),
+  commentMiddlewares.delete,
+  commentController.delete
+)
 
 export default router
