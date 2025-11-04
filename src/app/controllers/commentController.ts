@@ -21,6 +21,17 @@ export const commentController = {
       next(err)
     }
   },
+  update: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await commentServices.update(
+        req.paramsMap.commentId,
+        req.body
+      )
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await commentServices.delete(

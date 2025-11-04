@@ -2,12 +2,34 @@ import type { NextFunction, Request, Response } from 'express'
 import {
   validateAddComment,
   validateDeleteComment,
+  validateUpdateComment,
 } from '../utils/validators/commentsValidator.ts'
+import { buildUpdateCommentData } from '../utils/helpers/buildUpdateCommentData.ts'
+import type { updateCommentMiddlewareDTO } from 'interfaces/commentInterfaces.ts'
 
 export const commentMiddlewares = {
   add: (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = validateAddComment.parse(req.body)
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  update: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const fields: string[] = []
+      const values: string[] = []
+
+      const validData: updateCommentMiddlewareDTO = validateUpdateComment.parse(
+        req.body
+      )
+      buildUpdateCommentData(validData, fields, values)
+
+      if (fields.length === 0 || values.length === 0)
+        return res.status(400).json({ error: 'No data to update provided' })
+
+      req.body = { name: validData.name, fields: fields, values: values }
       next()
     } catch (err) {
       next(err)
