@@ -1,5 +1,6 @@
 import type { paginationDTO } from 'interfaces/postInterfaces.ts'
 import pool from '../pool.ts'
+import type { updateCommentDTO } from 'interfaces/commentInterfaces.ts'
 
 export const commentRepo = {
   insert: (content: string, userId: number, postId: number) => {
@@ -20,13 +21,13 @@ export const commentRepo = {
       [postId, pagination.limit, pagination.offset]
     )
   },
-  selectById: (commentId: number) => {
+  updateById: (commentId: number, data: updateCommentDTO) => {
     return pool.query(
-      `SELECT users.name
-      FROM comments
-      JOIN users ON comments.user_id = users.id
-      WHERE comments.id = $1`,
-      [commentId]
+      `UPDATE comments
+      SET ${data.fields.join(', ')}
+      WHERE id = $1
+      RETURNING *`,
+      [commentId, ...data.values]
     )
   },
   deleteById: (commentId: number) => {
@@ -34,6 +35,15 @@ export const commentRepo = {
       `DELETE FROM comments
       WHERE id = $1
       RETURNING *`,
+      [commentId]
+    )
+  },
+  selectById: (commentId: number) => {
+    return pool.query(
+      `SELECT users.name
+      FROM comments
+      JOIN users ON comments.user_id = users.id
+      WHERE comments.id = $1`,
       [commentId]
     )
   },

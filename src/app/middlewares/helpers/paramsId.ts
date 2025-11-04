@@ -9,11 +9,9 @@ export const setParamsId = (...paramsNames: string[]) => {
         const num = parseInt(String(row), 10)
 
         if (isNaN(num) || num < 1) {
-          return res
-            .status(400)
-            .json({
-              error: `Param ${name}: ${num} needs to be a natural number`,
-            })
+          return res.status(400).json({
+            error: `Param ${name}: ${num} needs to be a natural number`,
+          })
         }
         validParams[name] = num
       }

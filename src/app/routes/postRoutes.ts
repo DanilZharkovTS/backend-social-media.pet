@@ -46,6 +46,13 @@ router.get(
   commentController.readAll
 )
 
+router.patch(
+  '/:postId/comments/:commentId/update',
+  setParamsId('postId', 'commentId'),
+  commentMiddlewares.update,
+  commentController.update
+)
+
 router.delete(
   '/:postId/comments/:commentId/delete',
   setParamsId('postId', 'commentId'),
