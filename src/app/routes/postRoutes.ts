@@ -15,15 +15,15 @@ router.post('/add', postMiddlewares.add, postController.add)
 router.get('/getAll', paginate, postController.readAll)
 
 router.patch(
-  '/update/:id',
-  setParamsId('id'),
+  '/update/:postId',
+  setParamsId(['postId']),
   postMiddlewares.update,
   postController.update
 )
 
 router.delete(
-  '/delete/:id',
-  setParamsId('id'),
+  '/delete/:postId',
+  setParamsId(['postId']),
   postMiddlewares.delete,
   postController.delete
 )
@@ -34,7 +34,7 @@ router.get('/find', paginate, postMiddlewares.find, postController.find)
 
 router.post(
   '/:postId/comments/add',
-  setParamsId('postId'),
+  setParamsId(['postId']),
   commentMiddlewares.add,
   commentController.add
 )
@@ -42,20 +42,20 @@ router.post(
 router.get(
   '/:postId/comments',
   paginate,
-  setParamsId('postId'),
+  setParamsId(['postId']),
   commentController.readAll
 )
 
 router.patch(
   '/:postId/comments/:commentId/update',
-  setParamsId('postId', 'commentId'),
+  setParamsId(['postId', 'commentId']),
   commentMiddlewares.update,
   commentController.update
 )
 
 router.delete(
   '/:postId/comments/:commentId/delete',
-  setParamsId('postId', 'commentId'),
+  setParamsId(['postId', 'commentId']),
   commentMiddlewares.delete,
   commentController.delete
 )

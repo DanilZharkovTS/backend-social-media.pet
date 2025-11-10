@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 
-export const setParamsId = (...paramsNames: string[]) => {
+export const setParamsId = (paramsNames: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       const validParams: Record<string, number> = {}
