@@ -1,7 +1,7 @@
 import express, { Router } from 'express'
 import cors from 'cors'
 import type { NextFunction, Request, Response } from 'express'
-import postRoutes from './routes/postRoutes.ts'
+import appRoutes from './routes/appRoutes.ts'
 import { errHandler } from './middlewares/errHandler.ts'
 import { jsonMiddleware } from './middlewares/jsonMiddleware.ts'
 
@@ -32,7 +32,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   next(err)
 })
 
-app.use('/api/post', postRoutes)
+app.use('/api', appRoutes)
 
 app.use(errHandler)
 
