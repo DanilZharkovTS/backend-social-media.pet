@@ -4,3 +4,8 @@ export interface registerUserDTO {
   password: string
   name: string
 }
+
+export interface loginUserDTO {
+  email: string
+  password: string
+}

@@ -1,13 +1,16 @@
 import express, { Router } from 'express'
 import cors from 'cors'
 import type { NextFunction, Request, Response } from 'express'
+import dotenv from 'dotenv'
 import appRoutes from './routes/appRoutes.ts'
 import { errHandler } from './middlewares/errHandler.ts'
 import { jsonMiddleware } from './middlewares/jsonMiddleware.ts'
 
+dotenv.config({path: '../.env'})
+console.log('DEBUG: JWT_SECRET =', process.env.JWT_SECRET)
+
 const app = express()
-const PORT = 3000
-const router = Router()
+const PORT = process.env.PORT || 3000
 
 app.use(cors())
 

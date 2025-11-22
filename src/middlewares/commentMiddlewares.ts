@@ -4,7 +4,7 @@ import {
   validateDeleteComment,
   validateUpdateComment,
 } from '../utils/validators/commentsValidator.ts'
-import { buildUpdateCommentData } from '../utils/helpers/buildUpdateCommentData.ts'
+import { buildUpdateCommentData } from '../utils/helpers/builders/buildUpdateCommentData.ts'
 import type { updateCommentMiddlewareDTO } from 'interfaces/commentInterfaces.ts'
 
 export const commentMiddlewares = {

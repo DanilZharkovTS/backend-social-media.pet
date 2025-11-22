@@ -5,7 +5,7 @@ import {
   validateFindPost,
   validateUpdatePost,
 } from '../utils/validators/postValidator.ts'
-import { buildUpdatePostData } from '../utils/helpers/buildUpdatePostData.ts'
+import { buildUpdatePostData } from '../utils/helpers/builders/buildUpdatePostData.ts'
 import type { updatePostDTO } from '../interfaces/postInterfaces.ts'
 
 export const postMiddlewares = {
@@ -45,10 +45,8 @@ export const postMiddlewares = {
   find: (req: Request, res: Response, next: NextFunction) => {
     try {
       const validated = validateFindPost.parse(req.query)
-      const search = validated.search
-        ? `%${validated.search}%`
-        : null
-      
+      const search = validated.search ? `%${validated.search}%` : null
+
       req.querySearch = { search: search }
       next()
     } catch (err) {
