@@ -5,12 +5,18 @@ import { paginate } from '../middlewares/helpers/pagination.ts'
 import { setParamsId } from '../middlewares/helpers/paramsId.ts'
 import { commentMiddlewares } from '../middlewares/commentMiddlewares.ts'
 import { commentController } from '../controllers/commentController.ts'
+import { authMiddlewares } from '../middlewares/authMiddlewares.ts'
 
 const router = Router()
 
 //posts
 
-router.post('/add', postMiddlewares.add, postController.add)
+router.post(
+  '/add',
+  authMiddlewares.verifyAccessToken,
+  postMiddlewares.add,
+  postController.add
+)
 
 router.get('/getAll', paginate, postController.readAll)
 

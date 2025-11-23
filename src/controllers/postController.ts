@@ -4,8 +4,8 @@ import { postService } from '../services/postService.ts'
 export const postController = {
   add: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.add(req.body)
-      return res.status(201).json(result.rows[0])
+      const result = await postService.add(req.body, req.user)
+      return res.status(201).json(result)
     } catch (err) {
       next(err)
     }

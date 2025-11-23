@@ -1,3 +1,4 @@
+import type { TokenPayload } from '../interfaces/authInterfaces.ts'
 import type {
   addPostInterface,
   findPostDTO,
@@ -8,13 +9,9 @@ import { postRepo } from '../repos/postRepo.ts'
 import { userRepo } from '../repos/userRepo.ts'
 
 export const postService = {
-  add: async (data: addPostInterface) => {
-    const userResult = await userRepo.insert(data.name)
-    const postResult = await postRepo.insert(
-      userResult.rows[0].id,
-      data.description
-    )
-    return postResult
+  add: async (data: addPostInterface, user: TokenPayload) => {
+    const result = await postRepo.insert(user.userId, data.description)
+    return { created: result.rows[0] }
   },
   getAll: async (pagination: paginationDTO) => {
     const result = await postRepo.selectAll(pagination)
