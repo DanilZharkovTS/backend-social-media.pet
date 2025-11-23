@@ -1,4 +1,11 @@
 
+
+
+export interface TokenPayload {
+  userId: number
+  email: string
+}
+
 export interface registerUserDTO {
   email: string
   password: string

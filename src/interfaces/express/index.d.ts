@@ -11,5 +11,9 @@ declare module 'express-serve-static-core' {
     querySearch?: {
       search?: string
     }
+    user?: {
+      userId: number
+      email: string
+    }
   }
 }

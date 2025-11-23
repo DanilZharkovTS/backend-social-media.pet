@@ -1,10 +1,6 @@
 import z from 'zod'
 
 export const validateAddPost = z.object({
-  name: z
-    .string('Name needs to be a string')
-    .min(4, 'Min. name length is 4 symbols')
-    .max(20, 'Max. name length is 20 symbols'),
   description: z
     .string('Description of the post needs to be a string')
     .min(1, 'Min. description length is 1')
@@ -27,7 +23,5 @@ export const validateDeletePost = z.object({
 })
 
 export const validateFindPost = z.object({
-  search: z
-    .string('Search needs to be a string')
-    .optional(),
+  search: z.string('Search needs to be a string').optional(),
 })

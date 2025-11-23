@@ -7,7 +7,6 @@ import { errHandler } from './middlewares/errHandler.ts'
 import { jsonMiddleware } from './middlewares/jsonMiddleware.ts'
 
 dotenv.config({path: '../.env'})
-console.log('DEBUG: JWT_SECRET =', process.env.JWT_SECRET)
 
 const app = express()
 const PORT = process.env.PORT || 3000
