@@ -34,7 +34,13 @@ router.delete(
   postController.delete
 )
 
-router.get('/find', paginate, postMiddlewares.find, postController.find)
+router.get(
+  '/find',
+  authMiddlewares.verifyAccessToken,
+  paginate,
+  postMiddlewares.find,
+  postController.find
+)
 
 //comments
 
