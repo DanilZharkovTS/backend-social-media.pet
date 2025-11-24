@@ -26,11 +26,12 @@ export const postService = {
       updated: result.rows[0],
     }
   },
-  delete: async (id: number, name: string) => {
+  delete: async (id: number, user: TokenPayload) => {
     const post = await postRepo.findById(id)
     if (post.rows.length === 0) throw new Error('Not found')
-    const userName = post.rows[0].name
-    if (userName !== name) throw new Error('Not your post')
+    
+    const userId = post.rows[0].user_id
+    if (userId !== user.userId) throw new Error('Not your post')
 
     const result = await postRepo.deleteById(id)
     return { deleted: result.rows[0] }

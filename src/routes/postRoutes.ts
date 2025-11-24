@@ -29,8 +29,8 @@ router.patch(
 
 router.delete(
   '/delete/:postId',
+  authMiddlewares.verifyAccessToken,
   setParamsId(['postId']),
-  postMiddlewares.delete,
   postController.delete
 )
 
