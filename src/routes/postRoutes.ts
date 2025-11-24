@@ -22,6 +22,7 @@ router.get('/getAll', paginate, postController.readAll)
 
 router.patch(
   '/update/:postId',
+  authMiddlewares.verifyAccessToken,
   setParamsId(['postId']),
   postMiddlewares.update,
   postController.update

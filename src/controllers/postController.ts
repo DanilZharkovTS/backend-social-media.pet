@@ -20,7 +20,11 @@ export const postController = {
   },
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.update(req.paramsMap.id, req.body)
+      const result = await postService.update(
+        req.paramsMap.postId,
+        req.body,
+        req.user
+      )
       res.status(200).json(result)
     } catch (err) {
       next(err)
