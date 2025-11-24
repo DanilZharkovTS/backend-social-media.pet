@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 import {
   validateAddPost,
-  validateDeletePost,
   validateFindPost,
   validateUpdatePost,
 } from '../utils/validators/postValidator.ts'
@@ -33,15 +32,7 @@ export const postMiddlewares = {
       next(err)
     }
   },
-  delete: (req: Request, res: Response, next: NextFunction) => {
-    console.log('DELETE BODY:', req.body)
-    try {
-      req.body = validateDeletePost.parse(req.body)
-      next()
-    } catch (err) {
-      return next(err)
-    }
-  },
+
   find: (req: Request, res: Response, next: NextFunction) => {
     try {
       const validated = validateFindPost.parse(req.query)
