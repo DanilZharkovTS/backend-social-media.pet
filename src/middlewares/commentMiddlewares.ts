@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 import {
   validateAddComment,
-  validateDeleteComment,
   validateUpdateComment,
 } from '../utils/validators/commentsValidator.ts'
 import { buildUpdateCommentData } from '../utils/helpers/builders/buildUpdateCommentData.ts'
@@ -31,14 +30,6 @@ export const commentMiddlewares = {
       }
 
       req.body = { fields: fields, values: values }
-      next()
-    } catch (err) {
-      next(err)
-    }
-  },
-  delete: (req: Request, res: Response, next: NextFunction) => {
-    try {
-      req.body = validateDeleteComment.parse(req.body)
       next()
     } catch (err) {
       next(err)

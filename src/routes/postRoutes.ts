@@ -72,7 +72,7 @@ router.patch(
 router.delete(
   '/:postId/comments/:commentId/delete',
   setParamsId(['postId', 'commentId']),
-  commentMiddlewares.delete,
+  authMiddlewares.verifyAccessToken,
   commentController.delete
 )
 

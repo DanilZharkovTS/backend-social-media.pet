@@ -41,7 +41,7 @@ export const commentController = {
     try {
       const result = await commentServices.delete(
         req.paramsMap.commentId,
-        req.body
+        req.user
       )
       res.status(200).json(result)
     } catch (err) {

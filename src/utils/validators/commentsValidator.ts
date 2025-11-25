@@ -14,10 +14,3 @@ export const validateUpdateComment = z.object({
     .max(40, 'Max. content length is 40 symbols')
     .optional(),
 })
-
-export const validateDeleteComment = z.object({
-  name: z
-    .string('Name needs to be a string')
-    .min(4, 'Min. name length is 4 symbols')
-    .max(20, 'Max. name length is 20 symbols'),
-})

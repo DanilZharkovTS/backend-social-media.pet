@@ -28,10 +28,9 @@ export const commentServices = {
 
     return { updated: result.rows[0] }
   },
-  delete: async (commentId: number, data: deleteCommentDTO) => {
-    const user = await commentRepo.selectById(commentId)
-    const userName = user.rows[0].name
-    if (data.name !== userName) throw new Error('Not your comment')
+  delete: async (commentId: number, user: TokenPayload) => {
+    const commentUser = await commentRepo.selectById(commentId)
+    if (user.userId !== commentUser.rows[0].user_id) throw new Error('Not your comment')
 
     const result = await commentRepo.deleteById(commentId)
 
