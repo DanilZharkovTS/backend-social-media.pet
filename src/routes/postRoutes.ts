@@ -54,6 +54,7 @@ router.post(
 
 router.get(
   '/:postId/comments',
+  authMiddlewares.verifyAccessToken,
   paginate,
   setParamsId(['postId']),
   commentController.readAll
