@@ -20,10 +20,9 @@ export const commentServices = {
       result: result.rows,
     }
   },
-  update: async (commentId: number, data: updateCommentDTO) => {
-    const user = await commentRepo.selectById(commentId)
-    const userName = user.rows[0].name
-    if (data.name !== userName) throw new Error('Not your comment')
+  update: async (commentId: number, data: updateCommentDTO, user: TokenPayload) => {
+    const commentUser = await commentRepo.selectById(commentId)
+    if (user.userId !== commentUser.rows[0].user_id) throw new Error('Not your comment')
 
     const result = await commentRepo.updateById(commentId, data)
 

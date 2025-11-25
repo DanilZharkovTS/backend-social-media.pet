@@ -63,6 +63,7 @@ router.get(
 
 router.patch(
   '/:postId/comments/:commentId/update',
+  authMiddlewares.verifyAccessToken,
   setParamsId(['postId', 'commentId']),
   commentMiddlewares.update,
   commentController.update

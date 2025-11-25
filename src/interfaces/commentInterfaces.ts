@@ -1,5 +1,4 @@
 export interface addCommentDTO {
-  name: string
   content: string
 }
 
@@ -8,12 +7,10 @@ export interface deleteCommentDTO {
 }
 
 export interface updateCommentMiddlewareDTO {
-  name: string
   content?: string
 }
 
 export interface updateCommentDTO {
-  name: string
   fields: string[]
   values: string[]
 }

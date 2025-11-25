@@ -26,10 +26,11 @@ export const commentMiddlewares = {
       )
       buildUpdateCommentData(validData, fields, values)
 
-      if (fields.length === 0 || values.length === 0)
+      if (fields.length === 0 || values.length === 0) {
         return res.status(400).json({ error: 'No data to update provided' })
+      }
 
-      req.body = { name: validData.name, fields: fields, values: values }
+      req.body = { fields: fields, values: values }
       next()
     } catch (err) {
       next(err)

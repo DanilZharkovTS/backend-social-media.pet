@@ -29,7 +29,8 @@ export const commentController = {
     try {
       const result = await commentServices.update(
         req.paramsMap.commentId,
-        req.body
+        req.body,
+        req.user
       )
       res.status(200).json(result)
     } catch (err) {

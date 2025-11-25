@@ -40,10 +40,8 @@ export const commentRepo = {
   },
   selectById: (commentId: number) => {
     return pool.query(
-      `SELECT users.name
-      FROM comments
-      JOIN users ON comments.user_id = users.id
-      WHERE comments.id = $1`,
+      `SELECT user_id FROM comments
+      WHERE id = $1`,
       [commentId]
     )
   },
