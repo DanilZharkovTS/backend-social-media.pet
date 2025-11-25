@@ -16,8 +16,16 @@ export const authController = {
       res.cookie('refreshToken', result.refreshToken)
       res.status(200).json(result.logined)
     } catch (err) {
+      next(err)
+    }
+  },
+  refresh: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await authService.refresh(req.hashedRefreshToken)
+      res.cookie('refreshToken', result.refreshToken)
+      res.status(200).json(result.logined)
+    } catch (err) {
       console.log(err);
-      
       next(err)
     }
   },
