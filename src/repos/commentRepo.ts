@@ -1,14 +1,14 @@
-import type { paginationDTO } from 'interfaces/postInterfaces.ts'
+import type { paginationDTO } from '../interfaces/postInterfaces.ts'
 import pool from '../pool.ts'
-import type { updateCommentDTO } from 'interfaces/commentInterfaces.ts'
+import type { updateCommentDTO } from '../interfaces/commentInterfaces.ts'
 
 export const commentRepo = {
-  insert: (content: string, userId: number, postId: number) => {
+  insert: (content: string, postId: number, userId: number) => {
     return pool.query(
-      `INSERT INTO comments (content, user_id, post_id)
+      `INSERT INTO comments (content, post_id, user_id)
         VALUES ($1, $2, $3)
         RETURNING *`,
-      [content, userId, postId]
+      [content, postId, userId]
     )
   },
   selectAll: (postId: number, pagination: paginationDTO) => {

@@ -1,4 +1,4 @@
-import type { paginationDTO } from 'interfaces/postInterfaces.ts'
+import type { paginationDTO } from '../interfaces/postInterfaces.ts'
 import type {
   addCommentDTO,
   deleteCommentDTO,
@@ -6,12 +6,11 @@ import type {
 } from '../interfaces/commentInterfaces.ts'
 import { commentRepo } from '../repos/commentRepo.ts'
 import { userRepo } from '../repos/userRepo.ts'
+import type { TokenPayload } from '../interfaces/authInterfaces.ts'
 
 export const commentServices = {
-  add: async (data: addCommentDTO, postId: number) => {
-    const user = await userRepo.insert(data.name)
-    const userId = user.rows[0].id
-    const result = await commentRepo.insert(data.content, userId, postId)
+  add: async (data: addCommentDTO, postId: number, user: TokenPayload) => {
+    const result = await commentRepo.insert(data.content, postId, user.userId)
     return { result: result.rows[0] }
   },
   getAll: async (postId: number, pagination: paginationDTO) => {

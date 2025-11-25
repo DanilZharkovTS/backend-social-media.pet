@@ -47,6 +47,7 @@ router.get(
 
 router.post(
   '/:postId/comments/add',
+  authMiddlewares.verifyAccessToken,
   setParamsId(['postId']),
   commentMiddlewares.add,
   commentController.add
