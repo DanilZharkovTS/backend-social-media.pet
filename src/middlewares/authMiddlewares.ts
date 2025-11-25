@@ -1,12 +1,29 @@
 import type { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
+import type { TokenPayload } from '../interfaces/authInterfaces.ts'
 import {
   validateLoginUser,
   validateRegisterUser,
 } from '../utils/validators/authValidator.ts'
-import type { TokenPayload } from '../interfaces/authInterfaces.ts'
 
 export const authMiddlewares = {
+  register: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      req.body = validateRegisterUser.parse(req.body)
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  login: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      req.body = validateLoginUser.parse(req.body)
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
   verifyAccessToken: (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.header('Authorization')
 
@@ -31,19 +48,21 @@ export const authMiddlewares = {
       return res.status(401).json({ err: 'Invalid or expired access token' })
     }
   },
-  register: (req: Request, res: Response, next: NextFunction) => {
+  refresh: (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.body = validateRegisterUser.parse(req.body)
+      const refreshToken = req.cookies.refreshToken
+      if (!refreshToken) {
+        return res.status(401).json({ auth: false })
+      }
+      const hashedRefreshToken = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex')
+
+      req.hashedRefreshToken = hashedRefreshToken
       next()
     } catch (err) {
-      next(err)
-    }
-  },
-  login: (req: Request, res: Response, next: NextFunction) => {
-    try {
-      req.body = validateLoginUser.parse(req.body)
-      next()
-    } catch (err) {
+      console.log(err)
       next(err)
     }
   },

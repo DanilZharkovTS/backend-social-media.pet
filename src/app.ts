@@ -2,6 +2,7 @@ import express, { Router } from 'express'
 import cors from 'cors'
 import type { NextFunction, Request, Response } from 'express'
 import dotenv from 'dotenv'
+import cookieParser from 'cookie-parser'
 import appRoutes from './routes/appRoutes.ts'
 import { errHandler } from './middlewares/errHandler.ts'
 import { jsonMiddleware } from './middlewares/jsonMiddleware.ts'
@@ -11,7 +12,9 @@ dotenv.config({path: '../.env'})
 const app = express()
 const PORT = process.env.PORT || 3000
 
+
 app.use(cors())
+app.use(cookieParser());
 
 app.use(
   express.json({

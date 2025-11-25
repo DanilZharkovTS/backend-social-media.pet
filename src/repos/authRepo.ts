@@ -9,4 +9,21 @@ export const authRepo = {
       [userId, token, expiresAt]
     )
   },
+  selectRefreshTokenByToken: (token: string) => {
+    return pool.query(
+      `SELECT refresh_tokens.user_id, refresh_tokens.id, refresh_tokens.token, users.email
+       FROM refresh_tokens
+       JOIN users ON refresh_tokens.user_id = users.id
+      WHERE refresh_tokens.token = $1 AND refresh_tokens.expires_at > NOW() `,
+      [token]
+    )
+  },
+  revokeRefreshTokenById: (tokenId: number) => {
+    return pool.query(
+      `UPDATE refresh_tokens
+      SET revoked = false
+      WHERE id = $1`,
+      [tokenId]
+    )
+  },
 }
