@@ -4,7 +4,11 @@ import { commentServices } from '../services/commentServices.ts'
 export const commentController = {
   add: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await commentServices.add(req.body, req.paramsMap.postId)
+      const result = await commentServices.add(
+        req.body,
+        req.paramsMap.postId,
+        req.user
+      )
       return res.status(201).json(result)
     } catch (err) {
       next(err)
@@ -25,7 +29,8 @@ export const commentController = {
     try {
       const result = await commentServices.update(
         req.paramsMap.commentId,
-        req.body
+        req.body,
+        req.user
       )
       res.status(200).json(result)
     } catch (err) {
@@ -36,7 +41,7 @@ export const commentController = {
     try {
       const result = await commentServices.delete(
         req.paramsMap.commentId,
-        req.body
+        req.user
       )
       res.status(200).json(result)
     } catch (err) {

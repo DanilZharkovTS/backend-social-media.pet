@@ -47,6 +47,7 @@ router.get(
 
 router.post(
   '/:postId/comments/add',
+  authMiddlewares.verifyAccessToken,
   setParamsId(['postId']),
   commentMiddlewares.add,
   commentController.add
@@ -54,6 +55,7 @@ router.post(
 
 router.get(
   '/:postId/comments',
+  authMiddlewares.verifyAccessToken,
   paginate,
   setParamsId(['postId']),
   commentController.readAll
@@ -61,6 +63,7 @@ router.get(
 
 router.patch(
   '/:postId/comments/:commentId/update',
+  authMiddlewares.verifyAccessToken,
   setParamsId(['postId', 'commentId']),
   commentMiddlewares.update,
   commentController.update
@@ -69,7 +72,7 @@ router.patch(
 router.delete(
   '/:postId/comments/:commentId/delete',
   setParamsId(['postId', 'commentId']),
-  commentMiddlewares.delete,
+  authMiddlewares.verifyAccessToken,
   commentController.delete
 )
 
