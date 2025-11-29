@@ -13,7 +13,11 @@ export const authController = {
   login: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await authService.login(req.body)
-      res.cookie('refreshToken', result.refreshToken)
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      })
       res.status(200).json(result.logined)
     } catch (err) {
       next(err)
@@ -25,7 +29,7 @@ export const authController = {
       res.cookie('refreshToken', result.refreshToken)
       res.status(200).json(result.logined)
     } catch (err) {
-      console.log(err);
+      console.log(err)
       next(err)
     }
   },

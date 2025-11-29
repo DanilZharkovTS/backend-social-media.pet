@@ -7,14 +7,18 @@ import appRoutes from './routes/appRoutes.ts'
 import { errHandler } from './middlewares/errHandler.ts'
 import { jsonMiddleware } from './middlewares/jsonMiddleware.ts'
 
-dotenv.config({path: '../.env'})
+dotenv.config({ path: '../.env' })
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
-
-app.use(cors())
-app.use(cookieParser());
+app.use(
+  cors({
+    origin: 'http://localhost:3001',
+    credentials: true,
+  })
+)
+app.use(cookieParser())
 
 app.use(
   express.json({
