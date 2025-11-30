@@ -52,7 +52,7 @@ export const authService = {
     }
 
     const dbToken = dbTokenResult.rows[0]
-    
+
     await authRepo.revokeRefreshTokenById(dbToken.id)
 
     const { rawRefreshToken, hashedRefreshToken, expiresAt } =
@@ -68,7 +68,10 @@ export const authService = {
 
     return {
       refreshToken: rawRefreshToken,
-      logined: { accessToken },
+      logined: {
+        accessToken,
+        user: { email: dbToken.email, userId: dbToken.user_id },
+      },
     }
   },
 }
