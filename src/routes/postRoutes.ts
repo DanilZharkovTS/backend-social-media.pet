@@ -87,4 +87,14 @@ router.delete(
   commentController.delete
 )
 
+//admin
+
+router.delete(
+  '/:postId/comments/:commentId/delete/admin',
+  authMiddlewares.verifyAccessToken,
+  requiresRole('admin'),
+  setParamsId(['postId', 'commentId']),
+  commentController.deleteAsAdmin
+)
+
 export default router

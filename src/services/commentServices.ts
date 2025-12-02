@@ -20,9 +20,14 @@ export const commentServices = {
       result: result.rows,
     }
   },
-  update: async (commentId: number, data: updateCommentDTO, user: TokenPayload) => {
+  update: async (
+    commentId: number,
+    data: updateCommentDTO,
+    user: TokenPayload
+  ) => {
     const commentUser = await commentRepo.selectById(commentId)
-    if (user.userId !== commentUser.rows[0].user_id) throw new Error('Not your comment')
+    if (user.userId !== commentUser.rows[0].user_id)
+      throw new Error('Not your comment')
 
     const result = await commentRepo.updateById(commentId, data)
 
@@ -30,10 +35,18 @@ export const commentServices = {
   },
   delete: async (commentId: number, user: TokenPayload) => {
     const commentUser = await commentRepo.selectById(commentId)
-    if (user.userId !== commentUser.rows[0].user_id) throw new Error('Not your comment')
+    if (user.userId !== commentUser.rows[0].user_id)
+      throw new Error('Not your comment')
 
     const result = await commentRepo.deleteById(commentId)
 
     return { deleted: result.rows[0] }
+  },
+  //admin
+  deleteAsAdmin: async (commentId: number) => {
+    const commentResult = await commentRepo.deleteById(commentId)
+    if (commentResult.rows.length === 0) throw new Error('Comment is not found')
+
+    return { deleted: commentResult.rows[0] }
   },
 }

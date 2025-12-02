@@ -48,4 +48,13 @@ export const commentController = {
       next(err)
     }
   },
+  //admin
+  deleteAsAdmin: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await commentServices.deleteAsAdmin(req.paramsMap.commentId)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  }
 }
