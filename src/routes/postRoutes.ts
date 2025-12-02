@@ -6,6 +6,7 @@ import { setParamsId } from '../middlewares/helpers/paramsId.ts'
 import { commentMiddlewares } from '../middlewares/commentMiddlewares.ts'
 import { commentController } from '../controllers/commentController.ts'
 import { authMiddlewares } from '../middlewares/authMiddlewares.ts'
+import { requiresRole } from '../middlewares/helpers/role.ts'
 
 const router = Router()
 
@@ -43,6 +44,16 @@ router.get(
   postController.find
 )
 
+//admin
+
+router.delete(
+  '/:postId/delete/admin',
+  authMiddlewares.verifyAccessToken,
+  requiresRole('admin'),
+  setParamsId(['postId']),
+  postController.deleteAsAdmin
+)
+
 //comments
 
 router.post(
@@ -74,6 +85,16 @@ router.delete(
   setParamsId(['postId', 'commentId']),
   authMiddlewares.verifyAccessToken,
   commentController.delete
+)
+
+//admin
+
+router.delete(
+  '/:postId/comments/:commentId/delete/admin',
+  authMiddlewares.verifyAccessToken,
+  requiresRole('admin'),
+  setParamsId(['postId', 'commentId']),
+  commentController.deleteAsAdmin
 )
 
 export default router
