@@ -1,5 +1,4 @@
 import pool from '../pool.ts'
-import type { addPostInterface } from '../interfaces/postInterfaces.ts'
 import type { registerUserDTO } from '../interfaces/authInterfaces.ts'
 
 export const userRepo = {
@@ -17,6 +16,13 @@ export const userRepo = {
       VALUES ($1, $2, $3)
       RETURNING users.id, users.email, users.name, users.created_at`,
       [data.email, data.password, data.name]
+    )
+  },
+  findById: (userId: number) => {
+    return pool.query(
+      `SELECT * FROM users
+      WHERE id = $1`,
+      [userId]
     )
   },
   findByEmail: (email: string) => {
