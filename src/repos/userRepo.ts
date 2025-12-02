@@ -18,9 +18,16 @@ export const userRepo = {
       [data.email, data.password, data.name]
     )
   },
-  findById: (userId: number) => {
+  findMeById: (userId: number) => {
     return pool.query(
-      `SELECT * FROM users
+      `SELECT id, role, email,name, bio, birth_date, created_at, avatar_url FROM users
+      WHERE id = $1`,
+      [userId]
+    )
+  },
+  findUserById: (userId: number) => {
+    return pool.query(
+      `SELECT id, name, bio, birth_date, created_at, avatar_url FROM users
       WHERE id = $1`,
       [userId]
     )
