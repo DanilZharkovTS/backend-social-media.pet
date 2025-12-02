@@ -48,4 +48,13 @@ export const postController = {
       next(err)
     }
   },
+  //admin
+  deleteAsAdmin: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await postService.deleteAsAdmin(req.paramsMap.postId)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
 }

@@ -35,7 +35,11 @@ export const authService = {
       expiresAt
     )
 
-    const accessToken = generateAccessToken(user.rows[0].id, user.rows[0].email)
+    const accessToken = generateAccessToken(
+      user.rows[0].id,
+      user.rows[0].email,
+      user.rows[0].role
+    )
 
     return {
       refreshToken: rawRefreshToken,
@@ -64,7 +68,11 @@ export const authService = {
       expiresAt
     )
 
-    const accessToken = generateAccessToken(dbToken.user_id, dbToken.email)
+    const accessToken = generateAccessToken(
+      dbToken.user_id,
+      dbToken.email,
+      dbToken.role
+    )
 
     return {
       refreshToken: rawRefreshToken,

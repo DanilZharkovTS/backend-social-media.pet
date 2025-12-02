@@ -22,10 +22,10 @@ export const postService = {
   update: async (id: number, data: updatePostDTO, user: TokenPayload) => {
     const post = await postRepo.findById(id)
     if (post.rows.length === 0) throw new Error('Not found')
-    
+
     const userId = post.rows[0].user_id
     if (userId !== user.userId) throw new Error('Not your post')
-    
+
     const result = await postRepo.update(id, data)
     return {
       updated: result.rows[0],
@@ -34,7 +34,7 @@ export const postService = {
   delete: async (id: number, user: TokenPayload) => {
     const post = await postRepo.findById(id)
     if (post.rows.length === 0) throw new Error('Not found')
-    
+
     const userId = post.rows[0].user_id
     if (userId !== user.userId) throw new Error('Not your post')
 
@@ -47,5 +47,12 @@ export const postService = {
       search: query.search,
       result: result.rows,
     }
+  },
+  //admin
+  deleteAsAdmin: async (postId: number) => {
+    const deletedPost = await postRepo.deleteById(postId)
+    if (deletedPost.rows.length === 0) throw new Error('Post is not found')
+
+    return { deleted: deletedPost.rows[0] }
   },
 }

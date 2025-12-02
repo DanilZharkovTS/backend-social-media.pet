@@ -14,6 +14,7 @@ declare module 'express-serve-static-core' {
     user?: {
       userId: number
       email: string
+      role: string
     }
     hashedRefreshToken?: string
   }
