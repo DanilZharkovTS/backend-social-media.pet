@@ -1,15 +1,8 @@
 import pool from '../pool.ts'
 import type { registerUserDTO } from '../interfaces/authInterfaces.ts'
+import type { dynamicUpdateMyInfo } from '../interfaces/userInterfaces.ts'
 
 export const userRepo = {
-  insert: (name: string) => {
-    return pool.query(
-      `INSERT INTO users (name)
-        VALUES ($1)
-        RETURNING *`,
-      [name]
-    )
-  },
   createUser: (data: registerUserDTO) => {
     return pool.query(
       `INSERT INTO users (email, password, name)
@@ -35,8 +28,17 @@ export const userRepo = {
   findByEmail: (email: string) => {
     return pool.query(
       `SELECT * FROM users
-       WHERE email = $1`,
+      WHERE email = $1`,
       [email]
+    )
+  },
+  updateMyInfoById: (userId: number, data: dynamicUpdateMyInfo) => {
+    return pool.query(
+      `UPDATE users
+      SET ${data.fields.join(', ')}
+      WHERE id = $1
+      RETURNING *`,
+      [userId, ...data.values]
     )
   },
 }
