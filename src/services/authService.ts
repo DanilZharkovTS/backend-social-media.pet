@@ -82,4 +82,15 @@ export const authService = {
       },
     }
   },
+  logout: async (clientRefreshToken: string) => {
+    const refreshTokenResult = await authRepo.selectRefreshTokenByToken(
+      clientRefreshToken
+    )
+    if (refreshTokenResult.rows.length === 0)
+      throw new Error('Invalid or expired refresh token')
+
+    await authRepo.revokeRefreshTokenById(refreshTokenResult.rows[0].id)
+
+    return { auth: false }
+  },
 }

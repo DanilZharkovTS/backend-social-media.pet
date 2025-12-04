@@ -10,4 +10,6 @@ router.post('/login', authMiddlewares.login, authController.login)
 
 router.get('/refresh', authMiddlewares.refresh, authController.refresh)
 
+router.get('/logout', authMiddlewares.refresh, authController.logout)
+
 export default router

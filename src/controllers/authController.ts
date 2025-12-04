@@ -33,4 +33,14 @@ export const authController = {
       next(err)
     }
   },
+  logout: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await authService.logout(req.hashedRefreshToken)
+      res.clearCookie('refreshToken')
+      res.status(200).json(result)
+    } catch (err) {
+      res.clearCookie('refreshToken')
+      next(err)
+    }
+  },
 }

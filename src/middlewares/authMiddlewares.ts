@@ -52,7 +52,7 @@ export const authMiddlewares = {
     try {
       const refreshToken = req.cookies.refreshToken
       if (!refreshToken) {
-        return res.status(401).json({ auth: false })
+        return res.status(401).json({ err: 'You are not authorized' })
       }
       const hashedRefreshToken = crypto
         .createHash('sha256')
