@@ -9,6 +9,7 @@ import { userRepo } from '../repos/userRepo.ts'
 import type { TokenPayload } from '../interfaces/authInterfaces.ts'
 
 export const commentServices = {
+  //me
   add: async (data: addCommentDTO, postId: number, user: TokenPayload) => {
     const result = await commentRepo.insert(data.content, postId, user.userId)
     return { result: result.rows[0] }
