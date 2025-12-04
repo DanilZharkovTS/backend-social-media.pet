@@ -8,6 +8,7 @@ import type {
 import { postRepo } from '../repos/postRepo.ts'
 
 export const postService = {
+  //me
   add: async (data: addPostInterface, user: TokenPayload) => {
     const result = await postRepo.insert(user.userId, data.description)
     return { created: result.rows[0] }
