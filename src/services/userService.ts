@@ -15,6 +15,7 @@ export const userService = {
 
     return { updated: userResult.rows[0] }
   },
+  //users
   readUserInfo: async (userId: number) => {
     const userResult = await userRepo.findUserById(userId)
 
