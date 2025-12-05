@@ -1,5 +1,8 @@
 import type { NextFunction, Request, Response } from 'express'
-import { validateUpdateMyInfo } from '../utils/validators/userValidator.ts'
+import {
+  validateUpdateMyAvatar,
+  validateUpdateMyInfo,
+} from '../utils/validators/userValidator.ts'
 import { buildUpdateData } from '../utils/helpers/builders/buildUpdateData.ts'
 import type { updateMyInfoDTO } from '../interfaces/userInterfaces.ts'
 
@@ -57,6 +60,14 @@ export const userMiddlewares = {
       }
 
       req.body = { fields, values }
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  updateMyAvatarUrl: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      req.body = validateUpdateMyAvatar.parse(req.body)
       next()
     } catch (err) {
       next(err)

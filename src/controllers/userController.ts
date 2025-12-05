@@ -19,6 +19,14 @@ export const userController = {
       next(err)
     }
   },
+  updateMyAvatarUrl: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await userService.updateMyAvatarUrl(req.user, req.body)
+      res.status(201).json(result)
+    } catch (err) {      
+      next(err)
+    }
+  },
   //users
   readUserInfo: async (req: Request, res: Response, next: NextFunction) => {
     try {

@@ -18,6 +18,13 @@ router.patch(
   userController.updateMyInfo
 )
 
+router.patch(
+  '/me/avatar',
+  authMiddlewares.verifyAccessToken,
+  userMiddlewares.updateMyAvatarUrl,
+  userController.updateMyAvatarUrl
+)
+
 //users
 
 router.get(
