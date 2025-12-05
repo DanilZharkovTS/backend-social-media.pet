@@ -57,6 +57,10 @@ export const authService = {
 
     const dbToken = dbTokenResult.rows[0]
 
+    if (Date() > dbToken.expires_at || dbToken.revoked) {
+      throw new Error('Invalid or expired refresh token')
+    }
+
     await authRepo.revokeRefreshTokenById(dbToken.id)
 
     const { rawRefreshToken, hashedRefreshToken, expiresAt } =

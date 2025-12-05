@@ -26,10 +26,14 @@ export const authController = {
   refresh: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await authService.refresh(req.hashedRefreshToken)
-      res.cookie('refreshToken', result.refreshToken)
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      })
       res.status(200).json(result.logined)
     } catch (err) {
-      console.log(err)
+      res.clearCookie('refreshToken')
       next(err)
     }
   },
