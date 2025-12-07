@@ -14,7 +14,7 @@ export const authRepo = {
       `SELECT refresh_tokens.user_id, refresh_tokens.id, refresh_tokens.token, users.email, users.role
        FROM refresh_tokens
        JOIN users ON refresh_tokens.user_id = users.id
-      WHERE refresh_tokens.token = $1 AND refresh_tokens.expires_at > NOW() `,
+       WHERE refresh_tokens.token = $1`,
       [token]
     )
   },

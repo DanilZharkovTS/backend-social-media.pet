@@ -8,7 +8,7 @@ export const jsonMiddleware = (
 ) => {
   const method = req.method.toUpperCase()
   const contentType = req.headers['content-type'] || ''
-  const methodsWithBody = ['POST', 'PUT', 'PATCH']
+  const methodsWithBody = [ 'PUT', 'PATCH']
 
   if (methodsWithBody.includes(method)) {
     if (!contentType.includes('application/json')) {

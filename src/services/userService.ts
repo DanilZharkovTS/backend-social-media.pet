@@ -1,10 +1,38 @@
 import { userRepo } from '../repos/userRepo.ts'
 import type { TokenPayload } from '../interfaces/authInterfaces.ts'
-import type { dynamicUpdateMyInfo } from '../interfaces/userInterfaces.ts'
+import type {
+  dynamicUpdateMyInfo,
+  updateAvatarUrlDTO,
+} from '../interfaces/userInterfaces.ts'
+import { getSupabaseClient } from '../lib/supabaseClient.ts'
 
 export const userService = {
   //me
 
+  uploadMyAvatar: async (user: TokenPayload, file) => {
+    const supabase = getSupabaseClient()
+
+    const fileName = `${user.userId}-${Date.now()}-${file.originalname
+      .split('.')
+      .pop()}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false,
+      })
+
+    if (uploadError) {
+      throw new Error(uploadError.message)
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName)
+
+    return { avatarUrl: urlData.publicUrl }
+  },
   readMyInfo: async (user: TokenPayload) => {
     const userResult = await userRepo.findMeById(user.userId)
 
@@ -15,6 +43,15 @@ export const userService = {
 
     return { updated: userResult.rows[0] }
   },
+  updateMyAvatarUrl: async (user: TokenPayload, data: updateAvatarUrlDTO) => {
+    const avatarResult = await userRepo.updateMyAvatarById(
+      data.avatar_url,
+      user.userId
+    )
+
+    return { avatarUrl: avatarResult.rows[0].avatar_url }
+  },
+
   //users
   readUserInfo: async (userId: number) => {
     const userResult = await userRepo.findUserById(userId)

@@ -8,3 +8,7 @@ export interface dynamicUpdateMyInfo {
   fields: string[]
   values: string[] & Date[]
 }
+
+export interface updateAvatarUrlDTO {
+  avatar_url: string
+}

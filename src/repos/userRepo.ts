@@ -41,4 +41,13 @@ export const userRepo = {
       [userId, ...data.values]
     )
   },
+  updateMyAvatarById: (avatarUrl: string, userId: number) => {
+    return pool.query(
+      `UPDATE users
+      SET avatar_url = $1
+      WHERE id = $2
+      RETURNING avatar_url`,
+      [avatarUrl, userId]
+    )
+  },
 }

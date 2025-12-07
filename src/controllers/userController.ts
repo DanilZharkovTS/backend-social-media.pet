@@ -3,6 +3,14 @@ import { userService } from '../services/userService.ts'
 
 export const userController = {
   //me
+  uploadMyAvatar: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await userService.uploadMyAvatar(req.user, req.file)
+      res.status(201).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
   readMyInfo: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await userService.readMyInfo(req.user)
@@ -19,6 +27,19 @@ export const userController = {
       next(err)
     }
   },
+  updateMyAvatarUrl: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await userService.updateMyAvatarUrl(req.user, req.body)
+      res.status(201).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
+
   //users
   readUserInfo: async (req: Request, res: Response, next: NextFunction) => {
     try {
