@@ -17,5 +17,6 @@ declare module 'express-serve-static-core' {
       role: string
     }
     hashedRefreshToken?: string
+    fileValidationError?: null | string
   }
 }

@@ -3,6 +3,7 @@ import { authMiddlewares } from '../middlewares/authMiddlewares.ts'
 import { userController } from '../controllers/userController.ts'
 import { setParamsId } from '../middlewares/helpers/paramsId.ts'
 import { userMiddlewares } from '../middlewares/userMiddlewares.ts'
+import { upload } from '../lib/uploadMiddleware.ts'
 
 const router = Router()
 
@@ -23,6 +24,13 @@ router.patch(
   authMiddlewares.verifyAccessToken,
   userMiddlewares.updateMyAvatarUrl,
   userController.updateMyAvatarUrl
+)
+
+router.post(
+  '/me/avatar/upload',
+  authMiddlewares.verifyAccessToken,
+  upload.single('avatar'),
+  userController.uploadMyAvatar
 )
 
 //users
