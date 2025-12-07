@@ -4,12 +4,14 @@ import type {
   dynamicUpdateMyInfo,
   updateAvatarUrlDTO,
 } from '../interfaces/userInterfaces.ts'
-import { supabase } from '../lib/supabaseClient.ts'
+import { getSupabaseClient } from '../lib/supabaseClient.ts'
 
 export const userService = {
   //me
 
   uploadMyAvatar: async (user: TokenPayload, file) => {
+    const supabase = getSupabaseClient()
+
     const fileName = `${user.userId}-${Date.now()}-${file.originalname
       .split('.')
       .pop()}`
