@@ -10,7 +10,15 @@ import {
 export const authMiddlewares = {
   register: (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.body = validateRegisterUser.parse(req.body)
+      const validData = validateRegisterUser.parse(req.body)
+      
+      if (validData.confirmPassword !== validData.password) {
+        return res
+          .status(400)
+          .json({ err: "Confirmation password isn't the same as password is" })
+      }
+      
+      req.body = validData
       next()
     } catch (err) {
       next(err)

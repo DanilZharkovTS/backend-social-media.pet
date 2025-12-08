@@ -13,6 +13,7 @@ const passwordSchema = z
 export const validateRegisterUser = z.object({
   email: z.email('Not a valid email'),
   password: passwordSchema,
+  confirmPassword: z.string('Password confirmation need to be a string'),
   name: z.string('Name needs to be a string').min(1, 'Name is required'),
 })
 
