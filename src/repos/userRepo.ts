@@ -11,16 +11,9 @@ export const userRepo = {
       [data.email, data.password, data.name]
     )
   },
-  findMeById: (userId: number) => {
-    return pool.query(
-      `SELECT id, role, email,name, bio, birth_date, created_at, avatar_url FROM users
-      WHERE id = $1`,
-      [userId]
-    )
-  },
   findUserById: (userId: number) => {
     return pool.query(
-      `SELECT id, name, bio, birth_date, created_at, avatar_url FROM users
+      `SELECT * FROM users
       WHERE id = $1`,
       [userId]
     )
@@ -39,6 +32,15 @@ export const userRepo = {
       WHERE id = $1
       RETURNING *`,
       [userId, ...data.values]
+    )
+  },
+  updateMyPasswordById: (userId: number, newPassword: string) => {
+    return pool.query(
+      `UPDATE users 
+      SET password = $2
+      WHERE id = $1
+      RETURNING *`,
+      [userId, newPassword]
     )
   },
   updateMyAvatarById: (avatarUrl: string, userId: number) => {

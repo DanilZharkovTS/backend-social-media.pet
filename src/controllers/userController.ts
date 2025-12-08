@@ -27,6 +27,14 @@ export const userController = {
       next(err)
     }
   },
+  updateMyPassword: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await userService.updateMyPassword(req.user, req.body)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
   updateMyAvatarUrl: async (
     req: Request,
     res: Response,

@@ -4,8 +4,8 @@ import type { NextFunction, Request, Response } from 'express'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import appRoutes from './routes/appRoutes.ts'
-import { errHandler } from './middlewares/errHandler.ts'
-import { jsonMiddleware } from './middlewares/jsonMiddleware.ts'
+import { errHandler } from './middlewares/app/errHandler.ts'
+import { jsonMiddleware } from './middlewares/app/jsonMiddleware.ts'
 
 dotenv.config({ path: '../.env' })
 

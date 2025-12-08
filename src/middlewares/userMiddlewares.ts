@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express'
 import {
   validateUpdateMyAvatar,
   validateUpdateMyInfo,
+  validateUpdatePassword,
 } from '../utils/validators/userValidator.ts'
 import { buildUpdateData } from '../utils/helpers/builders/buildUpdateData.ts'
 import type { updateMyInfoDTO } from '../interfaces/userInterfaces.ts'
@@ -60,6 +61,15 @@ export const userMiddlewares = {
       }
 
       req.body = { fields, values }
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  updateMyPassword: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validData = validateUpdatePassword.parse(req.body)
+      req.body = validData
       next()
     } catch (err) {
       next(err)
