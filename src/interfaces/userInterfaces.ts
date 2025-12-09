@@ -12,3 +12,13 @@ export interface dynamicUpdateMyInfo {
 export interface updateAvatarUrlDTO {
   avatar_url: string
 }
+
+export interface updatePassword {
+  oldPassword: string
+  newPassword: string
+}
+
+export interface updateEmail {
+  password: string
+  newEmail: string
+}
