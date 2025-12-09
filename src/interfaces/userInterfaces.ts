@@ -17,3 +17,8 @@ export interface updatePassword {
   oldPassword: string
   newPassword: string
 }
+
+export interface updateEmail {
+  password: string
+  newEmail: string
+}

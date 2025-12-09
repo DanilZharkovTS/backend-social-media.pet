@@ -20,6 +20,13 @@ router.patch(
 )
 
 router.patch(
+  '/me/email',
+  authMiddlewares.verifyAccessToken,
+  userMiddlewares.updateMyEmail,
+  userController.updateMyEmail
+)
+
+router.patch(
   '/me/password',
   authMiddlewares.verifyAccessToken,
   userMiddlewares.updateMyPassword,

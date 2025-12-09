@@ -18,11 +18,16 @@ export const validateUpdateMyInfo = z.object({
   bio: z.string('Bio needs to be a string').optional(),
 })
 
+export const validateUpdateEmail = z.object({
+  password: z.string('Password need to be a string'),
+  newEmail: z.email('Not a valid email'),
+})
+
 export const validateUpdatePassword = z.object({
   oldPassword: z.string('Old password needs to be a string'),
-  newPassword: passwordSchema
+  newPassword: passwordSchema,
 })
 
 export const validateUpdateMyAvatar = z.object({
-  avatar_url: z.string('Avatar url needs to be a string')
+  avatar_url: z.string('Avatar url needs to be a string'),
 })

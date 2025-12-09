@@ -4,6 +4,7 @@ import type { TokenPayload } from '../interfaces/authInterfaces.ts'
 import type {
   dynamicUpdateMyInfo,
   updateAvatarUrlDTO,
+  updateEmail,
   updatePassword,
 } from '../interfaces/userInterfaces.ts'
 import { getSupabaseClient } from '../lib/supabaseClient.ts'
@@ -50,6 +51,24 @@ export const userService = {
     const userResult = await userRepo.updateMyInfoById(user.userId, data)
 
     return { updated: userResult.rows[0] }
+  },
+  updateMyEmail: async (user: TokenPayload, data: updateEmail) => {
+    const userResult = await userRepo.findUserById(user.userId)
+    const userDb = userResult.rows[0]
+
+    const isValidPassword = await bcrypt.compare(data.password, userDb.password)
+
+    if (!isValidPassword) {
+      throw ApiError('Password is not valid', 401)
+    }
+
+    if (userDb.email === data.newEmail) {
+      throw ApiError('A new email cannot be the same as old one', 400) 
+    }
+
+    await userRepo.updateMyEmailById(user.userId, data.newEmail)
+
+    return { newEmail: data.newEmail }
   },
   updateMyPassword: async (user: TokenPayload, data: updatePassword) => {
     const saltRounds = 10

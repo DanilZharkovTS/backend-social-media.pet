@@ -34,6 +34,15 @@ export const userRepo = {
       [userId, ...data.values]
     )
   },
+  updateMyEmailById: (userId: number, newEmail: string) => {
+    return pool.query(
+      `UPDATE users
+      SET email = $2
+      WHERE id = $1
+      RETURNING *`,
+      [userId, newEmail]
+    )
+  },
   updateMyPasswordById: (userId: number, newPassword: string) => {
     return pool.query(
       `UPDATE users 

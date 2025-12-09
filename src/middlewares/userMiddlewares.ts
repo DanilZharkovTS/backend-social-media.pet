@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 import {
+  validateUpdateEmail,
   validateUpdateMyAvatar,
   validateUpdateMyInfo,
   validateUpdatePassword,
@@ -66,10 +67,19 @@ export const userMiddlewares = {
       next(err)
     }
   },
+  updateMyEmail: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      req.body = validateUpdateEmail.parse(req.body)
+      
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
   updateMyPassword: (req: Request, res: Response, next: NextFunction) => {
     try {
-      const validData = validateUpdatePassword.parse(req.body)
-      req.body = validData
+      req.body = validateUpdatePassword.parse(req.body)
+
       next()
     } catch (err) {
       next(err)
