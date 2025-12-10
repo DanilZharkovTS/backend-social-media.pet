@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 import {
+  validateDeleteUserAsAdmin,
   validateUpdateEmail,
   validateUpdateMyAvatar,
   validateUpdateMyInfo,
@@ -70,7 +71,7 @@ export const userMiddlewares = {
   updateMyEmail: (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = validateUpdateEmail.parse(req.body)
-      
+
       next()
     } catch (err) {
       next(err)
@@ -88,6 +89,18 @@ export const userMiddlewares = {
   updateMyAvatarUrl: (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = validateUpdateMyAvatar.parse(req.body)
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  //admin
+
+  deleteUserAsAdmin: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      req.body = validateDeleteUserAsAdmin.parse(req.body)
+
       next()
     } catch (err) {
       next(err)

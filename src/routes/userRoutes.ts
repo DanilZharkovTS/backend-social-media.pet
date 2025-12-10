@@ -4,6 +4,7 @@ import { userController } from '../controllers/userController.ts'
 import { setParamsId } from '../middlewares/helpers/paramsId.ts'
 import { userMiddlewares } from '../middlewares/userMiddlewares.ts'
 import { upload } from '../lib/uploadMiddleware.ts'
+import { requiresRole } from '../middlewares/helpers/role.ts'
 
 const router = Router()
 
@@ -57,3 +58,14 @@ router.get(
 )
 
 export default router
+
+//admin
+
+router.delete(
+  '/:userId/delete/admin',
+  authMiddlewares.verifyAccessToken,
+  requiresRole('admin'),
+  setParamsId(['userId']),
+  userMiddlewares.deleteUserAsAdmin,
+  userController.deleteUserAsAdmin
+)
