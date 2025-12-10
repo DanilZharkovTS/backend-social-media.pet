@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import { userRepo } from '../repos/userRepo.ts'
 import type { TokenPayload } from '../interfaces/authInterfaces.ts'
 import type {
+  deleteUserAsAdminDTO,
   dynamicUpdateMyInfo,
   updateAvatarUrlDTO,
   updateEmail,
@@ -12,7 +13,6 @@ import { ApiError } from '../lib/ApiErrors.ts'
 
 export const userService = {
   //me
-
   uploadMyAvatar: async (user: TokenPayload, file) => {
     const supabase = getSupabaseClient()
 
@@ -63,7 +63,7 @@ export const userService = {
     }
 
     if (userDb.email === data.newEmail) {
-      throw ApiError('A new email cannot be the same as old one', 400) 
+      throw ApiError('A new email cannot be the same as old one', 400)
     }
 
     await userRepo.updateMyEmailById(user.userId, data.newEmail)
@@ -101,7 +101,6 @@ export const userService = {
 
     return { avatarUrl: avatarResult.rows[0].avatar_url }
   },
-
   //users
   readUserInfo: async (userId: number) => {
     const userResult = await userRepo.findUserById(userId)
@@ -110,5 +109,32 @@ export const userService = {
       userResult.rows[0]
 
     return { info: { id, name, bio, birth_date, created_at, avatar_url } }
+  },
+  //admin
+  deleteUserAsAdmin: async (
+    admin: TokenPayload,
+    data: deleteUserAsAdminDTO,
+    userId: number
+  ) => {
+    const adminResult = await userRepo.findUserById(admin.userId)
+    const adminDb = adminResult.rows[0]
+
+    const isValidPassword = await bcrypt.compare(
+      data.password,
+      adminDb.password
+    )
+    if (
+      !isValidPassword ||
+      data.adminPasscode !== process.env.SECRET_ADMIN_PASSCODE
+    ) {
+      throw ApiError('Password or admin passcode is not valid', 401)
+    }
+
+    const userResult = await userRepo.deleteUserById(userId)
+    if (userResult.rows.length === 0) {
+      throw ApiError(`User with id: ${userId} is not found`, 404)
+    }
+
+    return { deletedUserId: userId }
   },
 }

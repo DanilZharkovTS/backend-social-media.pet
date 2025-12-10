@@ -19,7 +19,7 @@ export const validateUpdateMyInfo = z.object({
 })
 
 export const validateUpdateEmail = z.object({
-  password: z.string('Password need to be a string'),
+  password: z.string('Password needs to be a string'),
   newEmail: z.email('Not a valid email'),
 })
 
@@ -30,4 +30,9 @@ export const validateUpdatePassword = z.object({
 
 export const validateUpdateMyAvatar = z.object({
   avatar_url: z.string('Avatar url needs to be a string'),
+})
+
+export const validateDeleteUserAsAdmin = z.object({
+  password: z.string('Password needs to be a string'),
+  adminPasscode: z.string('Admin passcode needs to be a string'),
 })

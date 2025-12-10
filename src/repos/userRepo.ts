@@ -61,4 +61,12 @@ export const userRepo = {
       [avatarUrl, userId]
     )
   },
+  deleteUserById: (userId: number) => {
+    return pool.query(
+      `DELETE FROM users
+      WHERE id = $1
+      RETURNING *`,
+      [userId]
+    )
+  },
 }

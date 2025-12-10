@@ -55,11 +55,27 @@ export const userController = {
       next(err)
     }
   },
-
   //users
   readUserInfo: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await userService.readUserInfo(req.paramsMap.userId)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
+  //admin
+  deleteUserAsAdmin: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await userService.deleteUserAsAdmin(
+        req.user,
+        req.body,
+        req.paramsMap.userId
+      )
       res.status(200).json(result)
     } catch (err) {
       next(err)
