@@ -81,7 +81,7 @@ export const authService = {
       refreshToken: rawRefreshToken,
       logined: {
         accessToken,
-        user: { email: dbToken.email, userId: dbToken.user_id },
+        user: { email: dbToken.email, role: dbToken.role, userId: dbToken.user_id },
       },
     }
   },
