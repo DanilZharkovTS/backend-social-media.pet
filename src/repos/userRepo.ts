@@ -1,6 +1,7 @@
 import pool from '../pool.ts'
 import type { registerUserDTO } from '../interfaces/authInterfaces.ts'
 import type { dynamicUpdateMyInfo } from '../interfaces/userInterfaces.ts'
+import type { paginationDTO } from '../interfaces/postInterfaces.ts'
 
 export const userRepo = {
   createUser: (data: registerUserDTO) => {
@@ -23,6 +24,15 @@ export const userRepo = {
       `SELECT * FROM users
       WHERE email = $1`,
       [email]
+    )
+  },
+  findBySearch: (search: string, pagination: paginationDTO) => {
+    return pool.query(
+      `SELECT id, name, email FROM users
+      WHERE ($1::text IS NULL OR
+      LOWER(email) LIKE LOWER($1))
+      LIMIT $2 OFFSET $3`,
+      [search, pagination.limit, pagination.offset]
     )
   },
   updateMyInfoById: (userId: number, data: dynamicUpdateMyInfo) => {

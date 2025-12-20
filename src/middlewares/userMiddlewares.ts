@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import {
   validateDeleteUserAsAdmin,
+  validateFindUser,
   validateUpdateEmail,
   validateUpdateMyAvatar,
   validateUpdateMyInfo,
@@ -96,6 +97,18 @@ export const userMiddlewares = {
   },
 
   //admin
+
+  findAsAdmin: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validData = validateFindUser.parse(req.query)
+      const search = validData.search ? `%${validData.search}%` : null
+
+      req.querySearch = { search }
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
 
   deleteUserAsAdmin: (req: Request, res: Response, next: NextFunction) => {
     try {
