@@ -5,8 +5,29 @@ import { setParamsId } from '../middlewares/helpers/paramsId.ts'
 import { userMiddlewares } from '../middlewares/userMiddlewares.ts'
 import { upload } from '../lib/uploadMiddleware.ts'
 import { requiresRole } from '../middlewares/helpers/role.ts'
+import { paginate } from '../middlewares/helpers/pagination.ts'
 
 const router = Router()
+
+//admin
+
+router.get(
+  '/admin',
+  authMiddlewares.verifyAccessToken,
+  requiresRole('admin'),
+  paginate,
+  userMiddlewares.findAsAdmin,
+  userController.findAsAdmin
+)
+
+router.delete(
+  '/:userId/delete/admin',
+  authMiddlewares.verifyAccessToken,
+  requiresRole('admin'),
+  setParamsId(['userId']),
+  userMiddlewares.deleteUserAsAdmin,
+  userController.deleteUserAsAdmin
+)
 
 //me
 
@@ -59,13 +80,3 @@ router.get(
 
 export default router
 
-//admin
-
-router.delete(
-  '/:userId/delete/admin',
-  authMiddlewares.verifyAccessToken,
-  requiresRole('admin'),
-  setParamsId(['userId']),
-  userMiddlewares.deleteUserAsAdmin,
-  userController.deleteUserAsAdmin
-)

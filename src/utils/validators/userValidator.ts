@@ -32,6 +32,10 @@ export const validateUpdateMyAvatar = z.object({
   avatar_url: z.string('Avatar url needs to be a string'),
 })
 
+export const validateFindUser = z.object({
+  search: z.string('Search needs to be a string').optional()
+})
+
 export const validateDeleteUserAsAdmin = z.object({
   password: z.string('Password needs to be a string'),
   adminPasscode: z.string('Admin passcode needs to be a string'),

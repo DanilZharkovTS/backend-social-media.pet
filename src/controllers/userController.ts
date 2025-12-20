@@ -65,6 +65,17 @@ export const userController = {
     }
   },
   //admin
+  findAsAdmin: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await userService.findAsAdmin(
+        req.querySearch.search,
+        req.pagination
+      )
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
   deleteUserAsAdmin: async (
     req: Request,
     res: Response,

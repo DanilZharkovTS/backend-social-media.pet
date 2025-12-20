@@ -10,6 +10,7 @@ import type {
 } from '../interfaces/userInterfaces.ts'
 import { getSupabaseClient } from '../lib/supabaseClient.ts'
 import { ApiError } from '../lib/ApiErrors.ts'
+import type { paginationDTO } from '../interfaces/postInterfaces.ts'
 
 export const userService = {
   //me
@@ -111,6 +112,17 @@ export const userService = {
     return { info: { id, name, bio, birth_date, created_at, avatar_url } }
   },
   //admin
+  findAsAdmin: async (search: string, pagination: paginationDTO) => {
+    const userResult = await userRepo.findBySearch(search, pagination)
+    if (userResult.rows.length === 0) {
+      throw ApiError('No users found', 404)
+    }
+
+    return {
+      pagination: { page: pagination.page, limit: pagination.limit },
+      result: userResult.rows,
+    }
+  },
   deleteUserAsAdmin: async (
     admin: TokenPayload,
     data: deleteUserAsAdminDTO,
