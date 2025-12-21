@@ -7,6 +7,8 @@ import { userRepo } from '../repos/userRepo.ts'
 import { generateRefreshToken } from '../utils/helpers/auth/refreshToken.ts'
 import { authRepo } from '../repos/authRepo.ts'
 import { generateAccessToken } from '../utils/helpers/auth/accessToken.ts'
+import { generateEmailVerificationToken } from '../utils/helpers/auth/emailVerificationToken.ts'
+import { getMailer } from '../lib/mailer.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
@@ -14,8 +16,37 @@ export const authService = {
     const hashedPassword = await bcrypt.hash(data.password, saltRounds)
     data.password = hashedPassword
 
-    const result = await userRepo.createUser(data)
-    return { registered: result.rows[0] }
+    const userResult = await userRepo.createUser(data)
+    const userDb = userResult.rows[0]
+
+    const {
+      rawEmailVerificationToken,
+      hashedEmailVerificationToken,
+      expiresAt,
+    } = generateEmailVerificationToken()
+
+    await authRepo.insertEmailVerificationToken(
+      userDb.id,
+      hashedEmailVerificationToken,
+      expiresAt
+    )
+
+    const link = `http://localhost:3000/auth/verify-email?token=${rawEmailVerificationToken}`
+
+    const mailer = getMailer()
+
+    mailer.sendMail({
+      from: '"My App" <no-reply@myapp.dev>',
+      to: 'test@gmail.com',
+      subject: 'Verify your email',
+      html: `
+      <h2>Email verification</h2>
+      <p>Click the link below:</p>
+      <a href="${link}">${link}</a>
+    `,
+    })
+
+    return { registered: userDb }
   },
   login: async (data: loginUserDTO) => {
     const user = await userRepo.findByEmail(data.email)
@@ -81,7 +112,11 @@ export const authService = {
       refreshToken: rawRefreshToken,
       logined: {
         accessToken,
-        user: { email: dbToken.email, role: dbToken.role, userId: dbToken.user_id },
+        user: {
+          email: dbToken.email,
+          role: dbToken.role,
+          userId: dbToken.user_id,
+        },
       },
     }
   },
