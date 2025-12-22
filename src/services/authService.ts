@@ -7,23 +7,105 @@ import { userRepo } from '../repos/userRepo.ts'
 import { generateRefreshToken } from '../utils/helpers/auth/refreshToken.ts'
 import { authRepo } from '../repos/authRepo.ts'
 import { generateAccessToken } from '../utils/helpers/auth/accessToken.ts'
+import { generateEmailVerificationToken } from '../utils/helpers/auth/emailVerificationToken.ts'
+import { getMailer } from '../lib/mailer.ts'
+import { ApiError } from '../lib/ApiErrors.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
+    const existingUserResult = await userRepo.findByEmail(data.email)
+    const existingUser = existingUserResult.rows[0]
+
+    if (existingUser && !existingUser.email_is_verified) {
+      await userRepo.deleteUserById(existingUser.id)
+    }
+
+    if (existingUser && existingUser.email_is_verified) {
+      throw ApiError('This email is already being used', 409)
+    }
+
     const saltRounds = 10
     const hashedPassword = await bcrypt.hash(data.password, saltRounds)
-    data.password = hashedPassword
 
-    const result = await userRepo.createUser(data)
-    return { registered: result.rows[0] }
+    const userToCreate = {
+      ...data,
+      password: hashedPassword,
+    }
+
+    const createdUserResult = await userRepo.createUser(userToCreate)
+    const createdUser = createdUserResult.rows[0]
+
+    const {
+      rawEmailVerificationToken,
+      hashedEmailVerificationToken,
+      expiresAt,
+    } = generateEmailVerificationToken()
+
+    await authRepo.insertEmailVerificationToken(
+      createdUser.id,
+      hashedEmailVerificationToken,
+      expiresAt
+    )
+
+    const verificationLink = `http://localhost:3000/api/auth/verify-email?emailToken=${rawEmailVerificationToken}`
+
+    const mailer = getMailer()
+
+    await mailer.sendMail({
+      from: '"My App" <no-reply@myapp.dev>',
+      to: createdUser.email,
+      subject: 'Verify your email',
+      html: `
+      <h2>Email verification</h2>
+      <p>Click the link below:</p>
+      <a href="${verificationLink}">${verificationLink}</a>
+    `,
+    })
+
+    return {
+      user: createdUser,
+    }
+  },
+
+  verifyEmail: async (token: string) => {
+    const tokenResult = await authRepo.selectEmailVerificationTokenByToken(
+      token
+    )
+
+    if (tokenResult.rows.length === 0) {
+      throw ApiError('Verification token is not valid', 400)
+    }
+
+    const dbToken = tokenResult.rows[0]
+
+    const userResult = await userRepo.findUserById(dbToken.user_id)
+
+    if (userResult.rows[0].email_is_verified) {
+      return { emailIsVerified: true }
+    }
+
+    if (new Date() > dbToken.expires_at) {
+      throw ApiError('Verification token is expired', 400)
+    }
+
+    const now: Date = new Date()
+    await authRepo.revokeEmailVerificationTokenById(now, dbToken.id)
+
+    await userRepo.updateIsVerified(true, dbToken.user_id)
+
+    return { emailIsVerified: true }
   },
   login: async (data: loginUserDTO) => {
     const user = await userRepo.findByEmail(data.email)
-    const isValidPassword = await bcrypt.compare(
-      data.password,
-      user.rows[0].password
-    )
-    if (!isValidPassword) throw new Error('Email or password are not right')
+    if (user.rows.length == 0) {
+      throw ApiError('Email or password is not right', 400)
+    }
+
+    const dbUser = user.rows[0]
+    if (!dbUser.email_is_verified) throw ApiError('Email was not verified', 403)
+
+    const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
+    if (!isValidPassword) throw ApiError('Email or password is not right', 400)
 
     const { rawRefreshToken, hashedRefreshToken, expiresAt } =
       generateRefreshToken()
@@ -56,7 +138,7 @@ export const authService = {
 
     const dbToken = dbTokenResult.rows[0]
 
-    if (Date() > dbToken.expires_at || dbToken.revoked) {
+    if (new Date() > dbToken.expires_at || dbToken.revoked) {
       throw new Error('Invalid or expired refresh token')
     }
 
@@ -81,7 +163,11 @@ export const authService = {
       refreshToken: rawRefreshToken,
       logined: {
         accessToken,
-        user: { email: dbToken.email, role: dbToken.role, userId: dbToken.user_id },
+        user: {
+          email: dbToken.email,
+          role: dbToken.role,
+          userId: dbToken.user_id,
+        },
       },
     }
   },

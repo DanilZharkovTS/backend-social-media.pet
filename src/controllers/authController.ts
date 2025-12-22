@@ -10,6 +10,14 @@ export const authController = {
       next(err)
     }
   },
+  verifyEmail: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await authService.verifyEmail(req.queryMap.emailToken)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
   login: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await authService.login(req.body)
