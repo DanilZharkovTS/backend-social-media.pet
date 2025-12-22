@@ -13,60 +13,59 @@ import { ApiError } from '../lib/ApiErrors.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
-  const existingUserResult = await userRepo.findByEmail(data.email)
-  const existingUser = existingUserResult.rows[0]
+    const existingUserResult = await userRepo.findByEmail(data.email)
+    const existingUser = existingUserResult.rows[0]
 
-  if (existingUser && !existingUser.email_is_verified) {
-    await userRepo.deleteUserById(existingUser.id)
-  }
+    if (existingUser && !existingUser.email_is_verified) {
+      await userRepo.deleteUserById(existingUser.id)
+    }
 
-  if (existingUser && existingUser.email_is_verified) {
-    throw ApiError('This email is already being used', 409)
-  }
+    if (existingUser && existingUser.email_is_verified) {
+      throw ApiError('This email is already being used', 409)
+    }
 
-  const saltRounds = 10
-  const hashedPassword = await bcrypt.hash(data.password, saltRounds)
+    const saltRounds = 10
+    const hashedPassword = await bcrypt.hash(data.password, saltRounds)
 
-  const userToCreate = {
-    ...data,
-    password: hashedPassword,
-  }
+    const userToCreate = {
+      ...data,
+      password: hashedPassword,
+    }
 
-  const createdUserResult = await userRepo.createUser(userToCreate)
-  const createdUser = createdUserResult.rows[0]
+    const createdUserResult = await userRepo.createUser(userToCreate)
+    const createdUser = createdUserResult.rows[0]
 
-  const {
-    rawEmailVerificationToken,
-    hashedEmailVerificationToken,
-    expiresAt,
-  } = generateEmailVerificationToken()
+    const {
+      rawEmailVerificationToken,
+      hashedEmailVerificationToken,
+      expiresAt,
+    } = generateEmailVerificationToken()
 
-  await authRepo.insertEmailVerificationToken(
-    createdUser.id,
-    hashedEmailVerificationToken,
-    expiresAt
-  )
+    await authRepo.insertEmailVerificationToken(
+      createdUser.id,
+      hashedEmailVerificationToken,
+      expiresAt
+    )
 
-  const verificationLink =
-    `http://localhost:3000/api/auth/verify-email?emailToken=${rawEmailVerificationToken}`
+    const verificationLink = `http://localhost:3000/api/auth/verify-email?emailToken=${rawEmailVerificationToken}`
 
-  const mailer = getMailer()
+    const mailer = getMailer()
 
-  await mailer.sendMail({
-    from: '"My App" <no-reply@myapp.dev>',
-    to: createdUser.email,
-    subject: 'Verify your email',
-    html: `
+    await mailer.sendMail({
+      from: '"My App" <no-reply@myapp.dev>',
+      to: createdUser.email,
+      subject: 'Verify your email',
+      html: `
       <h2>Email verification</h2>
       <p>Click the link below:</p>
       <a href="${verificationLink}">${verificationLink}</a>
     `,
-  })
+    })
 
-  return {
-    user: createdUser,
-  }
-},
+    return {
+      user: createdUser,
+    }
+  },
 
   verifyEmail: async (token: string) => {
     const tokenResult = await authRepo.selectEmailVerificationTokenByToken(
@@ -86,7 +85,7 @@ export const authService = {
     }
 
     if (new Date() > dbToken.expires_at) {
-      throw ApiError('Your verification token is expired', 400)
+      throw ApiError('Verification token is expired', 400)
     }
 
     const now: Date = new Date()
@@ -98,11 +97,15 @@ export const authService = {
   },
   login: async (data: loginUserDTO) => {
     const user = await userRepo.findByEmail(data.email)
-    const isValidPassword = await bcrypt.compare(
-      data.password,
-      user.rows[0].password
-    )
-    if (!isValidPassword) throw new Error('Email or password are not right')
+    if (user.rows.length == 0) {
+      throw ApiError('Email or password is not right', 400)
+    }
+
+    const dbUser = user.rows[0]
+    if (!dbUser.email_is_verified) throw ApiError('Email was not verified', 403)
+
+    const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
+    if (!isValidPassword) throw ApiError('Email or password is not right', 400)
 
     const { rawRefreshToken, hashedRefreshToken, expiresAt } =
       generateRefreshToken()
