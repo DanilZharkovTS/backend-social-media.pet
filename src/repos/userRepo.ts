@@ -35,6 +35,15 @@ export const userRepo = {
       [search, pagination.limit, pagination.offset]
     )
   },
+  updateIsVerified: (value: boolean, userId: number) => {
+    return pool.query(
+      `UPDATE users
+      SET email_is_verified = $1
+      WHERE id = $2
+      RETURNING *`,
+      [value, userId]
+    )
+  },
   updateMyInfoById: (userId: number, data: dynamicUpdateMyInfo) => {
     return pool.query(
       `UPDATE users

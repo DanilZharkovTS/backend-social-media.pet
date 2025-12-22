@@ -8,8 +8,9 @@ declare module 'express-serve-static-core' {
       limit: number
     }
     paramsMap?: Record<string, number>
-    querySearch?: {
+    queryMap?: {
       search?: string
+      emailToken?: string 
     }
     user?: {
       userId: number

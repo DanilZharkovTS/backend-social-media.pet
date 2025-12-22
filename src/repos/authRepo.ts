@@ -21,6 +21,13 @@ export const authRepo = {
       [userId, tokenHash, expiresAt]
     )
   },
+  selectEmailVerificationTokenByToken: (token: string) => {
+    return pool.query(
+      `SELECT * FROM email_verification_tokens
+      WHERE token_hash = $1`,
+      [token]
+    )
+  },
   selectRefreshTokenByToken: (token: string) => {
     return pool.query(
       `SELECT refresh_tokens.user_id, refresh_tokens.id, refresh_tokens.token, users.email, users.role
@@ -28,6 +35,15 @@ export const authRepo = {
        JOIN users ON refresh_tokens.user_id = users.id
        WHERE refresh_tokens.token = $1`,
       [token]
+    )
+  },
+  revokeEmailVerificationTokenById: (date: Date, tokenId: number) => {
+    return pool.query(
+      `UPDATE email_verification_tokens 
+      SET used_at = $1
+      WHERE id = $2
+      RETURNING *`,
+      [date, tokenId]
     )
   },
   revokeRefreshTokenById: (tokenId: number) => {

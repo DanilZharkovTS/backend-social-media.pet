@@ -9,6 +9,7 @@ import { authRepo } from '../repos/authRepo.ts'
 import { generateAccessToken } from '../utils/helpers/auth/accessToken.ts'
 import { generateEmailVerificationToken } from '../utils/helpers/auth/emailVerificationToken.ts'
 import { getMailer } from '../lib/mailer.ts'
+import { ApiError } from '../lib/ApiErrors.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
@@ -31,7 +32,7 @@ export const authService = {
       expiresAt
     )
 
-    const link = `http://localhost:3000/auth/verify-email?token=${rawEmailVerificationToken}`
+    const link = `http://localhost:3000/api/auth/verify-email?emailToken=${rawEmailVerificationToken}`
 
     const mailer = getMailer()
 
@@ -47,6 +48,34 @@ export const authService = {
     })
 
     return { registered: userDb }
+  },
+  verifyEmail: async (token: string) => {
+    const tokenResult = await authRepo.selectEmailVerificationTokenByToken(
+      token
+    )
+
+    if (tokenResult.rows.length === 0) {
+      throw ApiError('Verification token is not valid', 400)
+    }
+
+    const dbToken = tokenResult.rows[0]
+
+    const userResult = await userRepo.findUserById(dbToken.user_id)
+
+    if (userResult.rows[0].email_is_verified) {
+      return { emailIsVerified: true }
+    }
+
+    if (new Date() > dbToken.expires_at) {
+      throw ApiError('Your verification token is expired', 400)
+    }
+
+    const now: Date = new Date()
+    await authRepo.revokeEmailVerificationTokenById(now, dbToken.id)
+
+    await userRepo.updateIsVerified(true, dbToken.user_id)
+
+    return { emailIsVerified: true }
   },
   login: async (data: loginUserDTO) => {
     const user = await userRepo.findByEmail(data.email)
@@ -87,7 +116,7 @@ export const authService = {
 
     const dbToken = dbTokenResult.rows[0]
 
-    if (Date() > dbToken.expires_at || dbToken.revoked) {
+    if (new Date() > dbToken.expires_at || dbToken.revoked) {
       throw new Error('Invalid or expired refresh token')
     }
 
