@@ -13,42 +13,61 @@ import { ApiError } from '../lib/ApiErrors.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
-    const saltRounds = 10
-    const hashedPassword = await bcrypt.hash(data.password, saltRounds)
-    data.password = hashedPassword
+  const existingUserResult = await userRepo.findByEmail(data.email)
+  const existingUser = existingUserResult.rows[0]
 
-    const userResult = await userRepo.createUser(data)
-    const userDb = userResult.rows[0]
+  if (existingUser && !existingUser.email_is_verified) {
+    await userRepo.deleteUserById(existingUser.id)
+  }
 
-    const {
-      rawEmailVerificationToken,
-      hashedEmailVerificationToken,
-      expiresAt,
-    } = generateEmailVerificationToken()
+  if (existingUser && existingUser.email_is_verified) {
+    throw ApiError('This email is already being used', 409)
+  }
 
-    await authRepo.insertEmailVerificationToken(
-      userDb.id,
-      hashedEmailVerificationToken,
-      expiresAt
-    )
+  const saltRounds = 10
+  const hashedPassword = await bcrypt.hash(data.password, saltRounds)
 
-    const link = `http://localhost:3000/api/auth/verify-email?emailToken=${rawEmailVerificationToken}`
+  const userToCreate = {
+    ...data,
+    password: hashedPassword,
+  }
 
-    const mailer = getMailer()
+  const createdUserResult = await userRepo.createUser(userToCreate)
+  const createdUser = createdUserResult.rows[0]
 
-    mailer.sendMail({
-      from: '"My App" <no-reply@myapp.dev>',
-      to: 'test@gmail.com',
-      subject: 'Verify your email',
-      html: `
+  const {
+    rawEmailVerificationToken,
+    hashedEmailVerificationToken,
+    expiresAt,
+  } = generateEmailVerificationToken()
+
+  await authRepo.insertEmailVerificationToken(
+    createdUser.id,
+    hashedEmailVerificationToken,
+    expiresAt
+  )
+
+  const verificationLink =
+    `http://localhost:3000/api/auth/verify-email?emailToken=${rawEmailVerificationToken}`
+
+  const mailer = getMailer()
+
+  await mailer.sendMail({
+    from: '"My App" <no-reply@myapp.dev>',
+    to: createdUser.email,
+    subject: 'Verify your email',
+    html: `
       <h2>Email verification</h2>
       <p>Click the link below:</p>
-      <a href="${link}">${link}</a>
+      <a href="${verificationLink}">${verificationLink}</a>
     `,
-    })
+  })
 
-    return { registered: userDb }
-  },
+  return {
+    user: createdUser,
+  }
+},
+
   verifyEmail: async (token: string) => {
     const tokenResult = await authRepo.selectEmailVerificationTokenByToken(
       token

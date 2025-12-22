@@ -15,8 +15,6 @@ export const authController = {
       const result = await authService.verifyEmail(req.queryMap.emailToken)
       res.status(200).json(result)
     } catch (err) {
-      console.log(err);
-      
       next(err)
     }
   },
