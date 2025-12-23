@@ -15,7 +15,7 @@ export const authRepo = {
     expiresAt: Date
   ) => {
     return pool.query(
-      `INSERT INTO email_verification_tokens (user_id, token_hash, expires_at)
+      `INSERT INTO action_tokens (user_id, token_hash, expires_at)
       VALUES ($1, $2, $3)
       RETURNING *`,
       [userId, tokenHash, expiresAt]
@@ -23,7 +23,7 @@ export const authRepo = {
   },
   selectEmailVerificationTokenByToken: (token: string) => {
     return pool.query(
-      `SELECT * FROM email_verification_tokens
+      `SELECT * FROM action_tokens
       WHERE token_hash = $1`,
       [token]
     )
@@ -39,7 +39,7 @@ export const authRepo = {
   },
   revokeEmailVerificationTokenById: (date: Date, tokenId: number) => {
     return pool.query(
-      `UPDATE email_verification_tokens 
+      `UPDATE action_tokens 
       SET used_at = $1
       WHERE id = $2
       RETURNING *`,
