@@ -41,7 +41,7 @@ export const authService = {
       expiresAt,
     } = generateEmailVerificationToken()
 
-    await authRepo.insertEmailVerificationToken(
+    await authRepo.insertActionToken(
       createdUser.id,
       hashedEmailVerificationToken,
       expiresAt
