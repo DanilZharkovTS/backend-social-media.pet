@@ -10,6 +10,16 @@ export const emailController = {
       next(err)
     }
   },
+  forgotPassword: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await emailService.forgotPassword(req.body)
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err)
+
+      next(err)
+    }
+  },
   requestPasswordResetEmail: async (
     req: Request,
     res: Response,
@@ -19,23 +29,20 @@ export const emailController = {
       const result = await emailService.requestPasswordResetEmail(req.user)
       res.status(200).json(result)
     } catch (err) {
+      next(err)
+    }
+  },
+  resetPassword: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await emailService.resetPassword(
+        req.queryMap.resetPasswordToken,
+        req.body
+      )
+      res.status(200).json(result)
+    } catch (err) {
       console.log(err)
 
       next(err)
     }
   },
-  resetPassword: async(req: Request,
-    res: Response,
-    next: NextFunction) => {
-    try {
-      const result = await emailService.resetPassword(req.queryMap.resetPasswordToken, req.body)
-      res.status(200).json(result)
-    } catch (err) {
-      console.log(err);
-      
-      next(err)
-    }
-    }
-    
-  
 }

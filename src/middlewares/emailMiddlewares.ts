@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express'
 import crypto from 'crypto'
 import { ApiError } from '../lib/ApiErrors.ts'
 import {
+  validateForgotPassword,
   validateResetPasswordBody,
   validateResetPasswordQuery,
   validateVerifyEmail,
@@ -18,6 +19,15 @@ export const emailMiddlewares = {
         .digest('hex')
 
       req.queryMap = { emailToken: hashedEmailToken }
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  forgotPassword: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      req.body = validateForgotPassword.parse(req.body)
+
       next()
     } catch (err) {
       next(err)
