@@ -37,13 +37,13 @@ export const authRepo = {
       [token]
     )
   },
-  revokeActionTokenById: (date: Date, tokenId: number) => {
+  revokeActionTokenById: (tokenId: number) => {
     return pool.query(
       `UPDATE action_tokens 
-      SET used_at = $1
-      WHERE id = $2
+      SET used_at = NOW()
+      WHERE id = $1
       RETURNING *`,
-      [date, tokenId]
+      [tokenId]
     )
   },
   revokeRefreshTokenById: (tokenId: number) => {

@@ -24,4 +24,18 @@ export const emailController = {
       next(err)
     }
   },
+  resetPassword: async(req: Request,
+    res: Response,
+    next: NextFunction) => {
+    try {
+      const result = await emailService.resetPassword(req.queryMap.resetPasswordToken, req.body)
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err);
+      
+      next(err)
+    }
+    }
+    
+  
 }

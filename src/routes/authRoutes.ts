@@ -24,6 +24,12 @@ router.get(
   emailController.requestPasswordResetEmail
 )
 
+router.post(
+  '/reset-password',
+  emailMiddlewares.resetPassword,
+  emailController.resetPassword
+)
+
 router.get('/logout', authMiddlewares.refresh, authController.logout)
 
 export default router
