@@ -11,6 +11,7 @@ declare module 'express-serve-static-core' {
     queryMap?: {
       search?: string
       emailToken?: string 
+      resetPasswordToken?: string
     }
     user?: {
       userId: number
