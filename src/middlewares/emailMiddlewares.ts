@@ -3,6 +3,7 @@ import crypto from 'crypto'
 import { ApiError } from '../lib/ApiErrors.ts'
 import {
   validateForgotPassword,
+  validateRequestChangeEmail,
   validateResetPasswordBody,
   validateResetPasswordQuery,
   validateVerifyEmail,
@@ -27,6 +28,15 @@ export const emailMiddlewares = {
   forgotPassword: (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = validateForgotPassword.parse(req.body)
+
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  requestChangeEmail: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      req.body = validateRequestChangeEmail.parse(req.body)
 
       next()
     } catch (err) {
