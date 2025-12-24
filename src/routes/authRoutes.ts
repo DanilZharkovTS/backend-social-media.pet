@@ -25,6 +25,12 @@ router.post(
   emailController.requestChangeEmail
 )
 
+router.get(
+  '/change-email',
+  emailMiddlewares.changeEmail,
+  emailController.changeEmail
+)
+
 router.post(
   '/forgot-password',
   emailMiddlewares.forgotPassword,

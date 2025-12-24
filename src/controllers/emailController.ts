@@ -22,13 +22,21 @@ export const emailController = {
       next(err)
     }
   },
+  changeEmail: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await emailService.changeEmail(req.queryMap.emailChangeToken)
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err);
+      
+      next(err)
+    }
+  },
   forgotPassword: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await emailService.forgotPassword(req.body)
       res.status(200).json(result)
     } catch (err) {
-      console.log(err)
-
       next(err)
     }
   },

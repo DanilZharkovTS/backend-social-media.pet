@@ -44,13 +44,24 @@ export const emailService = {
   ) => {
     const mailer = getMailer()
 
+    if (data.newEmail === user.email)
+      throw ApiError('New email must be different from current email', 400)
+
+    const existingUserResult = await userRepo.findByEmail(data.newEmail)
+    const dbExistingUser = existingUserResult.rows[0]
+
+    if (dbExistingUser && dbExistingUser.email_is_verified) {
+      throw ApiError('This email is already being used', 409)
+    }
+
     const { rawEmailChangeToken, hashedEmailChangeToken, expiresAt } =
       generateEmailChangeToken()
 
-    await authRepo.insertActionToken(
+    await authRepo.insertEmailChangeToken(
       user.userId,
       hashedEmailChangeToken,
       expiresAt,
+      data.newEmail,
       'EMAIL_CHANGE'
     )
 
@@ -68,6 +79,20 @@ export const emailService = {
     })
 
     return { emailChangeLinkWasSent: true }
+  },
+  changeEmail: async (token: string) => {
+    const tokenResult = await authRepo.selectActionTokenByToken(token)
+    const dbToken = tokenResult.rows[0]
+
+    if (!dbToken || new Date() > dbToken.expires_at || dbToken.used_at) {
+      throw ApiError('Email change token is invalid or expired', 400)
+    }
+
+    await userRepo.updateMyEmailById(dbToken.user_id, dbToken.payload.newEmail)
+
+    await authRepo.revokeActionTokenById(dbToken.id)
+
+    return { emailIsChanged: true }
   },
   forgotPassword: async (data: forgotPasswordDTO) => {
     const mailer = getMailer()

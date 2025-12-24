@@ -10,7 +10,8 @@ declare module 'express-serve-static-core' {
     paramsMap?: Record<string, number>
     queryMap?: {
       search?: string
-      emailToken?: string 
+      emailToken?: string
+      emailChangeToken?: string
       resetPasswordToken?: string
     }
     user?: {
