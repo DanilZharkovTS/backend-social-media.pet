@@ -19,6 +19,19 @@ router.post('/login', authMiddlewares.login, authController.login)
 router.get('/refresh', authMiddlewares.refresh, authController.refresh)
 
 router.post(
+  '/request-change-email',
+  authMiddlewares.verifyAccessToken,
+  emailMiddlewares.requestChangeEmail,
+  emailController.requestChangeEmail
+)
+
+router.get(
+  '/change-email',
+  emailMiddlewares.changeEmail,
+  emailController.changeEmail
+)
+
+router.post(
   '/forgot-password',
   emailMiddlewares.forgotPassword,
   emailController.forgotPassword

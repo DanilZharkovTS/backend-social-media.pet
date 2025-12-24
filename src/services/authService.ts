@@ -44,7 +44,8 @@ export const authService = {
     await authRepo.insertActionToken(
       createdUser.id,
       hashedEmailVerificationToken,
-      expiresAt
+      expiresAt,
+      'EMAIL_VERIFY'
     )
 
     const verificationLink = `http://localhost:3000/api/auth/verify-email?emailToken=${rawEmailVerificationToken}`

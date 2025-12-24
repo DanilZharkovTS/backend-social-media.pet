@@ -1,4 +1,5 @@
 import pool from '../pool.ts'
+import type { actionTokenType } from '../interfaces/emailInterfaces.ts'
 
 export const authRepo = {
   insertRefreshToken: (userId: number, token: string, expiresAt: Date) => {
@@ -7,25 +8,6 @@ export const authRepo = {
       VALUES ($1, $2, $3)
       RETURNING *`,
       [userId, token, expiresAt]
-    )
-  },
-  insertActionToken: (
-    userId: number,
-    tokenHash: string,
-    expiresAt: Date
-  ) => {
-    return pool.query(
-      `INSERT INTO action_tokens (user_id, token_hash, expires_at)
-      VALUES ($1, $2, $3)
-      RETURNING *`,
-      [userId, tokenHash, expiresAt]
-    )
-  },
-  selectActionTokenByToken: (token: string) => {
-    return pool.query(
-      `SELECT * FROM action_tokens
-      WHERE token_hash = $1`,
-      [token]
     )
   },
   selectRefreshTokenByToken: (token: string) => {
@@ -37,20 +19,54 @@ export const authRepo = {
       [token]
     )
   },
+  revokeRefreshTokenById: (tokenId: number) => {
+    return pool.query(
+      `UPDATE refresh_tokens
+      SET revoked = true
+      WHERE id = $1`,
+      [tokenId]
+    )
+  },
+  insertActionToken: (
+    userId: number,
+    tokenHash: string,
+    expiresAt: Date,
+    type: actionTokenType
+  ) => {
+    return pool.query(
+      `INSERT INTO action_tokens (user_id, token_hash, expires_at, type)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *`,
+      [userId, tokenHash, expiresAt, type]
+    )
+  },
+  insertEmailChangeToken: (
+    userId: number,
+    tokenHash: string,
+    expiresAt: Date,
+    newEmail: string,
+    type: actionTokenType
+  ) => {
+    return pool.query(
+      `INSERT INTO action_tokens (user_id, token_hash, expires_at, payload, type)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [userId, tokenHash, expiresAt, JSON.stringify({ newEmail }), type]
+    )
+  },
+  selectActionTokenByToken: (token: string) => {
+    return pool.query(
+      `SELECT * FROM action_tokens
+      WHERE token_hash = $1`,
+      [token]
+    )
+  },
   revokeActionTokenById: (tokenId: number) => {
     return pool.query(
       `UPDATE action_tokens 
       SET used_at = NOW()
       WHERE id = $1
       RETURNING *`,
-      [tokenId]
-    )
-  },
-  revokeRefreshTokenById: (tokenId: number) => {
-    return pool.query(
-      `UPDATE refresh_tokens
-      SET revoked = true
-      WHERE id = $1`,
       [tokenId]
     )
   },

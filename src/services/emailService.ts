@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import type { TokenPayload } from '../interfaces/authInterfaces.ts'
 import type {
   forgotPasswordDTO,
+  requestChangeEmailDTO,
   resetPasswordDTO,
 } from '../interfaces/emailInterfaces.ts'
 import { getMailer } from '../lib/mailer.ts'
@@ -9,6 +10,7 @@ import { ApiError } from '../lib/ApiErrors.ts'
 import { authRepo } from '../repos/authRepo.ts'
 import { userRepo } from '../repos/userRepo.ts'
 import { generateResetPasswordToken } from '../utils/helpers/auth/resetPasswordToken.ts'
+import { generateEmailChangeToken } from '../utils/helpers/auth/emailChangeToken.ts'
 
 export const emailService = {
   verifyEmail: async (token: string) => {
@@ -36,6 +38,62 @@ export const emailService = {
 
     return { emailIsVerified: true }
   },
+  requestChangeEmail: async (
+    user: TokenPayload,
+    data: requestChangeEmailDTO
+  ) => {
+    const mailer = getMailer()
+
+    if (data.newEmail === user.email)
+      throw ApiError('New email must be different from current email', 400)
+
+    const existingUserResult = await userRepo.findByEmail(data.newEmail)
+    const dbExistingUser = existingUserResult.rows[0]
+
+    if (dbExistingUser && dbExistingUser.email_is_verified) {
+      throw ApiError('This email is already being used', 409)
+    }
+
+    const { rawEmailChangeToken, hashedEmailChangeToken, expiresAt } =
+      generateEmailChangeToken()
+
+    await authRepo.insertEmailChangeToken(
+      user.userId,
+      hashedEmailChangeToken,
+      expiresAt,
+      data.newEmail,
+      'EMAIL_CHANGE'
+    )
+
+    const emailChangeLink = `http://localhost:3000/api/auth/change-email?emailChangeToken=${rawEmailChangeToken}`
+
+    await mailer.sendMail({
+      from: '"My App" <no-reply@myapp.dev>',
+      to: data.newEmail,
+      subject: 'Email change',
+      html: `
+      <h2>Email change</h2>
+      <p>Click the link below:</p>
+      <a href="${emailChangeLink}">${emailChangeLink}</a>
+    `,
+    })
+
+    return { emailChangeLinkWasSent: true }
+  },
+  changeEmail: async (token: string) => {
+    const tokenResult = await authRepo.selectActionTokenByToken(token)
+    const dbToken = tokenResult.rows[0]
+
+    if (!dbToken || new Date() > dbToken.expires_at || dbToken.used_at) {
+      throw ApiError('Email change token is invalid or expired', 400)
+    }
+
+    await userRepo.updateMyEmailById(dbToken.user_id, dbToken.payload.newEmail)
+
+    await authRepo.revokeActionTokenById(dbToken.id)
+
+    return { emailIsChanged: true }
+  },
   forgotPassword: async (data: forgotPasswordDTO) => {
     const mailer = getMailer()
     const message =
@@ -56,7 +114,8 @@ export const emailService = {
     await authRepo.insertActionToken(
       dbUser.id,
       hashedResetPasswordToken,
-      expiresAt
+      expiresAt,
+      'PASSWORD_RESET'
     )
 
     const resetPasswordLink = `http://localhost:3000/api/auth/reset-password?resetPasswordToken=${rawResetPasswordToken}`
@@ -88,7 +147,8 @@ export const emailService = {
     await authRepo.insertActionToken(
       dbUser.id,
       hashedResetPasswordToken,
-      expiresAt
+      expiresAt,
+      'PASSWORD_RESET'
     )
 
     const resetPasswordLink = `http://localhost:3000/api/auth/reset-password?resetPasswordToken=${rawResetPasswordToken}`
