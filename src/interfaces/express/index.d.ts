@@ -20,6 +20,7 @@ declare module 'express-serve-static-core' {
       role: string
     }
     hashedRefreshToken?: string
+    hashedTrustedDeviceToken?: string
     fileValidationError?: null | string
   }
 }

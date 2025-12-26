@@ -27,7 +27,19 @@ export const authMiddlewares = {
   },
   login: (req: Request, res: Response, next: NextFunction) => {
     try {
+      const trustedDeviceToken = req.cookies.trustedDeviceToken
+
+      let hashedTrustedDeviceToken
+      if (trustedDeviceToken) {
+        hashedTrustedDeviceToken = crypto
+          .createHash('sha256')
+          .update(trustedDeviceToken)
+          .digest('hex')
+      }
+
+      req.hashedTrustedDeviceToken = hashedTrustedDeviceToken
       req.body = validateLoginUser.parse(req.body)
+
       next()
     } catch (err) {
       next(err)

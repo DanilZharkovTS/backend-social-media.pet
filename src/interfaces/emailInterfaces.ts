@@ -1,5 +1,9 @@
-
-export type actionTokenType = 'PASSWORD_RESET' | 'EMAIL_VERIFY' | 'EMAIL_CHANGE' | 'INVITE'
+export type actionTokenType =
+  | 'PASSWORD_RESET'
+  | 'EMAIL_VERIFY'
+  | 'LOGIN_EMAIL_CONFIRM'
+  | 'EMAIL_CHANGE'
+  | 'INVITE'
 
 export interface requestChangeEmailDTO {
   newEmail: string
