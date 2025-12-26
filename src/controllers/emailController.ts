@@ -10,6 +10,27 @@ export const emailController = {
       next(err)
     }
   },
+  loginEmailConfirm: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await emailService.loginEmailConfirm(req.body)
+      if (!req.cookies.trustedDeviceToken) {
+        res.cookie('trustedDeviceToken', result.trustedDeviceToken, {
+          httpOnly: true,
+          sameSite: 'none',
+          secure: true,
+        })
+      }
+      res.status(200).json(result.logined)
+    } catch (err) {
+      console.log(err)
+
+      next(err)
+    }
+  },
   requestChangeEmail: async (
     req: Request,
     res: Response,
@@ -24,11 +45,13 @@ export const emailController = {
   },
   changeEmail: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await emailService.changeEmail(req.queryMap.emailChangeToken)
+      const result = await emailService.changeEmail(
+        req.queryMap.emailChangeToken
+      )
       res.status(200).json(result)
     } catch (err) {
-      console.log(err);
-      
+      console.log(err)
+
       next(err)
     }
   },

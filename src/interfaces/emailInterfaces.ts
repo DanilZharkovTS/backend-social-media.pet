@@ -5,6 +5,11 @@ export type actionTokenType =
   | 'EMAIL_CHANGE'
   | 'INVITE'
 
+export interface loginEmailConfirmDTO {
+  hashedToken: string
+  hashedCode: string
+}
+
 export interface requestChangeEmailDTO {
   newEmail: string
 }

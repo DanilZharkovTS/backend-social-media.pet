@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import type { TokenPayload } from '../interfaces/authInterfaces.ts'
 import type {
   forgotPasswordDTO,
+  loginEmailConfirmDTO,
   requestChangeEmailDTO,
   resetPasswordDTO,
 } from '../interfaces/emailInterfaces.ts'
@@ -11,6 +12,9 @@ import { authRepo } from '../repos/authRepo.ts'
 import { userRepo } from '../repos/userRepo.ts'
 import { generateResetPasswordToken } from '../utils/helpers/auth/resetPasswordToken.ts'
 import { generateEmailChangeToken } from '../utils/helpers/auth/emailChangeToken.ts'
+import { generateRefreshToken } from '../utils/helpers/auth/refreshToken.ts'
+import { generateAccessToken } from '../utils/helpers/auth/accessToken.ts'
+import { generateTrustedDeviceToken } from '../utils/helpers/auth/trustedDeviceToken.ts'
 
 export const emailService = {
   verifyEmail: async (token: string) => {
@@ -37,6 +41,61 @@ export const emailService = {
     await authRepo.revokeActionTokenById(dbToken.id)
 
     return { emailIsVerified: true }
+  },
+  loginEmailConfirm: async (data: loginEmailConfirmDTO) => {
+    const tokenResult = await authRepo.selectActionTokenByToken(
+      data.hashedToken
+    )
+    const dbToken = tokenResult.rows[0]
+
+    if (!dbToken || new Date() > dbToken.expires_at || dbToken.used_at) {
+      throw ApiError(
+        'Login email confirmation token is invalid or expired',
+        400
+      )
+    }
+
+    if (data.hashedCode !== dbToken.payload.code) {
+      throw ApiError('Invalid code', 400)
+    }
+
+    const userResult = await userRepo.findUserById(dbToken.user_id)
+    const dbUser = userResult.rows[0]
+
+    const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
+      generateRefreshToken()
+
+    const refreshResult = await authRepo.insertRefreshToken(
+      dbUser.id,
+      hashedRefreshToken,
+      refreshExpiresAt
+    )
+
+    const accessToken = generateAccessToken(
+      dbUser.id,
+      dbUser.email,
+      dbUser.role
+    )
+
+    await authRepo.revokeActionTokenById(dbToken.id)
+
+    const {
+      rawTrustedDeviceToken,
+      hashedTrustedDeviceToken,
+      trustedDeviceExpiresAt,
+    } = generateTrustedDeviceToken()
+
+    const trustedDeviceResult = await authRepo.insertTrustedDevice(
+      dbUser.id,
+      hashedTrustedDeviceToken,
+      trustedDeviceExpiresAt
+    )
+
+    return {
+      trustedDeviceToken: rawTrustedDeviceToken,
+      refreshToken: rawRefreshToken,
+      logined: { accessToken, user: dbUser },
+    }
   },
   requestChangeEmail: async (
     user: TokenPayload,

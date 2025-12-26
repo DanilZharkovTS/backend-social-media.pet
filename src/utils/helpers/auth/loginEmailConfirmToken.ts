@@ -10,7 +10,7 @@ export const generateLoginEmailConfirmToken = () => {
   const rawLoginEmailConfirmCode = Math.floor(100000 + Math.random() * 900000)
   const hashedLoginEmailConfirmCode = crypto
     .createHash('sha256')
-    .update(rawLoginEmailConfirmToken)
+    .update(String(rawLoginEmailConfirmCode))
     .digest('hex')
 
   const expiresAt = new Date(Date.now() + 3 * 60 * 1000)

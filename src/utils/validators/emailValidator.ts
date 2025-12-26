@@ -18,6 +18,11 @@ export const validateForgotPassword = z.object({
   email: z.email('Not a valid email'),
 })
 
+export const validateLoginEmailConfirm = z.object({
+  loginEmailConfirmToken: z.string('Token needs to be a string'),
+  loginEmailConfirmCode: z.number('Token needs to be a number')
+})
+
 export const validateRequestChangeEmail = z.object({
   newEmail: z.email('Not a valid email'),
 })

@@ -118,16 +118,16 @@ export const authService = {
     `,
       })
 
-      return { loginEmailConfirmationToken: rawLoginEmailConfirmToken }
+      return { loginEmailConfirmToken: rawLoginEmailConfirmToken }
     }
 
-    const { rawRefreshToken, hashedRefreshToken, expiresAt } =
+    const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
     await authRepo.insertRefreshToken(
       user.rows[0].id,
       hashedRefreshToken,
-      expiresAt
+      refreshExpiresAt
     )
 
     const accessToken = generateAccessToken(

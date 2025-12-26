@@ -4,6 +4,7 @@ import { ApiError } from '../lib/ApiErrors.ts'
 import {
   validateChangeEmail,
   validateForgotPassword,
+  validateLoginEmailConfirm,
   validateRequestChangeEmail,
   validateResetPasswordBody,
   validateResetPasswordQuery,
@@ -35,6 +36,25 @@ export const emailMiddlewares = {
       next(err)
     }
   },
+  loginEmailConfirm: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validData = validateLoginEmailConfirm.parse(req.body)
+
+      const hashedToken = crypto
+        .createHash('sha256')
+        .update(validData.loginEmailConfirmToken)
+        .digest('hex')
+      const hashedCode = crypto
+        .createHash('sha256')
+        .update(String(validData.loginEmailConfirmCode))
+        .digest('hex')
+
+      req.body = { hashedToken, hashedCode }
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
   requestChangeEmail: (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = validateRequestChangeEmail.parse(req.body)
@@ -54,7 +74,7 @@ export const emailMiddlewares = {
         .digest('hex')
 
       req.queryMap = { emailChangeToken: hashedEmailChangeToken }
-      
+
       next()
     } catch (err) {
       next(err)
