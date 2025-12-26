@@ -1,15 +1,16 @@
 import bcrypt from 'bcrypt'
+import { getMailer } from '../lib/mailer.ts'
 import type {
   loginUserDTO,
   registerUserDTO,
 } from '../interfaces/authInterfaces.ts'
+import { ApiError } from '../lib/ApiErrors.ts'
 import { userRepo } from '../repos/userRepo.ts'
 import { generateRefreshToken } from '../utils/helpers/auth/refreshToken.ts'
 import { authRepo } from '../repos/authRepo.ts'
 import { generateAccessToken } from '../utils/helpers/auth/accessToken.ts'
 import { generateEmailVerificationToken } from '../utils/helpers/auth/emailVerificationToken.ts'
-import { getMailer } from '../lib/mailer.ts'
-import { ApiError } from '../lib/ApiErrors.ts'
+import { generateLoginEmailConfirmToken } from '../utils/helpers/auth/loginEmailConfirmToken.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
@@ -67,7 +68,9 @@ export const authService = {
       user: createdUser,
     }
   },
-  login: async (data: loginUserDTO) => {
+  login: async (data: loginUserDTO, trustedDeviceToken: string) => {
+    const mailer = getMailer()
+
     const user = await userRepo.findByEmail(data.email)
     if (user.rows.length == 0) {
       throw ApiError('Email or password is not right', 400)
@@ -79,13 +82,52 @@ export const authService = {
     const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
     if (!isValidPassword) throw ApiError('Email or password is not right', 400)
 
-    const { rawRefreshToken, hashedRefreshToken, expiresAt } =
+    const trustedDevice = await authRepo.selectTrustedDeviceByToken(
+      trustedDeviceToken
+    )
+
+    if (
+      !trustedDevice ||
+      trustedDevice.user_id !== dbUser.id ||
+      new Date() > trustedDevice.expires_at
+    ) {
+      const {
+        rawLoginEmailConfirmToken,
+        hashedLoginEmailConfirmToken,
+        rawLoginEmailConfirmCode,
+        hashedLoginEmailConfirmCode,
+        expiresAt,
+      } = generateLoginEmailConfirmToken()
+
+      await authRepo.insertLoginEmailConfirmToken(
+        dbUser.id,
+        hashedLoginEmailConfirmToken,
+        expiresAt,
+        hashedLoginEmailConfirmCode,
+        'LOGIN_EMAIL_CONFIRM'
+      )
+
+      mailer.sendMail({
+        from: '"My App" <no-reply@myapp.dev>',
+        to: dbUser.email,
+        subject: 'Confirm your email',
+        html: `
+      <h2>Login email confirmation</h2>
+      <p>Code to enter is below:</p>
+      <p>${rawLoginEmailConfirmCode}</p>
+    `,
+      })
+
+      return { loginEmailConfirmToken: rawLoginEmailConfirmToken }
+    }
+
+    const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
     await authRepo.insertRefreshToken(
       user.rows[0].id,
       hashedRefreshToken,
-      expiresAt
+      refreshExpiresAt
     )
 
     const accessToken = generateAccessToken(

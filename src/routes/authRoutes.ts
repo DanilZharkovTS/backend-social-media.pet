@@ -16,6 +16,12 @@ router.get(
 
 router.post('/login', authMiddlewares.login, authController.login)
 
+router.post(
+  '/login/email-confirm',
+  emailMiddlewares.loginEmailConfirm,
+  emailController.loginEmailConfirm
+)
+
 router.get('/refresh', authMiddlewares.refresh, authController.refresh)
 
 router.post(

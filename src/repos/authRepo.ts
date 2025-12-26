@@ -27,6 +27,21 @@ export const authRepo = {
       [tokenId]
     )
   },
+  insertTrustedDevice: (user_id: number, token: string, expires_at: Date) => {
+    return pool.query(
+      `INSERT INTO trusted_devices (user_id, token_hash, expires_at)
+      VALUES ($1, $2, $3)
+      RETURNING *`,
+      [user_id, token, expires_at]
+    )
+  },
+  selectTrustedDeviceByToken: (token: string) => {
+    return pool.query(
+      `SELECT * FROM trusted_devices
+      WHERE token_hash = $1`,
+      [token]
+    )
+  },
   insertActionToken: (
     userId: number,
     tokenHash: string,
@@ -38,6 +53,26 @@ export const authRepo = {
       VALUES ($1, $2, $3, $4)
       RETURNING *`,
       [userId, tokenHash, expiresAt, type]
+    )
+  },
+  insertLoginEmailConfirmToken: (
+    userId: number,
+    token_hash: string,
+    expires_at: Date,
+    code_hash: string,
+    type: actionTokenType
+  ) => {
+    return pool.query(
+      `INSERT INTO action_tokens (user_id, token_hash, expires_at, payload, type)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [
+        userId,
+        token_hash,
+        expires_at,
+        JSON.stringify({ code: code_hash }),
+        type,
+      ]
     )
   },
   insertEmailChangeToken: (

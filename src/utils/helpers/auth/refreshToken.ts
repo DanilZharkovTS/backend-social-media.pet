@@ -6,8 +6,8 @@ export const generateRefreshToken = () => {
     .createHash('sha256')
     .update(rawRefreshToken)
     .digest('hex')
-  const expiresAt = new Date()
-  expiresAt.setDate(expiresAt.getDate() + 30)
+  const refreshExpiresAt = new Date()
+  refreshExpiresAt.setDate(refreshExpiresAt.getDate() + 30)
 
-  return { rawRefreshToken, hashedRefreshToken, expiresAt }
+  return { rawRefreshToken, hashedRefreshToken, refreshExpiresAt }
 }
