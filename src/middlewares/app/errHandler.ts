@@ -17,25 +17,25 @@ export const errHandler = (
   }
 
   if (err instanceof multer.MulterError) {
-    return res.status(400).json({ error: err.message })
+    return res.status(400).json({ message: err.message })
   }
 
   if (err?.code) {
     switch (err.code) {
       case '23505':
-        return res.status(409).json({ error: 'Duplicate key value' })
+        return res.status(409).json({ message: 'Duplicate key value' })
       case '23503':
-        return res.status(400).json({ error: 'Referenced entity does not exist' })
+        return res.status(400).json({ message: 'Referenced entity does not exist' })
       case '23502':
-        return res.status(400).json({ error: `Missing required field: ${err.column}` })
+        return res.status(400).json({ message: `Missing required field: ${err.column}` })
       case '22P02':
-        return res.status(400).json({ error: 'Invalid input syntax' })
+        return res.status(400).json({ message: 'Invalid input syntax' })
     }
   }
 
   if (err?.status) {
-    return res.status(err.status).json({ error: err.message })
+    return res.status(err.status).json({ message: err.message })
   }
 
-  return res.status(500).json({ error: 'Internal server error' })
+  return res.status(500).json({ message: 'Internal server error' })
 }
