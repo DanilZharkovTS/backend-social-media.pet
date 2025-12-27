@@ -1,9 +1,9 @@
-import bcrypt from 'bcrypt'
-import { getMailer } from '../lib/mailer.ts'
 import type {
   loginUserDTO,
   registerUserDTO,
 } from '../interfaces/authInterfaces.ts'
+import bcrypt from 'bcrypt'
+import { getMailer } from '../lib/mailer.ts'
 import { ApiError } from '../lib/ApiErrors.ts'
 import { userRepo } from '../repos/userRepo.ts'
 import { generateRefreshToken } from '../utils/helpers/auth/refreshToken.ts'
@@ -145,26 +145,21 @@ export const authService = {
     const dbTokenResult = await authRepo.selectRefreshTokenByToken(
       clientRefreshToken
     )
-
-    if (dbTokenResult.rows.length === 0) {
-      throw new Error('Invalid or expired refresh token')
-    }
-
     const dbToken = dbTokenResult.rows[0]
 
-    if (new Date() > dbToken.expires_at || dbToken.revoked) {
-      throw new Error('Invalid or expired refresh token')
+    if (!dbToken || new Date() > dbToken.expires_at || dbToken.revoked) {
+      throw ApiError('Invalid or expired refresh token', 401)
     }
 
     await authRepo.revokeRefreshTokenById(dbToken.id)
 
-    const { rawRefreshToken, hashedRefreshToken, expiresAt } =
+    const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
     await authRepo.insertRefreshToken(
       dbToken.user_id,
       hashedRefreshToken,
-      expiresAt
+      refreshExpiresAt
     )
 
     const accessToken = generateAccessToken(
@@ -189,8 +184,9 @@ export const authService = {
     const refreshTokenResult = await authRepo.selectRefreshTokenByToken(
       clientRefreshToken
     )
-    if (refreshTokenResult.rows.length === 0)
-      throw new Error('Invalid or expired refresh token')
+    if (refreshTokenResult.rows.length === 0) {
+      throw ApiError('Invalid or expired refresh token', 401)
+    }
 
     await authRepo.revokeRefreshTokenById(refreshTokenResult.rows[0].id)
 

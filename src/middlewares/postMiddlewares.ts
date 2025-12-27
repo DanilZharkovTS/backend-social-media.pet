@@ -1,11 +1,12 @@
 import type { NextFunction, Request, Response } from 'express'
+import type { updatePostDTO } from '../interfaces/postInterfaces.ts'
+import { ApiError } from '../lib/ApiErrors.ts'
 import {
   validateAddPost,
   validateFindPost,
   validateUpdatePost,
 } from '../utils/validators/postValidator.ts'
 import { buildUpdatePostData } from '../utils/helpers/builders/buildUpdatePostData.ts'
-import type { updatePostDTO } from '../interfaces/postInterfaces.ts'
 
 export const postMiddlewares = {
   add: (req: Request, res: Response, next: NextFunction) => {
@@ -23,6 +24,10 @@ export const postMiddlewares = {
 
       const data: updatePostDTO = validateUpdatePost.parse(req.body)
       buildUpdatePostData(data, fields, values)
+
+      if (fields.length === 0 || values.length === 0) {
+        throw ApiError('There is no data to update', 400)
+      }
       req.body = {
         fields: fields,
         values: values,
@@ -38,7 +43,7 @@ export const postMiddlewares = {
       const validated = validateFindPost.parse(req.query)
       const search = validated.search ? `%${validated.search}%` : null
 
-      req.querySearch = { search: search }
+      req.queryMap = { search: search }
       next()
     } catch (err) {
       next(err)

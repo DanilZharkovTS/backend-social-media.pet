@@ -1,12 +1,12 @@
-import type { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
+import type { NextFunction, Request, Response } from 'express'
 import type { TokenPayload } from '../interfaces/authInterfaces.ts'
+import { ApiError } from '../lib/ApiErrors.ts'
 import {
   validateLoginUser,
   validateRegisterUser,
 } from '../utils/validators/authValidator.ts'
-import { ApiError } from '../lib/ApiErrors.ts'
 
 export const authMiddlewares = {
   register: (req: Request, res: Response, next: NextFunction) => {
@@ -14,9 +14,10 @@ export const authMiddlewares = {
       const validData = validateRegisterUser.parse(req.body)
 
       if (validData.confirmPassword !== validData.password) {
-        return res
-          .status(400)
-          .json({ err: "Confirmation password isn't the same as password is" })
+        throw ApiError(
+          "Confirmation password isn't the same as password is",
+          400
+        )
       }
 
       req.body = validData
@@ -29,7 +30,7 @@ export const authMiddlewares = {
     try {
       const trustedDeviceToken = req.cookies.trustedDeviceToken
 
-      let hashedTrustedDeviceToken
+      let hashedTrustedDeviceToken: string
       if (trustedDeviceToken) {
         hashedTrustedDeviceToken = crypto
           .createHash('sha256')
@@ -49,13 +50,13 @@ export const authMiddlewares = {
     const authHeader = req.header('Authorization')
 
     if (!authHeader) {
-      return res.status(401).json({ err: 'Authorization header is missing' })
+      throw ApiError('Authorization header is missing', 401)
     }
 
     const accessToken = authHeader.split(' ')[1]
 
     if (!accessToken) {
-      return res.status(401).json({ err: 'Access token is missing' })
+      throw ApiError('Access token is missing', 401)
     }
 
     try {
@@ -66,14 +67,14 @@ export const authMiddlewares = {
       req.user = payload
       next()
     } catch (err) {
-      return res.status(401).json({ err: 'Invalid or expired access token' })
+      throw ApiError('Invalid or expired access token', 401)
     }
   },
   refresh: (req: Request, res: Response, next: NextFunction) => {
     try {
       const refreshToken = req.cookies.refreshToken
       if (!refreshToken) {
-        return res.status(401).json({ err: 'You are not authorized' })
+        throw ApiError('You are not authorized', 401)
       }
       const hashedRefreshToken = crypto
         .createHash('sha256')

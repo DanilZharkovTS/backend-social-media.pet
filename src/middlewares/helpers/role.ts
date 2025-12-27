@@ -7,7 +7,7 @@ export const requiresRole = (role: string) => {
       if (userRole !== role) {
         return res
           .status(403)
-          .json({ err: 'You do not have permission to access this resource' })
+          .json({ message: 'You do not have permission to access this resource' })
       }
       next()
     } catch (err) {

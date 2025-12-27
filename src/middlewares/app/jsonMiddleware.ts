@@ -13,13 +13,13 @@ export const jsonMiddleware = (
   if (methodsWithBody.includes(method)) {
     if (!contentType.includes('application/json')) {
       return res.status(400).json({
-        error: `Content-Type must be application/json for ${method} requests`,
+        message: `Content-Type must be application/json for ${method} requests`,
       })
     }
 
     if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({
-        error: `Request body cannot be empty for ${method} requests`,
+        message: `Request body cannot be empty for ${method} requests`,
       })
     }
   }

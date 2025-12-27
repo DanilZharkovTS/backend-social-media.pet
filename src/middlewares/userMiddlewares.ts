@@ -1,4 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
+import type { updateMyInfoDTO } from '../interfaces/userInterfaces.ts'
+import { ApiError } from '../lib/ApiErrors.ts'
 import {
   validateDeleteUserAsAdmin,
   validateFindUser,
@@ -8,7 +10,6 @@ import {
   validateUpdatePassword,
 } from '../utils/validators/userValidator.ts'
 import { buildUpdateData } from '../utils/helpers/builders/buildUpdateData.ts'
-import type { updateMyInfoDTO } from '../interfaces/userInterfaces.ts'
 
 export const userMiddlewares = {
   validateBirthDate: (req: Request, res: Response, next: NextFunction) => {
@@ -39,12 +40,7 @@ export const userMiddlewares = {
 
     const age = now.getFullYear() - date.getFullYear()
     if (age > 120) {
-      return res.status(400).json([
-        {
-          field: 'birth_date',
-          message: 'Birth date is unrealistic',
-        },
-      ])
+      throw ApiError('Birth date is unrealistic', 400)
     }
 
     next()
@@ -60,7 +56,7 @@ export const userMiddlewares = {
       buildUpdateData.myInfo(validData, fields, values)
 
       if (fields.length === 0 || values.length === 0) {
-        return res.status(400).json({ err: 'No data provided to update' })
+        throw ApiError('No data provided to update', 400)
       }
 
       req.body = { fields, values }
@@ -103,7 +99,7 @@ export const userMiddlewares = {
       const validData = validateFindUser.parse(req.query)
       const search = validData.search ? `%${validData.search}%` : null
 
-      req.querySearch = { search }
+      req.queryMap = { search }
       next()
     } catch (err) {
       next(err)
