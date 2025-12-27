@@ -1,10 +1,11 @@
 import type { NextFunction, Request, Response } from 'express'
+import { buildUpdateCommentData } from '../utils/helpers/builders/buildUpdateCommentData.ts'
+import type { updateCommentMiddlewareDTO } from '../interfaces/commentInterfaces.ts'
+import { ApiError } from '../lib/ApiErrors.ts'
 import {
   validateAddComment,
   validateUpdateComment,
 } from '../utils/validators/commentsValidator.ts'
-import { buildUpdateCommentData } from '../utils/helpers/builders/buildUpdateCommentData.ts'
-import type { updateCommentMiddlewareDTO } from '../interfaces/commentInterfaces.ts'
 
 export const commentMiddlewares = {
   add: (req: Request, res: Response, next: NextFunction) => {
@@ -26,7 +27,7 @@ export const commentMiddlewares = {
       buildUpdateCommentData(validData, fields, values)
 
       if (fields.length === 0 || values.length === 0) {
-        return res.status(400).json({ error: 'No data to update provided' })
+        throw ApiError('No data to update provided', 400)
       }
 
       req.body = { fields: fields, values: values }
