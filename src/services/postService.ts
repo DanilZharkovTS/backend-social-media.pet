@@ -5,6 +5,7 @@ import type {
   paginationDTO,
   updatePostDTO,
 } from '../interfaces/postInterfaces.ts'
+import { ApiError } from '../lib/ApiErrors.ts'
 import { postRepo } from '../repos/postRepo.ts'
 
 export const postService = {
@@ -22,10 +23,12 @@ export const postService = {
   },
   update: async (id: number, data: updatePostDTO, user: TokenPayload) => {
     const post = await postRepo.findById(id)
-    if (post.rows.length === 0) throw new Error('Not found')
+    if (post.rows.length === 0) throw ApiError('Post not found', 404)
 
     const userId = post.rows[0].user_id
-    if (userId !== user.userId) throw new Error('Not your post')
+    if (userId !== user.userId) {
+      throw ApiError('You are not allowed to modify this post', 403)
+    }
 
     const result = await postRepo.update(id, data)
     return {
@@ -34,10 +37,12 @@ export const postService = {
   },
   delete: async (id: number, user: TokenPayload) => {
     const post = await postRepo.findById(id)
-    if (post.rows.length === 0) throw new Error('Not found')
+    if (post.rows.length === 0) throw ApiError('Post not found', 404)
 
     const userId = post.rows[0].user_id
-    if (userId !== user.userId) throw new Error('Not your post')
+    if (userId !== user.userId) {
+      throw ApiError('You are not allowed to delete this post', 403)
+    }
 
     const result = await postRepo.deleteById(id)
     return { deleted: result.rows[0] }
@@ -52,7 +57,7 @@ export const postService = {
   //admin
   deleteAsAdmin: async (postId: number) => {
     const deletedPost = await postRepo.deleteById(postId)
-    if (deletedPost.rows.length === 0) throw new Error('Post is not found')
+    if (deletedPost.rows.length === 0) throw ApiError('Post not found', 404)
 
     return { deleted: deletedPost.rows[0] }
   },

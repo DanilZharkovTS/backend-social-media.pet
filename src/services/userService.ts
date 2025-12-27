@@ -1,6 +1,5 @@
-import bcrypt from 'bcrypt'
-import { userRepo } from '../repos/userRepo.ts'
 import type { TokenPayload } from '../interfaces/authInterfaces.ts'
+import type { paginationDTO } from '../interfaces/postInterfaces.ts'
 import type {
   deleteUserAsAdminDTO,
   dynamicUpdateMyInfo,
@@ -8,9 +7,10 @@ import type {
   updateEmail,
   updatePassword,
 } from '../interfaces/userInterfaces.ts'
+import bcrypt from 'bcrypt'
 import { getSupabaseClient } from '../lib/supabaseClient.ts'
 import { ApiError } from '../lib/ApiErrors.ts'
-import type { paginationDTO } from '../interfaces/postInterfaces.ts'
+import { userRepo } from '../repos/userRepo.ts'
 
 export const userService = {
   //me

@@ -25,9 +25,13 @@ export const errHandler = (
       case '23505':
         return res.status(409).json({ message: 'Duplicate key value' })
       case '23503':
-        return res.status(400).json({ message: 'Referenced entity does not exist' })
+        return res
+          .status(400)
+          .json({ message: 'Referenced entity does not exist' })
       case '23502':
-        return res.status(400).json({ message: `Missing required field: ${err.column}` })
+        return res
+          .status(400)
+          .json({ message: `Missing required field: ${err.column}` })
       case '22P02':
         return res.status(400).json({ message: 'Invalid input syntax' })
     }
@@ -35,6 +39,10 @@ export const errHandler = (
 
   if (err?.status) {
     return res.status(err.status).json({ message: err.message })
+  }
+
+  if (err instanceof SyntaxError && 'body' in err) {
+    return res.status(400).json({ message: 'Invalid JSON format' })
   }
 
   return res.status(500).json({ message: 'Internal server error' })

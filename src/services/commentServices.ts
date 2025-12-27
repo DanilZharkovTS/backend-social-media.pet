@@ -1,12 +1,11 @@
+import type { TokenPayload } from '../interfaces/authInterfaces.ts'
 import type { paginationDTO } from '../interfaces/postInterfaces.ts'
 import type {
   addCommentDTO,
-  deleteCommentDTO,
   updateCommentDTO,
 } from '../interfaces/commentInterfaces.ts'
+import { ApiError } from '../lib/ApiErrors.ts'
 import { commentRepo } from '../repos/commentRepo.ts'
-import { userRepo } from '../repos/userRepo.ts'
-import type { TokenPayload } from '../interfaces/authInterfaces.ts'
 
 export const commentServices = {
   //me
@@ -27,8 +26,10 @@ export const commentServices = {
     user: TokenPayload
   ) => {
     const commentUser = await commentRepo.selectById(commentId)
-    if (user.userId !== commentUser.rows[0].user_id)
-      throw new Error('Not your comment')
+
+    if (user.userId !== commentUser.rows[0].user_id) {
+      throw ApiError('You are not allowed to modify this comment', 403)
+    }
 
     const result = await commentRepo.updateById(commentId, data)
 
@@ -36,8 +37,10 @@ export const commentServices = {
   },
   delete: async (commentId: number, user: TokenPayload) => {
     const commentUser = await commentRepo.selectById(commentId)
-    if (user.userId !== commentUser.rows[0].user_id)
-      throw new Error('Not your comment')
+
+    if (user.userId !== commentUser.rows[0].user_id) {
+      throw ApiError('You are not allowed to delete this comment', 403)
+    }
 
     const result = await commentRepo.deleteById(commentId)
 
@@ -46,7 +49,9 @@ export const commentServices = {
   //admin
   deleteAsAdmin: async (commentId: number) => {
     const commentResult = await commentRepo.deleteById(commentId)
-    if (commentResult.rows.length === 0) throw new Error('Comment is not found')
+    if (commentResult.rows.length === 0) {
+      throw ApiError('Comment is not found', 404)
+    }
 
     return { deleted: commentResult.rows[0] }
   },
