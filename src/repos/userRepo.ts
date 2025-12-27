@@ -28,7 +28,7 @@ export const userRepo = {
   },
   findBySearch: (search: string, pagination: paginationDTO) => {
     return pool.query(
-      `SELECT id, role, name, email FROM users
+      `SELECT id, role, name, email, email_is_verified FROM users
       WHERE ($1::text IS NULL OR
       LOWER(email) LIKE LOWER($1))
       LIMIT $2 OFFSET $3`,
