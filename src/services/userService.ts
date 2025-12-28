@@ -135,10 +135,13 @@ export const userService = {
       data.password,
       adminDb.password
     )
-    if (
-      !isValidPassword ||
-      data.adminPasscode !== process.env.SECRET_ADMIN_PASSCODE
-    ) {
+
+    const isValidAdminPasscode = await bcrypt.compare(
+      data.adminPasscode,
+      process.env.SECRET_ADMIN_PASSCODE
+    )
+
+    if (!isValidPassword || !isValidAdminPasscode) {
       throw ApiError('Password or admin passcode is not valid', 401)
     }
 
