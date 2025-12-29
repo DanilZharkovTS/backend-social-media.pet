@@ -29,8 +29,9 @@ export const authService = {
     const hashedPassword = await bcrypt.hash(data.password, saltRounds)
 
     const userToCreate = {
-      ...data,
+      email: data.email,
       password: hashedPassword,
+      name: data.name,
     }
 
     const createdUserResult = await userRepo.createUser(userToCreate)
@@ -49,20 +50,32 @@ export const authService = {
       'EMAIL_VERIFY'
     )
 
-    const verificationLink = `http://localhost:3000/api/auth/verify-email?emailToken=${rawEmailVerificationToken}`
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?emailToken=${rawEmailVerificationToken}`
+    if (process.env.NODE_ENV === 'dev') {
+      console.log(`
+        📧 EMAIL (DEV MODE)
+        ────────────────────────
+        To: ${createdUser.email}
+        Type: Email verification
+        Link:
+        ${verificationLink}
+        ────────────────────────
+        `)
+    }
+    if (process.env.NODE_ENV === 'prod') {
+      const mailer = getMailer()
 
-    const mailer = getMailer()
-
-    await mailer.sendMail({
-      from: '"My App" <no-reply@myapp.dev>',
-      to: createdUser.email,
-      subject: 'Verify your email',
-      html: `
-      <h2>Email verification</h2>
-      <p>Click the link below:</p>
-      <a href="${verificationLink}">${verificationLink}</a>
-    `,
-    })
+      await mailer.sendMail({
+        from: '"My App" <no-reply@myapp.dev>',
+        to: createdUser.email,
+        subject: 'Verify your email',
+        html: `
+        <h2>Email verification</h2>
+        <p>Click the link below:</p>
+        <a href="${verificationLink}">${verificationLink}</a>
+      `,
+      })
+    }
 
     return {
       user: createdUser,

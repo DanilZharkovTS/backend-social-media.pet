@@ -7,6 +7,8 @@ export const authController = {
       const result = await authService.register(req.body)
       res.status(201).json(result)
     } catch (err) {
+      console.log(err);
+      
       next(err)
     }
   },
