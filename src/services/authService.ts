@@ -14,6 +14,9 @@ import { generateLoginEmailConfirmToken } from '../utils/helpers/auth/loginEmail
 
 export const authService = {
   register: async (data: registerUserDTO) => {
+    const mailer = getMailer()
+    const isProd = process.env.NODE_ENV === 'production'
+
     const existingUserResult = await userRepo.findByEmail(data.email)
     const existingUser = existingUserResult.rows[0]
 
@@ -51,20 +54,7 @@ export const authService = {
     )
 
     const verificationLink = `${process.env.FRONTEND_URL}/verify-email?emailToken=${rawEmailVerificationToken}`
-    if (process.env.NODE_ENV === 'dev') {
-      console.log(`
-        📧 EMAIL (DEV MODE)
-        ────────────────────────
-        To: ${createdUser.email}
-        Type: Email verification
-        Link:
-        ${verificationLink}
-        ────────────────────────
-        `)
-    }
-    if (process.env.NODE_ENV === 'prod') {
-      const mailer = getMailer()
-
+    if (isProd) {
       await mailer.sendMail({
         from: '"My App" <no-reply@myapp.dev>',
         to: createdUser.email,
@@ -75,6 +65,16 @@ export const authService = {
         <a href="${verificationLink}">${verificationLink}</a>
       `,
       })
+    } else {
+      console.log(`
+      📧 EMAIL (DEV MODE)
+      ────────────────────────
+      To: ${createdUser.email}
+      Type: Email verification
+      Link:
+      ${verificationLink}
+      ────────────────────────
+      `)
     }
 
     return {
@@ -83,6 +83,7 @@ export const authService = {
   },
   login: async (data: loginUserDTO, trustedDeviceToken: string) => {
     const mailer = getMailer()
+    const isProd = process.env.NODE_ENV === 'production'
 
     const user = await userRepo.findByEmail(data.email)
     if (user.rows.length == 0) {
@@ -120,16 +121,29 @@ export const authService = {
         'LOGIN_EMAIL_CONFIRM'
       )
 
-      mailer.sendMail({
-        from: '"My App" <no-reply@myapp.dev>',
-        to: dbUser.email,
-        subject: 'Confirm your email',
-        html: `
-      <h2>Login email confirmation</h2>
-      <p>Code to enter is below:</p>
-      <p>${rawLoginEmailConfirmCode}</p>
-    `,
-      })
+      if (isProd) {
+        mailer.sendMail({
+          from: '"My App" <no-reply@myapp.dev>',
+          to: dbUser.email,
+          subject: 'Confirm your email',
+          html: `
+          <h2>Login email confirmation</h2>
+          <p>Code to enter is below:</p>
+          <p>${rawLoginEmailConfirmCode}</p>
+        `,
+        })
+      } else {
+        console.log(`
+          📧 EMAIL (DEV MODE)
+          ────────────────────────────
+          To: ${dbUser.email}
+          Subject: Confirm your email
+
+          Login confirmation code:
+          👉 ${rawLoginEmailConfirmCode}
+          ────────────────────────────
+          `)
+      }
 
       return { loginEmailConfirmToken: rawLoginEmailConfirmToken }
     }
