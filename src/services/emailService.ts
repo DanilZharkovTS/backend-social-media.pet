@@ -102,9 +102,11 @@ export const emailService = {
     data: requestChangeEmailDTO
   ) => {
     const mailer = getMailer()
+    const isProd = process.env.NODE_ENV === 'production'
 
-    if (data.newEmail === user.email)
+    if (data.newEmail === user.email) {
       throw ApiError('New email must be different from current email', 400)
+    }
 
     const existingUserResult = await userRepo.findByEmail(data.newEmail)
     const dbExistingUser = existingUserResult.rows[0]
@@ -126,16 +128,28 @@ export const emailService = {
 
     const emailChangeLink = `http://localhost:3000/api/auth/change-email?emailChangeToken=${rawEmailChangeToken}`
 
-    await mailer.sendMail({
-      from: '"My App" <no-reply@myapp.dev>',
-      to: data.newEmail,
-      subject: 'Email change',
-      html: `
-      <h2>Email change</h2>
-      <p>Click the link below:</p>
-      <a href="${emailChangeLink}">${emailChangeLink}</a>
-    `,
-    })
+    if (isProd) {
+      await mailer.sendMail({
+        from: '"My App" <no-reply@myapp.dev>',
+        to: data.newEmail,
+        subject: 'Email change',
+        html: `
+        <h2>Email change</h2>
+        <p>Click the link below:</p>
+        <a href="${emailChangeLink}">${emailChangeLink}</a>
+      `,
+      })
+    } else {
+      console.log(`
+        📧 EMAIL CHANGE (DEV MODE)
+        ────────────────────────────
+        To: ${data.newEmail}
+
+        Confirmation link:
+        👉 ${emailChangeLink}
+        ────────────────────────────
+        `)
+    }
 
     return { emailChangeLinkWasSent: true }
   },
@@ -155,6 +169,7 @@ export const emailService = {
   },
   forgotPassword: async (data: forgotPasswordDTO) => {
     const mailer = getMailer()
+    const isProd = process.env.NODE_ENV === 'production'
     const message =
       'If an account with this email exists, a reset link has been sent'
 
@@ -179,21 +194,34 @@ export const emailService = {
 
     const resetPasswordLink = `http://localhost:3000/api/auth/reset-password?resetPasswordToken=${rawResetPasswordToken}`
 
-    mailer.sendMail({
-      from: '"My App" <no-reply@myapp.dev>',
-      to: dbUser.email,
-      subject: 'Reset password',
-      html: `
-      <h2> Reset password </h2>
-      <p>Click the link below:</p>
-      <a href="${resetPasswordLink}">${resetPasswordLink}</a>
-    `,
-    })
+    if (isProd) {
+      await mailer.sendMail({
+        from: '"My App" <no-reply@myapp.dev>',
+        to: dbUser.email,
+        subject: 'Reset password',
+        html: `
+        <h2> Reset password </h2>
+        <p>Click the link below:</p>
+        <a href="${resetPasswordLink}">${resetPasswordLink}</a>
+      `,
+      })
+    } else {
+      console.log(`
+        📧 RESET PASSWORD (DEV MODE)
+        ────────────────────────────
+        To: ${dbUser.email}
+
+        Reset password link:
+        👉 ${resetPasswordLink}
+        ────────────────────────────
+        `)
+    }
 
     return { message }
   },
   requestPasswordResetEmail: async (user: TokenPayload) => {
     const mailer = getMailer()
+    const isProd = process.env.NODE_ENV === 'production'
 
     const userResult = await userRepo.findUserById(user.userId)
     if (userResult.rows.length === 0) throw ApiError('User is not found', 404)
@@ -212,16 +240,31 @@ export const emailService = {
 
     const resetPasswordLink = `http://localhost:3000/api/auth/reset-password?resetPasswordToken=${rawResetPasswordToken}`
 
-    mailer.sendMail({
-      from: '"My App" <no-reply@myapp.dev>',
-      to: dbUser.email,
-      subject: 'Reset password',
-      html: `
-      <h2> Reset password </h2>
-      <p>Click the link below:</p>
-      <a href="${resetPasswordLink}">${resetPasswordLink}</a>
-    `,
-    })
+    if (isProd) {
+      mailer.sendMail({
+        from: '"My App" <no-reply@myapp.dev>',
+        to: dbUser.email,
+        subject: 'Reset password',
+        html: `
+        <h2> Reset password </h2>
+        <p>Click the link below:</p>
+        <a href="${resetPasswordLink}">${resetPasswordLink}</a>
+      `,
+      })
+    } else {
+      console.log(`
+        📧 EMAIL (DEV MODE)
+        ────────────────────────────────
+        To: ${dbUser.email}
+        Subject: Reset your password
+
+        Reset password link:
+        👉 ${resetPasswordLink}
+
+        (Email was NOT sent. Dev mode)
+        ────────────────────────────────
+          `)
+    }
 
     return { passwordResetIsSent: true }
   },
