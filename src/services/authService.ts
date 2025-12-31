@@ -100,10 +100,12 @@ export const authService = {
       trustedDeviceToken
     )
 
+    const dbTrusetedDevice = trustedDevice.rows[0]
+
     if (
-      !trustedDevice ||
-      trustedDevice.user_id !== dbUser.id ||
-      new Date() > trustedDevice.expires_at
+      !dbTrusetedDevice ||
+      dbTrusetedDevice.user_id !== dbUser.id ||
+      new Date() > dbTrusetedDevice.expires_at
     ) {
       const {
         rawLoginEmailConfirmToken,

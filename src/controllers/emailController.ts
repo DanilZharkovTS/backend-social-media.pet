@@ -17,13 +17,16 @@ export const emailController = {
   ) => {
     try {
       const result = await emailService.loginEmailConfirm(req.body)
-      if (!req.cookies.trustedDeviceToken) {
-        res.cookie('trustedDeviceToken', result.trustedDeviceToken, {
-          httpOnly: true,
-          sameSite: 'none',
-          secure: true,
-        })
-      }
+      res.cookie('trustedDeviceToken', result.trustedDeviceToken, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      })
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      })
       res.status(200).json(result.logined)
     } catch (err) {
       console.log(err)

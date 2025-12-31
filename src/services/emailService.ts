@@ -64,6 +64,8 @@ export const emailService = {
 
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
+    console.log(rawRefreshToken);
+    
 
     const refreshResult = await authRepo.insertRefreshToken(
       dbUser.id,
