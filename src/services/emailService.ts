@@ -194,7 +194,7 @@ export const emailService = {
       'PASSWORD_RESET'
     )
 
-    const resetPasswordLink = `http://localhost:3000/api/auth/reset-password?resetPasswordToken=${rawResetPasswordToken}`
+    const resetPasswordLink = `http://localhost:3001/auth/reset-password?resetPasswordToken=${rawResetPasswordToken}`
 
     if (isProd) {
       await mailer.sendMail({
@@ -240,7 +240,7 @@ export const emailService = {
       'PASSWORD_RESET'
     )
 
-    const resetPasswordLink = `http://localhost:3000/api/auth/reset-password?resetPasswordToken=${rawResetPasswordToken}`
+    const resetPasswordLink = `http://localhost:3001/auth/reset-password?resetPasswordToken=${rawResetPasswordToken}`
 
     if (isProd) {
       mailer.sendMail({
