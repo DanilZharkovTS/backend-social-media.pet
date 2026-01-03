@@ -106,16 +106,13 @@ export const emailService = {
     const mailer = getMailer()
     const isProd = process.env.NODE_ENV === 'production'
 
-    if (data.newEmail === user.email) {
-      throw ApiError('New email must be different from current email', 400)
-    }
-
     const existingUserResult = await userRepo.findByEmail(data.newEmail)
     const dbExistingUser = existingUserResult.rows[0]
 
     if (dbExistingUser && dbExistingUser.email_is_verified) {
       throw ApiError('This email is already being used', 409)
     }
+
 
     const { rawEmailChangeToken, hashedEmailChangeToken, expiresAt } =
       generateEmailChangeToken()

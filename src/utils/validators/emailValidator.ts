@@ -24,6 +24,7 @@ export const validateLoginEmailConfirm = z.object({
 })
 
 export const validateRequestChangeEmail = z.object({
+  password: passwordSchema,
   newEmail: z.email('Not a valid email'),
 })
 
