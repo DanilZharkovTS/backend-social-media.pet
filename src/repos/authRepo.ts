@@ -89,6 +89,20 @@ export const authRepo = {
       [userId, tokenHash, expiresAt, JSON.stringify({ newEmail }), type]
     )
   },
+  insertAdminDeleteUserToken: (
+    userId: number,
+    token: string,
+    expiresAt: Date,
+    targetUserId: number,
+    type: actionTokenType
+  ) => {
+    return pool.query(
+      `INSERT INTO action_tokens (user_id, token_hash, expires_at, payload, type)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [userId, token, expiresAt, JSON.stringify({ targetUserId }), type]
+    )
+  },
   selectActionTokenByToken: (token: string) => {
     return pool.query(
       `SELECT * FROM action_tokens

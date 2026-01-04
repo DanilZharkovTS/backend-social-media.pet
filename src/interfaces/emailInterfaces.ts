@@ -4,6 +4,7 @@ export type actionTokenType =
   | 'LOGIN_EMAIL_CONFIRM'
   | 'EMAIL_CHANGE'
   | 'INVITE'
+  | 'ADMIN_DELETE_USER'
 
 export interface loginEmailConfirmDTO {
   hashedToken: string
