@@ -11,6 +11,7 @@ export interface loginEmailConfirmDTO {
 }
 
 export interface requestChangeEmailDTO {
+  password: string
   newEmail: string
 }
 

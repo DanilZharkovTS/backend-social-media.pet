@@ -25,7 +25,7 @@ export const authController = {
           secure: true,
         })
       }
-      res.status(200).json(result)
+      res.status(200).json(result.logined)
     } catch (err) {
       console.log(err)
 

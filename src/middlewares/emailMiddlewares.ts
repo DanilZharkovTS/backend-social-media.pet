@@ -57,8 +57,13 @@ export const emailMiddlewares = {
   },
   requestChangeEmail: (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.body = validateRequestChangeEmail.parse(req.body)
+      const data = validateRequestChangeEmail.parse(req.body)
 
+      if (data.newEmail === req.user.email) {
+            throw ApiError('New email must be different from current email', 400)
+          }
+
+      req.body = data
       next()
     } catch (err) {
       next(err)

@@ -64,8 +64,7 @@ export const emailService = {
 
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
-    console.log(rawRefreshToken);
-    
+    console.log(rawRefreshToken)
 
     const refreshResult = await authRepo.insertRefreshToken(
       dbUser.id,
@@ -106,8 +105,12 @@ export const emailService = {
     const mailer = getMailer()
     const isProd = process.env.NODE_ENV === 'production'
 
-    if (data.newEmail === user.email) {
-      throw ApiError('New email must be different from current email', 400)
+    const userResult = await userRepo.findUserById(user.userId)
+    const dbUser = userResult.rows[0]
+
+    const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
+    if (!isValidPassword) {
+      throw ApiError('Password is not right', 400)
     }
 
     const existingUserResult = await userRepo.findByEmail(data.newEmail)
