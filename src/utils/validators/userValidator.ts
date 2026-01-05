@@ -38,5 +38,4 @@ export const validateFindUser = z.object({
 
 export const validateDeleteUserAsAdmin = z.object({
   password: z.string('Password needs to be a string'),
-  adminPasscode: z.string('Admin passcode needs to be a string'),
 })

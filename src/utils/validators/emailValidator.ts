@@ -40,3 +40,7 @@ export const validateResetPasswordBody = z.object({
   newPassword: passwordSchema,
   confirmPassword: z.string('Password confirmation needs to be a string'),
 })
+
+export const validateAdminDeleteUser = z.object({
+  adminDeleteUserToken: z.string('Token needs to be a string')
+})

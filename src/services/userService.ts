@@ -9,8 +9,11 @@ import type {
 } from '../interfaces/userInterfaces.ts'
 import bcrypt from 'bcrypt'
 import { getSupabaseClient } from '../lib/supabaseClient.ts'
+import { getMailer } from '../lib/mailer.ts'
 import { ApiError } from '../lib/ApiErrors.ts'
 import { userRepo } from '../repos/userRepo.ts'
+import { authRepo } from '../repos/authRepo.ts'
+import { generateAdminDeleteUserToken } from '../utils/helpers/auth/adminDeleteUserToken.ts'
 
 export const userService = {
   //me
@@ -126,8 +129,11 @@ export const userService = {
   deleteUserAsAdmin: async (
     admin: TokenPayload,
     data: deleteUserAsAdminDTO,
-    userId: number
+    targetUserId: number
   ) => {
+    const mailer = getMailer()
+    const isProd = process.env.NODE_ENV === 'production'
+
     const adminResult = await userRepo.findUserById(admin.userId)
     const adminDb = adminResult.rows[0]
 
@@ -135,21 +141,46 @@ export const userService = {
       data.password,
       adminDb.password
     )
+    if (!isValidPassword) {
+      throw ApiError('Password is not valid', 401)
+    }
 
-    const isValidAdminPasscode = await bcrypt.compare(
-      data.adminPasscode,
-      process.env.SECRET_ADMIN_PASSCODE
+    const { rawAdminDeleteUserToken, hashedAdminDeleteUserToken, expiresAt } =
+      generateAdminDeleteUserToken()
+
+    await authRepo.insertAdminDeleteUserToken(
+      admin.userId,
+      hashedAdminDeleteUserToken,
+      expiresAt,
+      targetUserId,
+      'ADMIN_DELETE_USER'
     )
 
-    if (!isValidPassword || !isValidAdminPasscode) {
-      throw ApiError('Password or admin passcode is not valid', 401)
+    const adminDeleteUserLink = `http://localhost:3000/api/auth/admin/users/delete/confirm?adminDeleteUserToken=${rawAdminDeleteUserToken}`
+
+    if (isProd) {
+      mailer.sendMail({
+        from: '"My App" <no-reply@myapp.dev>',
+        to: adminDb.email,
+        subject: 'Admin delete user',
+        html: `
+        <h2>Admin delete user</h2>
+        <p>Click the link below:</p>
+        <a href="${adminDeleteUserLink}">${adminDeleteUserLink}</a>
+      `,
+      })
+    } else {
+      console.log(`
+        📧 ADMIN DELETE USER (DEV MODE)
+        ────────────────────────────
+        To: ${adminDb.email}
+
+        Confirmation link:
+        👉 ${adminDeleteUserLink}
+        ────────────────────────────
+        `)
     }
 
-    const userResult = await userRepo.deleteUserById(userId)
-    if (userResult.rows.length === 0) {
-      throw ApiError(`User with id: ${userId} is not found`, 404)
-    }
-
-    return { deletedUserId: userId }
+    return { emailWasSent: true }
   },
 }

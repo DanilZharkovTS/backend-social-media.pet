@@ -20,15 +20,6 @@ router.get(
   userController.findAsAdmin
 )
 
-router.delete(
-  '/:userId/delete/admin',
-  authMiddlewares.verifyAccessToken,
-  requiresRole('admin'),
-  setParamsId(['userId']),
-  userMiddlewares.deleteUserAsAdmin,
-  userController.deleteUserAsAdmin
-)
-
 //me
 
 router.get('/me', authMiddlewares.verifyAccessToken, userController.readMyInfo)
