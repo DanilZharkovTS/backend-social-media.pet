@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import adminRoutes from './admin/adminRotes.ts'
+import adminRoutes from './admin/adminRoutes.ts'
 import userRoutes from './user/userRoutes.ts'
 import postRoutes from './user/postRoutes.ts'
 import authRoutes from './auth/authRoutes.ts'

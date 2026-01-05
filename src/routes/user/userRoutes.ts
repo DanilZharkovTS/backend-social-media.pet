@@ -1,24 +1,11 @@
 import { Router } from 'express'
-import { authMiddlewares } from '../middlewares/authMiddlewares.ts'
-import { userController } from '../controllers/userController.ts'
-import { setParamsId } from '../middlewares/helpers/paramsId.ts'
-import { userMiddlewares } from '../middlewares/userMiddlewares.ts'
-import { upload } from '../lib/uploadMiddleware.ts'
-import { requiresRole } from '../middlewares/helpers/role.ts'
-import { paginate } from '../middlewares/helpers/pagination.ts'
+import { authMiddlewares } from '../../middlewares/authMiddlewares.ts'
+import { userController } from '../../controllers/userController.ts'
+import { setParamsId } from '../../middlewares/helpers/paramsId.ts'
+import { userMiddlewares } from '../../middlewares/userMiddlewares.ts'
+import { upload } from '../../lib/uploadMiddleware.ts'
 
 const router = Router()
-
-//admin
-
-router.get(
-  '/admin',
-  authMiddlewares.verifyAccessToken,
-  requiresRole('admin'),
-  paginate,
-  userMiddlewares.findAsAdmin,
-  userController.findAsAdmin
-)
 
 //me
 

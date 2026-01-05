@@ -46,13 +46,6 @@ router.get(
 
 //admin
 
-router.delete(
-  '/:postId/delete/admin',
-  authMiddlewares.verifyAccessToken,
-  requiresRole('admin'),
-  setParamsId(['postId']),
-  postController.deleteAsAdmin
-)
 
 //comments
 

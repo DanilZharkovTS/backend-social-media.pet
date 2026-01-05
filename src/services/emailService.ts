@@ -98,66 +98,6 @@ export const emailService = {
       logined: { accessToken, user: dbUser },
     }
   },
-  requestChangeEmail: async (
-    user: TokenPayload,
-    data: requestChangeEmailDTO
-  ) => {
-    const mailer = getMailer()
-    const isProd = process.env.NODE_ENV === 'production'
-
-    const userResult = await userRepo.findUserById(user.userId)
-    const dbUser = userResult.rows[0]
-
-    const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
-    if (!isValidPassword) {
-      throw ApiError('Password is not right', 400)
-    }
-
-    const existingUserResult = await userRepo.findByEmail(data.newEmail)
-    const dbExistingUser = existingUserResult.rows[0]
-
-    if (dbExistingUser && dbExistingUser.email_is_verified) {
-      throw ApiError('This email is already being used', 409)
-    }
-
-    const { rawEmailChangeToken, hashedEmailChangeToken, expiresAt } =
-      generateEmailChangeToken()
-
-    await authRepo.insertEmailChangeToken(
-      user.userId,
-      hashedEmailChangeToken,
-      expiresAt,
-      data.newEmail,
-      'EMAIL_CHANGE'
-    )
-
-    const emailChangeLink = `http://localhost:3000/api/auth/change-email?emailChangeToken=${rawEmailChangeToken}`
-
-    if (isProd) {
-      await mailer.sendMail({
-        from: '"My App" <no-reply@myapp.dev>',
-        to: data.newEmail,
-        subject: 'Email change',
-        html: `
-        <h2>Email change</h2>
-        <p>Click the link below:</p>
-        <a href="${emailChangeLink}">${emailChangeLink}</a>
-      `,
-      })
-    } else {
-      console.log(`
-        📧 EMAIL CHANGE (DEV MODE)
-        ────────────────────────────
-        To: ${data.newEmail}
-
-        Confirmation link:
-        👉 ${emailChangeLink}
-        ────────────────────────────
-        `)
-    }
-
-    return { emailChangeLinkWasSent: true }
-  },
   changeEmail: async (token: string) => {
     const tokenResult = await authRepo.selectActionTokenByToken(token)
     const dbToken = tokenResult.rows[0]
