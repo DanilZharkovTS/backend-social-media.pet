@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express'
 import crypto from 'crypto'
 import { ApiError } from '../lib/ApiErrors.ts'
 import {
+  validateAdminDeleteUser,
   validateChangeEmail,
   validateForgotPassword,
   validateLoginEmailConfirm,
@@ -60,8 +61,8 @@ export const emailMiddlewares = {
       const data = validateRequestChangeEmail.parse(req.body)
 
       if (data.newEmail === req.user.email) {
-            throw ApiError('New email must be different from current email', 400)
-          }
+        throw ApiError('New email must be different from current email', 400)
+      }
 
       req.body = data
       next()
@@ -102,6 +103,22 @@ export const emailMiddlewares = {
         .digest('hex')
 
       req.queryMap = { resetPasswordToken: hashedResetPasswordToken }
+
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  adminDeleteUser: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validQuery = validateAdminDeleteUser.parse(req.query)
+
+      const hashedAdminDeleteUserToken = crypto
+        .createHash('sha256')
+        .update(validQuery.adminDeleteUserToken)
+        .digest('hex')
+
+      req.queryMap = { adminDeleteUserToken: hashedAdminDeleteUserToken }
 
       next()
     } catch (err) {

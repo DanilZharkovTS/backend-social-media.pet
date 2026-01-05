@@ -305,4 +305,23 @@ export const emailService = {
 
     return { passwordIsChanged: true }
   },
+  adminDeleteUser: async (token: string) => {
+    const tokenResult = await authRepo.selectActionTokenByToken(token)
+    const dbToken = tokenResult.rows[0]
+
+    if (!dbToken || new Date() > dbToken.expires_at || dbToken.used_at) {
+      throw ApiError('Admin delete user token is invalid or expired', 400)
+    }
+
+    const payload = dbToken.payload
+
+    const userResult = await userRepo.deleteUserById(payload.targetUserId)
+    if (userResult.rows.length === 0) {
+      throw ApiError(`User with id: ${payload.targetUserId} is not found`, 404)
+    }
+
+    await authRepo.revokeActionTokenById(dbToken.id)
+
+    return { userIsDeleted: true }
+  },
 }

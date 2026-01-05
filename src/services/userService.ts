@@ -156,7 +156,7 @@ export const userService = {
       'ADMIN_DELETE_USER'
     )
 
-    const adminDeleteUserLink = `http://localhost:3000/api/auth/admin/delete-user/confirm?emailChangeToken=${rawAdminDeleteUserToken}`
+    const adminDeleteUserLink = `http://localhost:3000/api/auth/admin/users/delete/confirm?adminDeleteUserToken=${rawAdminDeleteUserToken}`
 
     if (isProd) {
       mailer.sendMail({
@@ -180,10 +180,6 @@ export const userService = {
         ────────────────────────────
         `)
     }
-    // const userResult = await userRepo.deleteUserById(userId)
-    // if (userResult.rows.length === 0) {
-    //   throw ApiError(`User with id: ${userId} is not found`, 404)
-    // }
 
     return { emailWasSent: true }
   },
