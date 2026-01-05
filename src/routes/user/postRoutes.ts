@@ -1,12 +1,12 @@
 import Router from 'express'
-import { postController } from '../controllers/postController.ts'
-import { postMiddlewares } from '../middlewares/postMiddlewares.ts'
-import { paginate } from '../middlewares/helpers/pagination.ts'
-import { setParamsId } from '../middlewares/helpers/paramsId.ts'
-import { commentMiddlewares } from '../middlewares/commentMiddlewares.ts'
-import { commentController } from '../controllers/commentController.ts'
-import { authMiddlewares } from '../middlewares/authMiddlewares.ts'
-import { requiresRole } from '../middlewares/helpers/role.ts'
+import { postController } from '../../controllers/postController.ts'
+import { postMiddlewares } from '../../middlewares/postMiddlewares.ts'
+import { paginate } from '../../middlewares/helpers/pagination.ts'
+import { setParamsId } from '../../middlewares/helpers/paramsId.ts'
+import { commentMiddlewares } from '../../middlewares/commentMiddlewares.ts'
+import { commentController } from '../../controllers/commentController.ts'
+import { authMiddlewares } from '../../middlewares/authMiddlewares.ts'
+import { requiresRole } from '../../middlewares/helpers/role.ts'
 
 const router = Router()
 
