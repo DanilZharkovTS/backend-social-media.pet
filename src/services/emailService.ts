@@ -6,6 +6,7 @@ import type {
   requestChangeEmailDTO,
   resetPasswordDTO,
 } from '../interfaces/emailInterfaces.ts'
+import type { deleteUserAsAdminDTO } from '../interfaces/userInterfaces.ts'
 import { getMailer } from '../lib/mailer.ts'
 import { ApiError } from '../lib/ApiErrors.ts'
 import { authRepo } from '../repos/authRepo.ts'
@@ -15,6 +16,7 @@ import { generateEmailChangeToken } from '../utils/helpers/auth/emailChangeToken
 import { generateRefreshToken } from '../utils/helpers/auth/refreshToken.ts'
 import { generateAccessToken } from '../utils/helpers/auth/accessToken.ts'
 import { generateTrustedDeviceToken } from '../utils/helpers/auth/trustedDeviceToken.ts'
+import { generateAdminDeleteUserToken } from '../utils/helpers/auth/adminDeleteUserToken.ts'
 
 export const emailService = {
   verifyEmail: async (token: string) => {
@@ -304,6 +306,63 @@ export const emailService = {
     await authRepo.revokeActionTokenById(dbToken.id)
 
     return { passwordIsChanged: true }
+  },
+  sendAdminDeleteUserEmail: async (
+    admin: TokenPayload,
+    data: deleteUserAsAdminDTO,
+    targetUserId: number
+  ) => {
+    const mailer = getMailer()
+    const isProd = process.env.NODE_ENV === 'production'
+
+    const adminResult = await userRepo.findUserById(admin.userId)
+    const adminDb = adminResult.rows[0]
+
+    const isValidPassword = await bcrypt.compare(
+      data.password,
+      adminDb.password
+    )
+    if (!isValidPassword) {
+      throw ApiError('Password is not valid', 401)
+    }
+
+    const { rawAdminDeleteUserToken, hashedAdminDeleteUserToken, expiresAt } =
+      generateAdminDeleteUserToken()
+
+    await authRepo.insertAdminDeleteUserToken(
+      admin.userId,
+      hashedAdminDeleteUserToken,
+      expiresAt,
+      targetUserId,
+      'ADMIN_DELETE_USER'
+    )
+
+    const adminDeleteUserLink = `http://localhost:3000/api/auth/admin/users/delete/confirm?adminDeleteUserToken=${rawAdminDeleteUserToken}`
+
+    if (isProd) {
+      mailer.sendMail({
+        from: '"My App" <no-reply@myapp.dev>',
+        to: adminDb.email,
+        subject: 'Admin delete user',
+        html: `
+        <h2>Admin delete user</h2>
+        <p>Click the link below:</p>
+        <a href="${adminDeleteUserLink}">${adminDeleteUserLink}</a>
+      `,
+      })
+    } else {
+      console.log(`
+        📧 ADMIN DELETE USER (DEV MODE)
+        ────────────────────────────
+        To: ${adminDb.email}
+
+        Confirmation link:
+        👉 ${adminDeleteUserLink}
+        ────────────────────────────
+        `)
+    }
+
+    return { emailWasSent: true }
   },
   adminDeleteUser: async (token: string) => {
     const tokenResult = await authRepo.selectActionTokenByToken(token)

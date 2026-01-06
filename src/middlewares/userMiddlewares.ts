@@ -2,7 +2,6 @@ import type { NextFunction, Request, Response } from 'express'
 import type { updateMyInfoDTO } from '../interfaces/userInterfaces.ts'
 import { ApiError } from '../lib/ApiErrors.ts'
 import {
-  validateDeleteUserAsAdmin,
   validateFindUser,
   validateUpdateEmail,
   validateUpdateMyAvatar,
@@ -100,16 +99,6 @@ export const userMiddlewares = {
       const search = validData.search ? `%${validData.search}%` : null
 
       req.queryMap = { search }
-      next()
-    } catch (err) {
-      next(err)
-    }
-  },
-
-  deleteUserAsAdmin: (req: Request, res: Response, next: NextFunction) => {
-    try {
-      req.body = validateDeleteUserAsAdmin.parse(req.body)
-
       next()
     } catch (err) {
       next(err)

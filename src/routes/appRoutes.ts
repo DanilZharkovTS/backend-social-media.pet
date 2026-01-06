@@ -1,9 +1,19 @@
 import { Router } from 'express'
-import userRoutes from './userRoutes.ts'
-import postRoutes from './postRoutes.ts'
-import authRoutes from './authRoutes.ts'
+import adminRoutes from './admin/adminRoutes.ts'
+import userRoutes from './user/userRoutes.ts'
+import postRoutes from './user/postRoutes.ts'
+import authRoutes from './auth/authRoutes.ts'
+import { authMiddlewares } from '../middlewares/authMiddlewares.ts'
+import { requiresRole } from '../middlewares/helpers/role.ts'
 
 const router = Router()
+
+router.use(
+  '/admin',
+  authMiddlewares.verifyAccessToken,
+  requiresRole('admin'),
+  adminRoutes
+)
 
 router.use('/users', userRoutes)
 

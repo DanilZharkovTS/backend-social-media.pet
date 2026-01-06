@@ -9,6 +9,7 @@ import {
   validateRequestChangeEmail,
   validateResetPasswordBody,
   validateResetPasswordQuery,
+  validateSendAdminDeleteUserEmail,
   validateVerifyEmail,
 } from '../utils/validators/emailValidator.ts'
 
@@ -103,6 +104,19 @@ export const emailMiddlewares = {
         .digest('hex')
 
       req.queryMap = { resetPasswordToken: hashedResetPasswordToken }
+
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  sendAdminDeleteUserEmail: (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      req.body = validateSendAdminDeleteUserEmail.parse(req.body)
 
       next()
     } catch (err) {
