@@ -1,15 +1,14 @@
-import { authController } from '../../controllers/authController.ts'
 import { Router } from 'express'
+import { requiresRole } from '../../middlewares/helpers/role.ts'
+import { paginate } from '../../middlewares/helpers/pagination.ts'
 import { authMiddlewares } from '../../middlewares/authMiddlewares.ts'
 import { emailController } from '../../controllers/emailController.ts'
 import { emailMiddlewares } from '../../middlewares/emailMiddlewares.ts'
-import { requiresRole } from '../../middlewares/helpers/role.ts'
 import { setParamsId } from '../../middlewares/helpers/paramsId.ts'
 import { userMiddlewares } from '../../middlewares/userMiddlewares.ts'
 import { userController } from '../../controllers/userController.ts'
 import { postController } from '../../controllers/postController.ts'
 import { commentController } from '../../controllers/commentController.ts'
-import { paginate } from '../../middlewares/helpers/pagination.ts'
 
 const router = Router()
 
@@ -17,8 +16,6 @@ const router = Router()
 
 router.get(
   '/users',
-  authMiddlewares.verifyAccessToken,
-  requiresRole('admin'),
   paginate,
   userMiddlewares.findAsAdmin,
   userController.findAsAdmin
@@ -26,17 +23,13 @@ router.get(
 
 router.post(
   '/users/:userId/delete/request',
-  authMiddlewares.verifyAccessToken,
-  requiresRole('admin'),
   setParamsId(['userId']),
-  userMiddlewares.deleteUserAsAdmin,
-  userController.deleteUserAsAdmin
+  emailMiddlewares.sendAdminDeleteUserEmail,
+  emailController.sendAdminDeleteUserEmail
 )
 
 router.post(
   '/users/delete/confirm',
-  authMiddlewares.verifyAccessToken,
-  requiresRole('admin'),
   emailMiddlewares.adminDeleteUser,
   emailController.adminDeleteUser
 )
@@ -45,8 +38,6 @@ router.post(
 
 router.delete(
   '/posts/:postId/delete',
-  authMiddlewares.verifyAccessToken,
-  requiresRole('admin'),
   setParamsId(['postId']),
   postController.deleteAsAdmin
 )
@@ -55,8 +46,6 @@ router.delete(
 
 router.delete(
   '/posts/:postId/comments/:commentId/delete',
-  authMiddlewares.verifyAccessToken,
-  requiresRole('admin'),
   setParamsId(['postId', 'commentId']),
   commentController.deleteAsAdmin
 )

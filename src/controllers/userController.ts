@@ -76,20 +76,4 @@ export const userController = {
       next(err)
     }
   },
-  deleteUserAsAdmin: async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const result = await userService.deleteUserAsAdmin(
-        req.user,
-        req.body,
-        req.paramsMap.userId
-      )
-      res.status(200).json(result)
-    } catch (err) {
-      next(err)
-    }
-  },
 }
