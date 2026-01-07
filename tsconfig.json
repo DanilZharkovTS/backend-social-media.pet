@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
-    "typeRoots": ["src/interfaces", "./node_modules/@types"],
     "baseUrl": "./src",
     "paths": {
-      "*": ["app/*"]
+      "app/*": ["app/*"]
     },
     "esModuleInterop": true,
     "noEmit": true,
