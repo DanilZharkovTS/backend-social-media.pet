@@ -1,5 +1,3 @@
-import bcrypt from 'bcrypt'
-import type { TokenPayload } from '../../interfaces/auth/authInterfaces.ts'
 import type {
   adminDeleteUserTokenDTO,
   changeEmailTokenDTO,
@@ -8,15 +6,7 @@ import type {
   verifyEmailTokenDTO,
 } from '../../interfaces/email/emailInterfaces.ts'
 import { getMailer } from '../../lib/mailer.ts'
-import { ApiError } from '../../lib/ApiErrors.ts'
-import { authRepo } from '../../repos/authRepo.ts'
-import { userRepo } from '../../repos/userRepo.ts'
-import { generateResetPasswordToken } from '../../utils/helpers/auth/resetPasswordToken.ts'
-import { generateEmailChangeToken } from '../../utils/helpers/auth/emailChangeToken.ts'
-import { generateRefreshToken } from '../../utils/helpers/auth/refreshToken.ts'
-import { generateAccessToken } from '../../utils/helpers/auth/accessToken.ts'
-import { generateTrustedDeviceToken } from '../../utils/helpers/auth/trustedDeviceToken.ts'
-import { generateAdminDeleteUserToken } from '../../utils/helpers/auth/adminDeleteUserToken.ts'
+
 
 export const emailService = {
   sendVerificationEmail: async (
