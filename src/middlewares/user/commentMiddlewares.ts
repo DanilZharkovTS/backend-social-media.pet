@@ -1,11 +1,11 @@
 import type { NextFunction, Request, Response } from 'express'
-import { buildUpdateCommentData } from '../utils/helpers/builders/buildUpdateCommentData.ts'
-import type { updateCommentMiddlewareDTO } from '../interfaces/commentInterfaces.ts'
-import { ApiError } from '../lib/ApiErrors.ts'
+import { buildUpdateCommentData } from '../../utils/helpers/builders/buildUpdateCommentData.ts'
+import type { updateCommentMiddlewareDTO } from '../../interfaces/user/commentInterfaces.ts'
+import { ApiError } from '../../lib/ApiErrors.ts'
 import {
   validateAddComment,
   validateUpdateComment,
-} from '../utils/validators/commentsValidator.ts'
+} from '../../utils/validators/commentsValidator.ts'
 
 export const commentMiddlewares = {
   add: (req: Request, res: Response, next: NextFunction) => {

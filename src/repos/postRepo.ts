@@ -4,7 +4,7 @@ import type {
   findPostDTO,
   paginationDTO,
   updatePostDTO,
-} from '../interfaces/postInterfaces.ts'
+} from '../interfaces/user/postInterfaces.ts'
 
 export const postRepo = {
   insert: (id: number, description: string) => {

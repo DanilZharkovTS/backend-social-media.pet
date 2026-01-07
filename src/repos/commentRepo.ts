@@ -1,6 +1,6 @@
-import type { paginationDTO } from '../interfaces/postInterfaces.ts'
+import type { paginationDTO } from '../interfaces/user/postInterfaces.ts'
 import pool from '../pool.ts'
-import type { updateCommentDTO } from '../interfaces/commentInterfaces.ts'
+import type { updateCommentDTO } from '../interfaces/user/commentInterfaces.ts'
 
 export const commentRepo = {
   insert: (content: string, postId: number, userId: number) => {

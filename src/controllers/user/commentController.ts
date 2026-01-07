@@ -1,10 +1,14 @@
 import type { NextFunction, Request, Response } from 'express'
-import { postService } from '../services/postService.ts'
+import { commentServices } from '../../services/user/commentServices.ts'
 
-export const postController = {
+export const commentController = {
   add: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.add(req.body, req.user)
+      const result = await commentServices.add(
+        req.body,
+        req.paramsMap.postId,
+        req.user
+      )
       return res.status(201).json(result)
     } catch (err) {
       next(err)
@@ -12,7 +16,10 @@ export const postController = {
   },
   readAll: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.getAll(req.pagination)
+      const result = await commentServices.getAll(
+        req.paramsMap.postId,
+        req.pagination
+      )
       res.status(200).json(result)
     } catch (err) {
       next(err)
@@ -20,8 +27,8 @@ export const postController = {
   },
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.update(
-        req.paramsMap.postId,
+      const result = await commentServices.update(
+        req.paramsMap.commentId,
         req.body,
         req.user
       )
@@ -32,17 +39,10 @@ export const postController = {
   },
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.delete(req.paramsMap.postId, req.user)
-      res.status(200).json(result)
-    } catch (err) {
-      console.log(err)
-
-      next(err)
-    }
-  },
-  find: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const result = await postService.find(req.queryMap, req.pagination)
+      const result = await commentServices.delete(
+        req.paramsMap.commentId,
+        req.user
+      )
       res.status(200).json(result)
     } catch (err) {
       next(err)
@@ -51,7 +51,9 @@ export const postController = {
   //admin
   deleteAsAdmin: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.deleteAsAdmin(req.paramsMap.postId)
+      const result = await commentServices.deleteAsAdmin(
+        req.paramsMap.commentId
+      )
       res.status(200).json(result)
     } catch (err) {
       next(err)

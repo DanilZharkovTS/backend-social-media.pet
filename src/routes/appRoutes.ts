@@ -3,7 +3,7 @@ import adminRoutes from './admin/adminRoutes.ts'
 import userRoutes from './user/userRoutes.ts'
 import postRoutes from './user/postRoutes.ts'
 import authRoutes from './auth/authRoutes.ts'
-import { authMiddlewares } from '../middlewares/authMiddlewares.ts'
+import { authMiddlewares } from '../middlewares/auth/authMiddlewares.ts'
 import { requiresRole } from '../middlewares/helpers/role.ts'
 
 const router = Router()

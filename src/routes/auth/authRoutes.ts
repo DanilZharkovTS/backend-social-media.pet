@@ -1,8 +1,6 @@
-import { authController } from '../../controllers/authController.ts'
+import { authController } from '../../controllers/auth/authController.ts'
 import { Router } from 'express'
-import { authMiddlewares } from '../../middlewares/authMiddlewares.ts'
-import { emailController } from '../../controllers/emailController.ts'
-import { emailMiddlewares } from '../../middlewares/emailMiddlewares.ts'
+import { authMiddlewares } from '../../middlewares/auth/authMiddlewares.ts'
 
 const router = Router()
 
@@ -10,16 +8,16 @@ router.post('/register', authMiddlewares.register, authController.register)
 
 router.get(
   '/verify-email',
-  emailMiddlewares.verifyEmail,
-  emailController.verifyEmail
+  authMiddlewares.verifyEmail,
+  authController.verifyEmail
 )
 
 router.post('/login', authMiddlewares.login, authController.login)
 
 router.post(
   '/login/email-confirm',
-  emailMiddlewares.loginEmailConfirm,
-  emailController.loginEmailConfirm
+  authMiddlewares.loginEmailConfirm,
+  authController.loginEmailConfirm
 )
 
 router.get('/refresh', authMiddlewares.refresh, authController.refresh)
@@ -27,32 +25,32 @@ router.get('/refresh', authMiddlewares.refresh, authController.refresh)
 router.post(
   '/request-change-email',
   authMiddlewares.verifyAccessToken,
-  emailMiddlewares.requestChangeEmail,
-  emailController.requestChangeEmail
+  authMiddlewares.requestChangeEmail,
+  authController.requestChangeEmail
 )
 
 router.get(
   '/change-email',
-  emailMiddlewares.changeEmail,
-  emailController.changeEmail
+  authMiddlewares.changeEmail,
+  authController.changeEmail
 )
 
 router.post(
   '/forgot-password',
-  emailMiddlewares.forgotPassword,
-  emailController.forgotPassword
+  authMiddlewares.forgotPassword,
+  authController.forgotPassword
 )
 
 router.get(
   '/change-password-email',
   authMiddlewares.verifyAccessToken,
-  emailController.requestPasswordResetEmail
+  authController.requestPasswordResetEmail
 )
 
 router.post(
   '/reset-password',
-  emailMiddlewares.resetPassword,
-  emailController.resetPassword
+  authMiddlewares.resetPassword,
+  authController.resetPassword
 )
 
 router.get('/logout', authMiddlewares.refresh, authController.logout)

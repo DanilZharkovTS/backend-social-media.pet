@@ -1,4 +1,4 @@
-import type { updateMyInfoDTO } from '../../../interfaces/userInterfaces.ts'
+import type { updateMyInfoDTO } from '../../../interfaces/user/userInterfaces.ts'
 
 export const buildUpdateData = {
   myInfo: (

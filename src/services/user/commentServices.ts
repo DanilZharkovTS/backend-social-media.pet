@@ -1,11 +1,11 @@
-import type { TokenPayload } from '../interfaces/authInterfaces.ts'
-import type { paginationDTO } from '../interfaces/postInterfaces.ts'
+import type { TokenPayload } from '../../interfaces/auth/authInterfaces.ts'
+import type { paginationDTO } from '../../interfaces/user/postInterfaces.ts'
 import type {
   addCommentDTO,
   updateCommentDTO,
-} from '../interfaces/commentInterfaces.ts'
-import { ApiError } from '../lib/ApiErrors.ts'
-import { commentRepo } from '../repos/commentRepo.ts'
+} from '../../interfaces/user/commentInterfaces.ts'
+import { ApiError } from '../../lib/ApiErrors.ts'
+import { commentRepo } from '../../repos/commentRepo.ts'
 
 export const commentServices = {
   //me

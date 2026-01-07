@@ -1,14 +1,10 @@
 import type { NextFunction, Request, Response } from 'express'
-import { commentServices } from '../services/commentServices.ts'
+import { postService } from '../../services/user/postService.ts'
 
-export const commentController = {
+export const postController = {
   add: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await commentServices.add(
-        req.body,
-        req.paramsMap.postId,
-        req.user
-      )
+      const result = await postService.add(req.body, req.user)
       return res.status(201).json(result)
     } catch (err) {
       next(err)
@@ -16,10 +12,7 @@ export const commentController = {
   },
   readAll: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await commentServices.getAll(
-        req.paramsMap.postId,
-        req.pagination
-      )
+      const result = await postService.getAll(req.pagination)
       res.status(200).json(result)
     } catch (err) {
       next(err)
@@ -27,8 +20,8 @@ export const commentController = {
   },
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await commentServices.update(
-        req.paramsMap.commentId,
+      const result = await postService.update(
+        req.paramsMap.postId,
         req.body,
         req.user
       )
@@ -39,10 +32,17 @@ export const commentController = {
   },
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await commentServices.delete(
-        req.paramsMap.commentId,
-        req.user
-      )
+      const result = await postService.delete(req.paramsMap.postId, req.user)
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err)
+
+      next(err)
+    }
+  },
+  find: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await postService.find(req.queryMap, req.pagination)
       res.status(200).json(result)
     } catch (err) {
       next(err)
@@ -51,10 +51,10 @@ export const commentController = {
   //admin
   deleteAsAdmin: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await commentServices.deleteAsAdmin(req.paramsMap.commentId)
+      const result = await postService.deleteAsAdmin(req.paramsMap.postId)
       res.status(200).json(result)
     } catch (err) {
       next(err)
     }
-  }
+  },
 }
