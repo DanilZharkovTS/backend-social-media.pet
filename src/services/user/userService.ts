@@ -1,19 +1,19 @@
-import type { TokenPayload } from '../interfaces/authInterfaces.ts'
-import type { paginationDTO } from '../interfaces/postInterfaces.ts'
+import type { TokenPayload } from '../../interfaces/authInterfaces.ts'
+import type { paginationDTO } from '../../interfaces/postInterfaces.ts'
 import type {
   deleteUserAsAdminDTO,
   dynamicUpdateMyInfo,
   updateAvatarUrlDTO,
   updateEmail,
   updatePassword,
-} from '../interfaces/userInterfaces.ts'
+} from '../../interfaces/userInterfaces.ts'
 import bcrypt from 'bcrypt'
-import { getSupabaseClient } from '../lib/supabaseClient.ts'
-import { getMailer } from '../lib/mailer.ts'
-import { ApiError } from '../lib/ApiErrors.ts'
-import { userRepo } from '../repos/userRepo.ts'
-import { authRepo } from '../repos/authRepo.ts'
-import { generateAdminDeleteUserToken } from '../utils/helpers/auth/adminDeleteUserToken.ts'
+import { getSupabaseClient } from '../../lib/supabaseClient.ts'
+import { getMailer } from '../../lib/mailer.ts'
+import { ApiError } from '../../lib/ApiErrors.ts'
+import { userRepo } from '../../repos/userRepo.ts'
+import { authRepo } from '../../repos/authRepo.ts'
+import { generateAdminDeleteUserToken } from '../../utils/helpers/auth/adminDeleteUserToken.ts'
 
 export const userService = {
   //me

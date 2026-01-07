@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { commentServices } from '../services/commentServices.ts'
+import { commentServices } from '../services/user/commentServices.ts'
 
 export const commentController = {
   add: async (req: Request, res: Response, next: NextFunction) => {
@@ -51,10 +51,12 @@ export const commentController = {
   //admin
   deleteAsAdmin: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await commentServices.deleteAsAdmin(req.paramsMap.commentId)
+      const result = await commentServices.deleteAsAdmin(
+        req.paramsMap.commentId
+      )
       res.status(200).json(result)
     } catch (err) {
       next(err)
     }
-  }
+  },
 }

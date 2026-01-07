@@ -1,12 +1,12 @@
-import type { TokenPayload } from '../interfaces/authInterfaces.ts'
+import type { TokenPayload } from '../../interfaces/authInterfaces.ts'
 import type {
   addPostInterface,
   findPostDTO,
   paginationDTO,
   updatePostDTO,
-} from '../interfaces/postInterfaces.ts'
-import { ApiError } from '../lib/ApiErrors.ts'
-import { postRepo } from '../repos/postRepo.ts'
+} from '../../interfaces/postInterfaces.ts'
+import { ApiError } from '../../lib/ApiErrors.ts'
+import { postRepo } from '../../repos/postRepo.ts'
 
 export const postService = {
   //me

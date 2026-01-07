@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { emailService } from '../services/emailService.ts'
+import { emailService } from '../services/email/emailService.ts'
 
 export const emailController = {
   verifyEmail: async (req: Request, res: Response, next: NextFunction) => {

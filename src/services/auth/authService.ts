@@ -1,16 +1,16 @@
 import type {
   loginUserDTO,
   registerUserDTO,
-} from '../interfaces/authInterfaces.ts'
+} from '../../interfaces/authInterfaces.ts'
 import bcrypt from 'bcrypt'
-import { getMailer } from '../lib/mailer.ts'
-import { ApiError } from '../lib/ApiErrors.ts'
-import { userRepo } from '../repos/userRepo.ts'
-import { generateRefreshToken } from '../utils/helpers/auth/refreshToken.ts'
-import { authRepo } from '../repos/authRepo.ts'
-import { generateAccessToken } from '../utils/helpers/auth/accessToken.ts'
-import { generateEmailVerificationToken } from '../utils/helpers/auth/emailVerificationToken.ts'
-import { generateLoginEmailConfirmToken } from '../utils/helpers/auth/loginEmailConfirmToken.ts'
+import { getMailer } from '../../lib/mailer.ts'
+import { ApiError } from '../../lib/ApiErrors.ts'
+import { userRepo } from '../../repos/userRepo.ts'
+import { generateRefreshToken } from '../../utils/helpers/auth/refreshToken.ts'
+import { authRepo } from '../../repos/authRepo.ts'
+import { generateAccessToken } from '../../utils/helpers/auth/accessToken.ts'
+import { generateEmailVerificationToken } from '../../utils/helpers/auth/emailVerificationToken.ts'
+import { generateLoginEmailConfirmToken } from '../../utils/helpers/auth/loginEmailConfirmToken.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
