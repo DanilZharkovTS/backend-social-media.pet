@@ -1,5 +1,5 @@
 import pool from '../pool.ts'
-import type { actionTokenType } from '../interfaces/emailInterfaces.ts'
+import type { actionTokenType } from '../interfaces/auth/authInterfaces.ts'
 
 export const authRepo = {
   insertRefreshToken: (userId: number, token: string, expiresAt: Date) => {

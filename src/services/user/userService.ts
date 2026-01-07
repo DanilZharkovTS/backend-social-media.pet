@@ -1,12 +1,11 @@
-import type { TokenPayload } from '../../interfaces/authInterfaces.ts'
-import type { paginationDTO } from '../../interfaces/postInterfaces.ts'
+import type { TokenPayload } from '../../interfaces/auth/authInterfaces.ts'
+import type { paginationDTO } from '../../interfaces/user/postInterfaces.ts'
 import type {
-  deleteUserAsAdminDTO,
   dynamicUpdateMyInfo,
   updateAvatarUrlDTO,
   updateEmail,
   updatePassword,
-} from '../../interfaces/userInterfaces.ts'
+} from '../../interfaces/user/userInterfaces.ts'
 import bcrypt from 'bcrypt'
 import { getSupabaseClient } from '../../lib/supabaseClient.ts'
 import { getMailer } from '../../lib/mailer.ts'

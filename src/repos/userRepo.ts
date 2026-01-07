@@ -1,7 +1,7 @@
 import pool from '../pool.ts'
-import type { registerUserDTO } from '../interfaces/authInterfaces.ts'
-import type { dynamicUpdateMyInfo } from '../interfaces/userInterfaces.ts'
-import type { paginationDTO } from '../interfaces/postInterfaces.ts'
+import type { registerUserDTO } from '../interfaces/auth/authInterfaces.ts'
+import type { dynamicUpdateMyInfo } from '../interfaces/user/userInterfaces.ts'
+import type { paginationDTO } from '../interfaces/user/postInterfaces.ts'
 
 export const userRepo = {
   createUser: (data: registerUserDTO) => {

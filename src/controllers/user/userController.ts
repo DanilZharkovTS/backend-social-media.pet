@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { userService } from '../services/user/userService.ts'
+import { userService } from '../../services/user/userService.ts'
 
 export const userController = {
   //me

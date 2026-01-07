@@ -1,12 +1,12 @@
 import type { NextFunction, Request, Response } from 'express'
-import type { updatePostDTO } from '../interfaces/postInterfaces.ts'
-import { ApiError } from '../lib/ApiErrors.ts'
+import type { updatePostDTO } from '../../interfaces/user/postInterfaces.ts'
+import { ApiError } from '../../lib/ApiErrors.ts'
 import {
   validateAddPost,
   validateFindPost,
   validateUpdatePost,
-} from '../utils/validators/postValidator.ts'
-import { buildUpdatePostData } from '../utils/helpers/builders/buildUpdatePostData.ts'
+} from '../../utils/validators/postValidator.ts'
+import { buildUpdatePostData } from '../../utils/helpers/builders/buildUpdatePostData.ts'
 
 export const postMiddlewares = {
   add: (req: Request, res: Response, next: NextFunction) => {

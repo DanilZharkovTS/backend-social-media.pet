@@ -1,14 +1,14 @@
 import { Router } from 'express'
 import { requiresRole } from '../../middlewares/helpers/role.ts'
 import { paginate } from '../../middlewares/helpers/pagination.ts'
-import { authMiddlewares } from '../../middlewares/authMiddlewares.ts'
-import { emailController } from '../../controllers/emailController.ts'
-import { emailMiddlewares } from '../../middlewares/emailMiddlewares.ts'
+import { authMiddlewares } from '../../middlewares/auth/authMiddlewares.ts'
 import { setParamsId } from '../../middlewares/helpers/paramsId.ts'
-import { userMiddlewares } from '../../middlewares/userMiddlewares.ts'
-import { userController } from '../../controllers/userController.ts'
-import { postController } from '../../controllers/postController.ts'
-import { commentController } from '../../controllers/commentController.ts'
+import { userMiddlewares } from '../../middlewares/user/userMiddlewares.ts'
+import { userController } from '../../controllers/user/userController.ts'
+import { postController } from '../../controllers/user/postController.ts'
+import { commentController } from '../../controllers/user/commentController.ts'
+import { adminActionsController } from '../../controllers/admin/adminActionsController.ts'
+import { adminActionsMiddlewares } from '../../middlewares/admin/adminActionsMiddlewares.ts'
 
 const router = Router()
 
@@ -24,14 +24,14 @@ router.get(
 router.post(
   '/users/:userId/delete/request',
   setParamsId(['userId']),
-  emailMiddlewares.sendAdminDeleteUserEmail,
-  emailController.sendAdminDeleteUserEmail
+  adminActionsMiddlewares.requestAdminDeleteUser,
+  adminActionsController.requestAdminDeleteUser
 )
 
 router.post(
   '/users/delete/confirm',
-  emailMiddlewares.adminDeleteUser,
-  emailController.adminDeleteUser
+  adminActionsMiddlewares.adminDeleteUserConfirm,
+  adminActionsController.adminDeleteUserConfirm
 )
 
 //posts

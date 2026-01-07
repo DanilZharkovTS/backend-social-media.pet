@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import { authMiddlewares } from '../../middlewares/authMiddlewares.ts'
-import { userController } from '../../controllers/userController.ts'
+import { authMiddlewares } from '../../middlewares/auth/authMiddlewares.ts'
+import { userController } from '../../controllers/user/userController.ts'
 import { setParamsId } from '../../middlewares/helpers/paramsId.ts'
-import { userMiddlewares } from '../../middlewares/userMiddlewares.ts'
+import { userMiddlewares } from '../../middlewares/user/userMiddlewares.ts'
 import { upload } from '../../lib/uploadMiddleware.ts'
 
 const router = Router()
@@ -57,4 +57,3 @@ router.get(
 )
 
 export default router
-

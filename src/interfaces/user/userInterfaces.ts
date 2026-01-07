@@ -22,8 +22,3 @@ export interface updateEmail {
   password: string
   newEmail: string
 }
-
-export interface deleteUserAsAdminDTO {
-  password: string
-  adminPasscode: string
-}

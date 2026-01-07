@@ -1,11 +1,11 @@
 import Router from 'express'
-import { postController } from '../../controllers/postController.ts'
-import { postMiddlewares } from '../../middlewares/postMiddlewares.ts'
+import { postController } from '../../controllers/user/postController.ts'
+import { postMiddlewares } from '../../middlewares/user/postMiddlewares.ts'
 import { paginate } from '../../middlewares/helpers/pagination.ts'
 import { setParamsId } from '../../middlewares/helpers/paramsId.ts'
-import { commentMiddlewares } from '../../middlewares/commentMiddlewares.ts'
-import { commentController } from '../../controllers/commentController.ts'
-import { authMiddlewares } from '../../middlewares/authMiddlewares.ts'
+import { commentMiddlewares } from '../../middlewares/user/commentMiddlewares.ts'
+import { commentController } from '../../controllers/user/commentController.ts'
+import { authMiddlewares } from '../../middlewares/auth/authMiddlewares.ts'
 import { requiresRole } from '../../middlewares/helpers/role.ts'
 
 const router = Router()
@@ -45,7 +45,6 @@ router.get(
 )
 
 //admin
-
 
 //comments
 
