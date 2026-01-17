@@ -19,7 +19,7 @@ export const paymentsRepo = {
     )
   },
   updatePaymentStripeSessionId: (
-    stripeSessionId: number,
+    stripeSessionId: string,
     paymentId: number
   ) => {
     return pool.query(

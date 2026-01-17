@@ -1,4 +1,5 @@
 import 'express'
+import Stripe from 'stripe'
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -20,6 +21,7 @@ declare module 'express-serve-static-core' {
       email: string
       role: string
     }
+    stripeEvent?: Stripe.Event
     hashedRefreshToken?: string
     hashedTrustedDeviceToken?: string
     fileValidationError?: null | string

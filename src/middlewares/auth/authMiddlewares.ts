@@ -40,12 +40,10 @@ export const authMiddlewares = {
       let hashedTrustedDeviceToken: string
 
       if (trustedDeviceToken) {
-        console.log(`MIDDLEWARE BEFORE ${trustedDeviceToken}`)
         hashedTrustedDeviceToken = crypto
           .createHash('sha256')
           .update(trustedDeviceToken)
           .digest('hex')
-        console.log(`MIDDLEWARE AFTER ${hashedTrustedDeviceToken}`)
       }
 
       req.hashedTrustedDeviceToken = hashedTrustedDeviceToken

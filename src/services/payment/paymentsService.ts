@@ -1,3 +1,4 @@
+import Stripe from 'stripe'
 import type { TokenPayload } from '../../interfaces/auth/authInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { stripeService } from './stripeService.ts'
@@ -31,6 +32,6 @@ export const paymentsServices = {
       dbPayment.id
     )
 
-    return { url: session.url}
+    return { url: session.url }
   },
 }

@@ -18,6 +18,6 @@ export const stripeService = {
         'https://glotcms.sgp1.digitaloceanspaces.com/epic/2024/07/360_F_44525362_SdNC1Ldl6vrIur3SkXrYg6Sk1xqCUuAn.jpg',
     })
 
-    return { url: sessionResult.url, sessionId: Number(sessionResult.id) }
+    return { url: sessionResult.url, sessionId: sessionResult.id }
   },
 }

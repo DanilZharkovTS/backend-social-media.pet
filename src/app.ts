@@ -6,8 +6,15 @@ import cookieParser from 'cookie-parser'
 import appRoutes from './routes/appRoutes.ts'
 import { errHandler } from './middlewares/app/errHandler.ts'
 import { jsonMiddleware } from './middlewares/app/jsonMiddleware.ts'
+import { paymentsMiddlewares } from './middlewares/paymentsMiddlewares.ts'
 
 dotenv.config({ path: '../.env' })
+
+Router().post(
+  '/api/payments/webhook',
+  express.raw({ type: 'application/json' }),
+  paymentsMiddlewares.handleWebhook
+)
 
 const app = express()
 const PORT = process.env.PORT || 3000
