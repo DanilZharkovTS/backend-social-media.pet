@@ -1,6 +1,6 @@
-import { getStripe } from '../../lib/stripeClient'
+import { getStripe } from '../../lib/stripeClient.ts'
 
-export const paymentsService = {
+export const stripeService = {
   createCheckoutSession: async (priceId: string, paymentId: number) => {
     const stripe = getStripe()
 
@@ -18,6 +18,6 @@ export const paymentsService = {
         'https://glotcms.sgp1.digitaloceanspaces.com/epic/2024/07/360_F_44525362_SdNC1Ldl6vrIur3SkXrYg6Sk1xqCUuAn.jpg',
     })
 
-    return { url: sessionResult.url, sessionId: sessionResult.id }
+    return { url: sessionResult.url, sessionId: Number(sessionResult.id) }
   },
 }
