@@ -10,6 +10,10 @@ export const paymentsMiddlewares = {
     if (!sign) throw ApiError('Missing Stripe signature', 401)
 
     try {
+      console.log(process.env.STRIPE_WEBHOOK_SIGN);
+      console.log(sign);
+      
+      
       event = Stripe.webhooks.constructEvent(
         req.body,
         sign,

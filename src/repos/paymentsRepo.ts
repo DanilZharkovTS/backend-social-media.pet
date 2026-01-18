@@ -1,3 +1,4 @@
+import Stripe from 'stripe'
 import type {
   paymentCurrency,
   paymentType,
@@ -18,6 +19,13 @@ export const paymentsRepo = {
       [userId, type, amount, currency]
     )
   },
+  findPaymentById: (paymentId: number) => {
+    return pool.query(
+      `SELECT * FROM payments
+      WHERE id = $1`,
+      [paymentId]
+    )
+  },
   updatePaymentStripeSessionId: (
     stripeSessionId: string,
     paymentId: number
@@ -27,6 +35,18 @@ export const paymentsRepo = {
       SET stripe_session_id = $1
       WHERE id = $2`,
       [stripeSessionId, paymentId]
+    )
+  },
+  updatePaymentToCompleted: (
+    stripe_payment_intent_id: string,
+    paymentId: number
+  ) => {
+    return pool.query(
+      `UPDATE payments 
+      SET status = $1, stripe_payment_intent_id = $2, paid_at = NOW()
+      WHERE id = $3
+      RETURNING *`,
+      ['paid', stripe_payment_intent_id, paymentId]
     )
   },
 }

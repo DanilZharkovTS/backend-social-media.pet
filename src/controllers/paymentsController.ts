@@ -10,4 +10,16 @@ export const paymentsController = {
       next(err)
     }
   },
+  handleWebhook: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+          console.log('WEBHOOK CONTROLLER HIT');
+
+      const result = await paymentsServices.handleWebhook(req.stripeEvent)
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err);
+      
+      next(err)
+    }
+  }
 }

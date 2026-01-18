@@ -44,6 +44,15 @@ export const userRepo = {
       [value, userId]
     )
   },
+  updateCheckmarkById: (value: boolean, userId: number) => {
+    return pool.query(
+      `UPDATE users 
+      SET has_checkmark = $1
+      WHERE id = $2`,
+      [value,
+      userId]
+    )
+  },
   updateMyInfoById: (userId: number, data: dynamicUpdateMyInfo) => {
     return pool.query(
       `UPDATE users
