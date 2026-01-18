@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express"
-import { adminActionsService } from "../../services/admin/adminActionsService.ts"
+import { adminActionsService } from "../services/admin/adminActionsService.ts"
 
 export const adminActionsController = {
   requestAdminDeleteUser: async (
