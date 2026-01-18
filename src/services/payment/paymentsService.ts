@@ -11,7 +11,7 @@ export const paymentsServices = {
     const userResult = await userRepo.findUserById(user.userId)
     const dbUser = userResult.rows[0]
 
-    if (dbUser.hasCheckmark) {
+    if (dbUser.has_checkmark) {
       throw ApiError('Checkmark already active', 409)
     }
 
