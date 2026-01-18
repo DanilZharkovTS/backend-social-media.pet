@@ -1,4 +1,4 @@
-import { authController } from '../../controllers/auth/authController.ts'
+import { authController } from '../../controllers/authController.ts'
 import { Router } from 'express'
 import { authMiddlewares } from '../../middlewares/auth/authMiddlewares.ts'
 

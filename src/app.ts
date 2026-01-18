@@ -1,16 +1,25 @@
-import express, { Router } from 'express'
+import type { Request, Response } from 'express'
+import express from 'express'
 import cors from 'cors'
-import type { NextFunction, Request, Response } from 'express'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
-import appRoutes from './routes/appRoutes.ts'
 import { errHandler } from './middlewares/app/errHandler.ts'
 import { jsonMiddleware } from './middlewares/app/jsonMiddleware.ts'
+import appRoutes from './routes/appRoutes.ts'
+import { paymentsMiddlewares } from './middlewares/paymentsMiddlewares.ts'
+import { paymentsController } from './controllers/paymentsController.ts'
 
 dotenv.config({ path: '../.env' })
 
 const app = express()
 const PORT = process.env.PORT || 3000
+
+app.post(
+  '/api/payments/webhook',
+  express.raw({ type: 'application/json' }),
+  paymentsMiddlewares.handleWebhook,
+  paymentsController.handleWebhook
+)
 
 app.use(
   cors({

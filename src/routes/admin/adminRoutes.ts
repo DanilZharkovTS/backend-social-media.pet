@@ -1,13 +1,11 @@
 import { Router } from 'express'
-import { requiresRole } from '../../middlewares/helpers/role.ts'
 import { paginate } from '../../middlewares/helpers/pagination.ts'
-import { authMiddlewares } from '../../middlewares/auth/authMiddlewares.ts'
 import { setParamsId } from '../../middlewares/helpers/paramsId.ts'
 import { userMiddlewares } from '../../middlewares/user/userMiddlewares.ts'
 import { userController } from '../../controllers/user/userController.ts'
 import { postController } from '../../controllers/user/postController.ts'
 import { commentController } from '../../controllers/user/commentController.ts'
-import { adminActionsController } from '../../controllers/admin/adminActionsController.ts'
+import { adminActionsController } from '../../controllers/adminActionsController.ts'
 import { adminActionsMiddlewares } from '../../middlewares/admin/adminActionsMiddlewares.ts'
 
 const router = Router()
