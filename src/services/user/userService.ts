@@ -40,11 +40,30 @@ export const userService = {
   readMyInfo: async (user: TokenPayload) => {
     const userResult = await userRepo.findUserById(user.userId)
 
-    const { id, role, email, name, bio, birth_date, created_at, avatar_url } =
-      userResult.rows[0]
+    const {
+      id,
+      role,
+      email,
+      name,
+      bio,
+      birth_date,
+      created_at,
+      avatar_url,
+      has_checkmark,
+    } = userResult.rows[0]
 
     return {
-      info: { id, role, email, name, bio, birth_date, created_at, avatar_url },
+      info: {
+        id,
+        role,
+        email,
+        name,
+        bio,
+        birth_date,
+        created_at,
+        avatar_url,
+        has_checkmark,
+      },
     }
   },
   updateMyInfo: async (user: TokenPayload, data: dynamicUpdateMyInfo) => {

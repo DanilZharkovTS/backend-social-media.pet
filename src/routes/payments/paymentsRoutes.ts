@@ -5,7 +5,7 @@ import { paymentsMiddlewares } from "../../middlewares/paymentsMiddlewares.ts";
 
 const router = Router()
 
-router.post('/checkout', authMiddlewares.verifyAccessToken, paymentsController.startCheckout)
+router.get('/checkout', authMiddlewares.verifyAccessToken, paymentsController.startCheckout)
 
 router.post('/webhook', paymentsMiddlewares.handleWebhook)
 

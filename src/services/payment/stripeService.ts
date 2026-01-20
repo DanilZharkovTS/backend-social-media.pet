@@ -15,7 +15,7 @@ export const stripeService = {
       ],
       metadata: { paymentId },
       success_url:
-        'https://glotcms.sgp1.digitaloceanspaces.com/epic/2024/07/360_F_44525362_SdNC1Ldl6vrIur3SkXrYg6Sk1xqCUuAn.jpg',
+        `${process.env.FRONTEND_URL}/checkout/success?type=checkmark`,
     })
 
     return { url: sessionResult.url, sessionId: sessionResult.id }
