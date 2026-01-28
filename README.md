@@ -1,1 +1,1 @@
-*This is a backend part of mini social media*
+*This is a backend part of my social media called flock*
