@@ -9,7 +9,7 @@ import appRoutes from './routes/appRoutes.ts'
 import { paymentsMiddlewares } from './middlewares/paymentsMiddlewares.ts'
 import { paymentsController } from './controllers/paymentsController.ts'
 
-dotenv.config({ path: '../.env' })
+dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3000
