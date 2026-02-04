@@ -15,10 +15,11 @@
     "nodemailer": "^7.0.11",
     "pg": "^8.16.3",
     "stripe": "^20.1.2",
+    "tsx": "^4.21.0",
     "zod": "^4.1.12"
   },
   "scripts": {
-    "dev": "npx nodemon app.ts"
+    "dev": "tsx watch src/app.ts"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
