@@ -121,7 +121,11 @@ export const authService = {
 
       await emailService.sendLoginEmailConfirmCode(dbUser.email, tokenData)
 
-      return { logined: tokenData.rawLoginEmailConfirmToken }
+      return {
+        logined: {
+          loginEmailConfirmToken: tokenData.rawLoginEmailConfirmToken,
+        },
+      }
     }
 
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
