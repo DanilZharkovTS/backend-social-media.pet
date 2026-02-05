@@ -4,7 +4,7 @@ import { orderService } from '../services/payment/orderService.ts'
 export const orderController = {
   startCheckout: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await orderService.startCheckout(req.user)
+      const result = await orderService.startCheckout(req.user, req.body)
       res.status(200).json(result)
     } catch (err) {
       next(err)
@@ -12,14 +12,14 @@ export const orderController = {
   },
   handleWebhook: async (req: Request, res: Response, next: NextFunction) => {
     try {
-          console.log('WEBHOOK CONTROLLER HIT');
+      console.log('WEBHOOK CONTROLLER HIT')
 
       const result = await orderService.handleWebhook(req.stripeEvent)
       res.status(200).json(result)
     } catch (err) {
-      console.log(err);
-      
+      console.log(err)
+
       next(err)
     }
-  }
+  },
 }

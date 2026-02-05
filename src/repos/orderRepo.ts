@@ -1,13 +1,13 @@
 import type {
   paymentCurrency,
-  paymentType,
+  orderType,
 } from '../interfaces/payments/paymentsInterfaces.ts'
 import pool from '../pool.ts'
 
 export const orderRepo = {
   insertOrder: (
     userId: number,
-    type: paymentType,
+    type: orderType,
     amount: number,
     currency: paymentCurrency
   ) => {
