@@ -7,7 +7,7 @@ import { errHandler } from './middlewares/app/errHandler.ts'
 import { jsonMiddleware } from './middlewares/app/jsonMiddleware.ts'
 import appRoutes from './routes/appRoutes.ts'
 import { paymentsMiddlewares } from './middlewares/paymentsMiddlewares.ts'
-import { paymentsController } from './controllers/paymentsController.ts'
+import { orderController } from './controllers/orderController.ts'
 
 dotenv.config()
 
@@ -18,7 +18,7 @@ app.post(
   '/api/payments/webhook',
   express.raw({ type: 'application/json' }),
   paymentsMiddlewares.handleWebhook,
-  paymentsController.handleWebhook
+  orderController.handleWebhook
 )
 
 app.use(

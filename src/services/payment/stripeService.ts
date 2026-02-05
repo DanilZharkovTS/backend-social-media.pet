@@ -1,7 +1,7 @@
 import { getStripe } from '../../lib/stripeClient.ts'
 
 export const stripeService = {
-  createCheckoutSession: async (priceId: string, paymentId: number) => {
+  createOneTimeCheckoutSession: async (priceId: string, orderId: number) => {
     const stripe = getStripe()
 
     const sessionResult = await stripe.checkout.sessions.create({
@@ -13,9 +13,9 @@ export const stripeService = {
           quantity: 1,
         },
       ],
-      metadata: { paymentId },
-      success_url:
-        `${process.env.FRONTEND_URL}/checkout/success?type=checkmark`,
+      metadata: { orderId },
+      success_url: `${process.env.FRONTEND_URL}/checkout/success?type=checkmark`,
+      cancel_url: `${process.env.FRONTEND_URL}/profile`,
     })
 
     return { url: sessionResult.url, sessionId: sessionResult.id }

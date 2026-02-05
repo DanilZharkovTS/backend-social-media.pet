@@ -3,10 +3,10 @@ import type { TokenPayload } from '../../interfaces/auth/authInterfaces.ts'
 import type { paymentType } from '../../interfaces/payments/paymentsInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { stripeService } from './stripeService.ts'
-import { paymentsRepo } from '../../repos/paymentsRepo.ts'
+import { orderRepo } from '../../repos/orderRepo.ts'
 import { userRepo } from '../../repos/userRepo.ts'
 
-export const paymentsServices = {
+export const orderService = {
   startCheckout: async (user: TokenPayload) => {
     const userResult = await userRepo.findUserById(user.userId)
     const dbUser = userResult.rows[0]
@@ -15,22 +15,22 @@ export const paymentsServices = {
       throw ApiError('Checkmark already active', 409)
     }
 
-    const paymentResult = await paymentsRepo.insertPayment(
+    const orderResult = await orderRepo.insertOrder(
       user.userId,
       'checkmark',
       1,
       'usd'
     )
-    const dbPayment = paymentResult.rows[0]
+    const dbOrder = orderResult.rows[0]
 
-    const session = await stripeService.createCheckoutSession(
+    const session = await stripeService.createOneTimeCheckoutSession(
       process.env.STRIPE_CHECKMARK_PRICE_ID,
-      dbPayment.id
+      dbOrder.id
     )
 
-    await paymentsRepo.updatePaymentStripeSessionId(
+    await orderRepo.updateOrderStripeSessionId(
       session.sessionId,
-      dbPayment.id
+      dbOrder.id
     )
 
     return { url: session.url }
@@ -40,7 +40,7 @@ export const paymentsServices = {
 
     switch (event.type) {
       case 'checkout.session.completed':
-        await paymentsServices.handleCheckoutCompleted(event)
+        await orderService.handleCheckoutCompleted(event)
         return { checkmark: true }
     }
   },
@@ -52,21 +52,21 @@ export const paymentsServices = {
       throw ApiError('Payment intent is missing in checkout session', 400)
     }
 
-    const paymentId = Number(session.metadata.paymentId)
+    const orderId = Number(session.metadata.orderId)
 
-    const paymentResult = await paymentsRepo.findPaymentById(paymentId)
-    const dbPayment = paymentResult.rows[0]
+    const orderResult = await orderRepo.findOrderById(orderId)
+    const dbOrder = orderResult.rows[0]
 
-    if (!dbPayment) throw ApiError(`Payment #${paymentId} was not found`, 404)
+    if (!dbOrder) throw ApiError(`Payment #${orderId} was not found`, 404)
 
-    switch (dbPayment.type as paymentType) {
+    switch (dbOrder.type as paymentType) {
       case 'checkmark':
-        await paymentsRepo.updatePaymentToCompleted(
+        await orderRepo.updateOrderToCompleted(
           String(session.payment_intent),
-          paymentId
+          orderId
         )
 
-        await userRepo.updateCheckmarkById(true, dbPayment.user_id)
+        await userRepo.updateCheckmarkById(true, dbOrder.user_id)
         break
     }
   },

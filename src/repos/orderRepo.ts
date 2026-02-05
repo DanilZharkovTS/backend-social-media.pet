@@ -1,52 +1,51 @@
-import Stripe from 'stripe'
 import type {
   paymentCurrency,
   paymentType,
 } from '../interfaces/payments/paymentsInterfaces.ts'
 import pool from '../pool.ts'
 
-export const paymentsRepo = {
-  insertPayment: (
+export const orderRepo = {
+  insertOrder: (
     userId: number,
     type: paymentType,
     amount: number,
     currency: paymentCurrency
   ) => {
     return pool.query(
-      `INSERT INTO payments (user_id, type, amount, currency)
+      `INSERT INTO orders (user_id, type, amount, currency)
           VALUES ($1, $2, $3, $4)
           RETURNING *`,
       [userId, type, amount, currency]
     )
   },
-  findPaymentById: (paymentId: number) => {
+  findOrderById: (orderId: number) => {
     return pool.query(
-      `SELECT * FROM payments
+      `SELECT * FROM orders
       WHERE id = $1`,
-      [paymentId]
+      [orderId]
     )
   },
-  updatePaymentStripeSessionId: (
+  updateOrderStripeSessionId: (
     stripeSessionId: string,
-    paymentId: number
+    orderId: number
   ) => {
     return pool.query(
-      `UPDATE payments
+      `UPDATE orders
       SET stripe_session_id = $1
       WHERE id = $2`,
-      [stripeSessionId, paymentId]
+      [stripeSessionId, orderId]
     )
   },
-  updatePaymentToCompleted: (
+  updateOrderToCompleted: (
     stripe_payment_intent_id: string,
-    paymentId: number
+    orderId: number
   ) => {
     return pool.query(
-      `UPDATE payments 
+      `UPDATE orders 
       SET status = $1, stripe_payment_intent_id = $2, paid_at = NOW()
       WHERE id = $3
       RETURNING *`,
-      ['paid', stripe_payment_intent_id, paymentId]
+      ['paid', stripe_payment_intent_id, orderId]
     )
   },
 }
