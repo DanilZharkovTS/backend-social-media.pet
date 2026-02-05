@@ -3,11 +3,12 @@ import type { TokenPayload } from '../../interfaces/auth/authInterfaces.ts'
 import type {
   checkoutDTO,
   orderType,
-} from '../../interfaces/payments/paymentsInterfaces.ts'
+} from '../../interfaces/payments/orderInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { stripeService } from './stripeService.ts'
 import { orderRepo } from '../../repos/orderRepo.ts'
 import { userRepo } from '../../repos/userRepo.ts'
+import { subscriptionPrices } from '../../cfg/stripePrices.ts'
 
 export const orderService = {
   startCheckout: async (user: TokenPayload, data: checkoutDTO) => {
@@ -17,8 +18,10 @@ export const orderService = {
         return result
       }
 
-      case 'SUBSCRIPTION':
-        break
+      case 'SUBSCRIPTION': {
+        const result = await orderService.handleSubscriptionCheckout(user, data)
+        return result
+      }
     }
   },
 
@@ -55,6 +58,56 @@ export const orderService = {
         )
 
         return { url: session.url }
+      }
+    }
+  },
+
+  handleSubscriptionCheckout: async (user: TokenPayload, data: checkoutDTO) => {
+    const userResult = await userRepo.findUserById(user.userId)
+    const dbUser = userResult.rows[0]
+
+    if (!dbUser) {
+      throw ApiError('User not found', 404)
+    }
+
+    switch (data.product) {
+      case 'checkmark': {
+        if (dbUser.has_checkmark) {
+          throw ApiError('Checkmark already active', 409)
+        }
+
+        const validPlan = subscriptionPrices[data.plan]
+        if (!validPlan) {
+          throw ApiError(`Plan "${data.plan}" is not available`, 400)
+        }
+
+        const validPeriod = validPlan[data.period]
+        if (!validPeriod) {
+          throw ApiError(
+            `Period "${data.period}" is not available for plan "${data.plan}"`,
+            400
+          )
+        }
+
+        const orderResult = await orderRepo.addSubscriptionOrder(
+          user.userId,
+          'checkmark',
+          1,
+          'usd',
+          data.plan,
+          data.period
+        )
+        const dbOrder = orderResult.rows[0]
+
+        const { checkoutUrl, sessionId } =
+          await stripeService.createSubscriptionCheckoutSession(
+            validPeriod.priceId,
+            dbOrder.id
+          )
+
+        await orderRepo.updateOrderStripeSessionId(sessionId, dbOrder.id)
+
+        return { checkoutUrl }
       }
     }
   },

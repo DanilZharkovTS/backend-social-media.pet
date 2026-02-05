@@ -1,7 +1,9 @@
 import type {
   paymentCurrency,
   orderType,
-} from '../interfaces/payments/paymentsInterfaces.ts'
+  subscriptionPlan,
+  subscriptionPeriod,
+} from '../interfaces/payments/orderInterfaces.ts'
 import pool from '../pool.ts'
 
 export const orderRepo = {
@@ -18,6 +20,21 @@ export const orderRepo = {
       [userId, type, amount, currency]
     )
   },
+  addSubscriptionOrder: (
+    userId: number,
+    type: orderType,
+    amount: number,
+    currency: paymentCurrency,
+    plan: subscriptionPlan,
+    period: subscriptionPeriod
+  ) => {
+    return pool.query(
+      `INSERT INTO orders (user_id, type, amount, currency, subscription_plan, subscription_period)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING *`,
+      [userId, type, amount, currency, plan, period]
+    )
+  },
   findOrderById: (orderId: number) => {
     return pool.query(
       `SELECT * FROM orders
@@ -25,10 +42,7 @@ export const orderRepo = {
       [orderId]
     )
   },
-  updateOrderStripeSessionId: (
-    stripeSessionId: string,
-    orderId: number
-  ) => {
+  updateOrderStripeSessionId: (stripeSessionId: string, orderId: number) => {
     return pool.query(
       `UPDATE orders
       SET stripe_session_id = $1

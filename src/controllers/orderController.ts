@@ -7,6 +7,7 @@ export const orderController = {
       const result = await orderService.startCheckout(req.user, req.body)
       res.status(200).json(result)
     } catch (err) {
+      console.log(err);
       next(err)
     }
   },
