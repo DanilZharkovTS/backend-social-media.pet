@@ -1,8 +1,10 @@
+import Stripe from 'stripe'
 import type {
   paymentCurrency,
   orderType,
   subscriptionPlan,
   subscriptionPeriod,
+  orderBillingType,
 } from '../interfaces/payments/orderInterfaces.ts'
 import pool from '../pool.ts'
 
@@ -14,10 +16,10 @@ export const orderRepo = {
     currency: paymentCurrency
   ) => {
     return pool.query(
-      `INSERT INTO orders (user_id, type, amount, currency)
-          VALUES ($1, $2, $3, $4)
-          RETURNING *`,
-      [userId, type, amount, currency]
+      `INSERT INTO orders (user_id, type, amount, currency, billing_type)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [userId, type, amount, currency, 'ONE_TIME']
     )
   },
   addSubscriptionOrder: (
@@ -29,10 +31,10 @@ export const orderRepo = {
     period: subscriptionPeriod
   ) => {
     return pool.query(
-      `INSERT INTO orders (user_id, type, amount, currency, subscription_plan, subscription_period)
-          VALUES ($1, $2, $3, $4, $5, $6)
-          RETURNING *`,
-      [userId, type, amount, currency, plan, period]
+      `INSERT INTO orders (user_id, type, amount, currency, subscription_plan, subscription_period, billing_type)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *`,
+      [userId, type, amount, currency, plan, period, 'SUBSCRIPTION']
     )
   },
   findOrderById: (orderId: number) => {
@@ -50,7 +52,7 @@ export const orderRepo = {
       [stripeSessionId, orderId]
     )
   },
-  updateOrderToCompleted: (
+  updateOneTimeOrderToCompleted: (
     stripe_payment_intent_id: string,
     orderId: number
   ) => {
@@ -60,6 +62,18 @@ export const orderRepo = {
       WHERE id = $3
       RETURNING *`,
       ['paid', stripe_payment_intent_id, orderId]
+    )
+  },
+  updateSubscriptionOrderToCompleted: (
+    stripeSubscriptionId: string | Stripe.Subscription,
+    orderId: number
+  ) => {
+    return pool.query(
+      `UPDATE orders 
+      SET status = $1, paid_at = NOW(), stripe_subscription_id = $2
+      WHERE id = $3
+      RETURNING *`,
+      ['paid', stripeSubscriptionId, orderId]
     )
   },
 }

@@ -2,6 +2,8 @@ import Stripe from 'stripe'
 import type { TokenPayload } from '../../interfaces/auth/authInterfaces.ts'
 import type {
   checkoutDTO,
+  Order,
+  orderBillingType,
   orderType,
 } from '../../interfaces/payments/orderInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
@@ -57,7 +59,7 @@ export const orderService = {
           dbOrder.id
         )
 
-        return { url: session.url }
+        return { checkoutUrl: session.url }
       }
     }
   },
@@ -126,9 +128,6 @@ export const orderService = {
     console.log('HANDLE CHECKOUT COMPLETED START')
 
     const session = event.data.object as Stripe.Checkout.Session
-    if (!session.payment_intent) {
-      throw ApiError('Payment intent is missing in checkout session', 400)
-    }
 
     const orderId = Number(session.metadata.orderId)
 
@@ -137,14 +136,48 @@ export const orderService = {
 
     if (!dbOrder) throw ApiError(`Payment #${orderId} was not found`, 404)
 
-    switch (dbOrder.type as orderType) {
-      case 'checkmark':
-        await orderRepo.updateOrderToCompleted(
+    switch (dbOrder.billing_type) {
+      case 'ONE_TIME':
+        await orderService.processOneTimeOrder(dbOrder, session)
+        break
+
+      case 'SUBSCRIPTION':
+        await orderService.processSubscriptionOrder(dbOrder, session)
+        break
+    }
+  },
+  processOneTimeOrder: async (
+    order: Order,
+    session: Stripe.Checkout.Session
+  ) => {
+    if (!session.payment_intent) {
+      console.error('Payment intend is missing')
+      throw ApiError('Payment intend is missing', 400)
+    }
+
+    switch (order.type) {
+      case 'checkmark': {
+        await orderRepo.updateOneTimeOrderToCompleted(
           String(session.payment_intent),
-          orderId
+          order.id
         )
 
-        await userRepo.updateCheckmarkById(true, dbOrder.user_id)
+        await userRepo.updateCheckmarkById(true, order.user_id)
+        return
+      }
+    }
+  },
+  processSubscriptionOrder: async (
+    order: Order,
+    session: Stripe.Checkout.Session
+  ) => {
+    switch (order.type) {
+      case 'checkmark':
+        await orderRepo.updateSubscriptionOrderToCompleted(
+          session.subscription,
+          order.id
+        )
+
         break
     }
   },
