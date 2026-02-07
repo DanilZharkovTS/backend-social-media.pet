@@ -3,8 +3,8 @@ import { orderRepo } from '../../repos/billing/orderRepo'
 import { subscriptionRepo } from '../../repos/billing/subscriptionRepo'
 import { ApiError } from '../../lib/ApiErrors'
 import { Order } from '../../interfaces/billing/orderInterfaces'
-import { userService } from '../user/userService'
 import { userRepo } from '../../repos/userRepo'
+import { Subscription } from '../../interfaces/billing/subscriptionInterfaces'
 
 export const subscriptionService = {
   handleInvoicePaymentSucceeded: async (event: Stripe.Event) => {
@@ -13,11 +13,12 @@ export const subscriptionService = {
     const invoice = event.data.object as Stripe.Invoice
     const subscriptionId =
       invoice.lines.data[0].parent.subscription_item_details.subscription
+
     const subscriptionResult =
       await subscriptionRepo.findSubscriptionByStripeSubscriptionId(
         subscriptionId
       )
-    const dbSubscription = subscriptionResult.rows[0]
+    const dbSubscription: Subscription = subscriptionResult.rows[0]
 
     if (!dbSubscription) {
       console.log('SUBSCRIPTION CREATION STARTED ---------')
@@ -50,6 +51,12 @@ export const subscriptionService = {
 
       return
     }
-    
+
+    await subscriptionRepo.updateSubscriptionPeriod(
+      invoice.period_start,
+      invoice.period_end,
+      dbSubscription.id
+    )
+    console.log('SUBSCRIPTION PERIOD WAS UPDATED ----------')
   },
 }

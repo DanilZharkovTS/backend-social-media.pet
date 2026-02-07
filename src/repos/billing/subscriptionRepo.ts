@@ -37,4 +37,16 @@ export const subscriptionRepo = {
       ]
     )
   },
+  updateSubscriptionPeriod: (
+    currentPeriodStart: number,
+    currentPeriodEnd: number,
+    subscriptionId: number
+  ) => {
+    return pool.query(
+      `UPDATE subscriptions
+      SET current_period_start = to_timestamp($1), current_period_end = to_timestamp($2), updated_at = NOW()
+      WHERE id = $3`,
+      [currentPeriodStart, currentPeriodEnd, subscriptionId]
+    )
+  },
 }
