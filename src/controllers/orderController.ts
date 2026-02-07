@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { orderService } from '../services/payment/orderService.ts'
+import { orderService } from '../services/billing/orderService.ts'
 
 export const orderController = {
   startCheckout: async (req: Request, res: Response, next: NextFunction) => {
@@ -16,7 +16,7 @@ export const orderController = {
       console.log('WEBHOOK CONTROLLER HIT')
 
       const result = await orderService.handleWebhook(req.stripeEvent)
-      res.status(200).json(result)
+      res.sendStatus(200)
     } catch (err) {
       console.log(err)
 

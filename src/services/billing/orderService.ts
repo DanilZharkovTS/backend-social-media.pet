@@ -1,16 +1,15 @@
-import Stripe from 'stripe'
 import type { TokenPayload } from '../../interfaces/auth/authInterfaces.ts'
 import type {
   checkoutDTO,
   Order,
-  orderBillingType,
-  orderType,
-} from '../../interfaces/payments/orderInterfaces.ts'
+} from '../../interfaces/billing/orderInterfaces.ts'
+import Stripe from 'stripe'
 import { ApiError } from '../../lib/ApiErrors.ts'
-import { stripeService } from './stripeService.ts'
-import { orderRepo } from '../../repos/orderRepo.ts'
-import { userRepo } from '../../repos/userRepo.ts'
 import { subscriptionPrices } from '../../cfg/stripePrices.ts'
+import { stripeService } from './stripeService.ts'
+import { subscriptionService } from './subscriptionService.ts'
+import { orderRepo } from '../../repos/billing/orderRepo.ts'
+import { userRepo } from '../../repos/userRepo.ts'
 
 export const orderService = {
   startCheckout: async (user: TokenPayload, data: checkoutDTO) => {
@@ -120,7 +119,11 @@ export const orderService = {
     switch (event.type) {
       case 'checkout.session.completed':
         await orderService.handleCheckoutCompleted(event)
-        return { checkmark: true }
+        break
+
+      case 'invoice.payment_succeeded':
+        await subscriptionService.handleInvoicePaymentSucceeded(event)
+        break
     }
   },
 

@@ -1,3 +1,5 @@
+import type { SubscriptionPeriod, SubscriptionPlan } from "./subscriptionInterfaces"
+
 export interface Order {
   id: number
   user_id: number
@@ -10,8 +12,8 @@ export interface Order {
   created_at: Date
   paid_at: Date | null
   stripe_subscription_id: string | null
-  subscription_plan: subscriptionPlan | null
-  subscription_period: subscriptionPeriod | null
+  subscription_plan: SubscriptionPlan | null
+  subscription_period: SubscriptionPeriod | null
   billing_type: orderBillingType | null
 }
 
@@ -25,15 +27,13 @@ export type paymentStatus = 'pending' | 'paid' | 'unpaid'
 
 export type paymentCurrency = 'usd' | 'euro' | 'uah'
 
-export type subscriptionPlan = 'BASIC'
 
-export type subscriptionPeriod = 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
 
 export interface checkoutDTO {
   type: checkoutType
   product: orderType
-  plan?: subscriptionPlan
-  period?: subscriptionPeriod
+  plan?: SubscriptionPlan
+  period?: SubscriptionPeriod
 }
 
 export interface plan {
