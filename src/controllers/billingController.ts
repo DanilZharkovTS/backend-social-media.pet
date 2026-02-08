@@ -1,13 +1,13 @@
 import type { NextFunction, Request, Response } from 'express'
-import { orderService } from '../services/billing/orderService.ts'
+import { billingService } from '../services/billing/billingService.ts'
 
-export const orderController = {
+export const billingController = {
   startCheckout: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await orderService.startCheckout(req.user, req.body)
+      const result = await billingService.startCheckout(req.user, req.body)
       res.status(200).json(result)
     } catch (err) {
-      console.log(err);
+      console.log(err)
       next(err)
     }
   },
@@ -15,11 +15,10 @@ export const orderController = {
     try {
       console.log('WEBHOOK CONTROLLER HIT')
 
-      const result = await orderService.handleWebhook(req.stripeEvent)
+      await billingService.handleWebhook(req.stripeEvent)
       res.sendStatus(200)
     } catch (err) {
       console.log(err)
-
       next(err)
     }
   },

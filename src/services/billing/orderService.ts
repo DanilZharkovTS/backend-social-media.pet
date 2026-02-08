@@ -12,20 +12,6 @@ import { orderRepo } from '../../repos/billing/orderRepo.ts'
 import { userRepo } from '../../repos/userRepo.ts'
 
 export const orderService = {
-  startCheckout: async (user: TokenPayload, data: checkoutDTO) => {
-    switch (data.type) {
-      case 'ONE_TIME': {
-        const result = await orderService.handleOneTimeCheckout(user, data)
-        return result
-      }
-
-      case 'SUBSCRIPTION': {
-        const result = await orderService.handleSubscriptionCheckout(user, data)
-        return result
-      }
-    }
-  },
-
   handleOneTimeCheckout: async (user: TokenPayload, data: checkoutDTO) => {
     const userResult = await userRepo.findUserById(user.userId)
     const dbUser = userResult.rows[0]
@@ -113,27 +99,6 @@ export const orderService = {
     }
   },
 
-  handleWebhook: async (event: Stripe.Event) => {
-    console.log('EVENT TYPE:', event.type)
-
-    switch (event.type) {
-      case 'checkout.session.completed':
-        await orderService.handleCheckoutCompleted(event)
-        break
-      
-      case 'checkout.session.async_payment_failed': 
-        
-
-      case 'invoice.payment_succeeded':
-        await subscriptionService.handleInvoicePaymentSucceeded(event)
-        break
-
-      case 'invoice.payment_failed':
-        await subscriptionService.handleInvoicePaymentFailed(event)
-        break
-    }
-  },
-
   handleCheckoutCompleted: async (event: Stripe.Event) => {
     console.log('HANDLE CHECKOUT COMPLETED START')
 
@@ -192,15 +157,16 @@ export const orderService = {
     }
   },
   handleCheckoutFailed: async (event: Stripe.Event) => {
-    console.log('handleCheckoutFailed HIT ------------------');
-    
+    console.log('handleCheckoutFailed HIT ------------------')
+
     const session = event.data.object as Stripe.Checkout.Session
     const orderId = Number(session.metadata.orderId)
-    
+
     if (!orderId) return
 
     await orderRepo.updateOrderStatusById('unpaid', orderId)
-    console.log('ORDER UNPAID STATUS WAS UPDATED ----------------------------------------');
-    
-  }
+    console.log(
+      'ORDER UNPAID STATUS WAS UPDATED ----------------------------------------'
+    )
+  },
 }

@@ -3,7 +3,7 @@ import Stripe from 'stripe'
 import { ApiError } from '../lib/ApiErrors.ts'
 import { validateCheckoutData } from '../utils/validators/orderValidator.ts'
 
-export const orderMiddlewares = {
+export const billingMiddlewares = {
   validateCheckout: (req: Request, res: Response, next: NextFunction) => {
     try {
       const validData = validateCheckoutData.parse(req.body)
