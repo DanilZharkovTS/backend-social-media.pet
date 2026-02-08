@@ -11,8 +11,9 @@ export const subscriptionService = {
     console.log('handleInvoicePaymentSucceeded HIT ----')
 
     const invoice = event.data.object as Stripe.Invoice
-    const subscriptionId =
-      invoice.lines.data[0].parent.subscription_item_details.subscription
+    const subscriptionId = invoice.parent.subscription_details.subscription
+
+    if (!subscriptionId) return
 
     const subscriptionResult =
       await subscriptionRepo.findSubscriptionByStripeSubscriptionId(
@@ -58,5 +59,29 @@ export const subscriptionService = {
       dbSubscription.id
     )
     console.log('SUBSCRIPTION PERIOD WAS UPDATED ----------')
+  },
+  handleInvoicePaymentFailed: async (event: Stripe.Event) => {
+    console.log('handleInvoicePaymentFailed HIT ----------------------')
+
+    const invoice = event.data.object as Stripe.Invoice
+    const subscriptionId = invoice.parent.subscription_details.subscription
+
+    if (!subscriptionId) return
+
+    const subscriptionResult =
+      await subscriptionRepo.findSubscriptionByStripeSubscriptionId(
+        subscriptionId
+      )
+    const dbSubscription: Subscription = subscriptionResult.rows[0]
+
+    if (!dbSubscription) return
+
+    await subscriptionRepo.updateSubscriptionStatus(
+      'past_due',
+      dbSubscription.id
+    )
+    await userRepo.updateCheckmarkById(false, dbSubscription.user_id)
+
+    console.log('PAST DUE STATUS WAS SET AND CHECKMARK WAS REMOVED-------------------')
   },
 }

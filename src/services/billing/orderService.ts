@@ -120,9 +120,16 @@ export const orderService = {
       case 'checkout.session.completed':
         await orderService.handleCheckoutCompleted(event)
         break
+      
+      case 'checkout.session.async_payment_failed': 
+        
 
       case 'invoice.payment_succeeded':
         await subscriptionService.handleInvoicePaymentSucceeded(event)
+        break
+
+      case 'invoice.payment_failed':
+        await subscriptionService.handleInvoicePaymentFailed(event)
         break
     }
   },
@@ -184,4 +191,16 @@ export const orderService = {
         break
     }
   },
+  handleCheckoutFailed: async (event: Stripe.Event) => {
+    console.log('handleCheckoutFailed HIT ------------------');
+    
+    const session = event.data.object as Stripe.Checkout.Session
+    const orderId = Number(session.metadata.orderId)
+    
+    if (!orderId) return
+
+    await orderRepo.updateOrderStatusById('unpaid', orderId)
+    console.log('ORDER UNPAID STATUS WAS UPDATED ----------------------------------------');
+    
+  }
 }

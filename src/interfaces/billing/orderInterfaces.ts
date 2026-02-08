@@ -5,8 +5,8 @@ export interface Order {
   user_id: number
   type: orderType
   amount: number
-  currency: paymentCurrency
-  status: paymentStatus
+  currency: orderCurrency
+  status: orderStatus
   stripe_session_id: string | null
   stripe_payment_intent_id: string | null
   created_at: Date
@@ -23,9 +23,9 @@ export type orderBillingType = 'ONE_TIME' | 'SUBSCRIPTION'
 
 export type orderType = 'checkmark'
 
-export type paymentStatus = 'pending' | 'paid' | 'unpaid'
+export type orderStatus = 'pending' | 'paid' | 'unpaid'
 
-export type paymentCurrency = 'usd' | 'euro' | 'uah'
+export type orderCurrency = 'usd' | 'euro' | 'uah'
 
 
 

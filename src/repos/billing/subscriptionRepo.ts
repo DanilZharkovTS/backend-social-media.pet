@@ -1,3 +1,4 @@
+import Stripe from 'stripe'
 import type {
   Subscription,
   SubscriptionStatus,
@@ -6,7 +7,9 @@ import type {
 import pool from '../../pool'
 
 export const subscriptionRepo = {
-  findSubscriptionByStripeSubscriptionId: (stripeSubcriptionId: string) => {
+  findSubscriptionByStripeSubscriptionId: (
+    stripeSubcriptionId: string | Stripe.Subscription
+  ) => {
     return pool.query(
       `SELECT * FROM subscriptions
       WHERE stripe_subscription_id = $1`,
@@ -16,7 +19,7 @@ export const subscriptionRepo = {
   addSubscription: async (
     userId: number,
     orderId: number,
-    stripeSubscriptionId: string,
+    stripeSubscriptionId: string | Stripe.Subscription,
     status: SubscriptionStatus,
     type: SubscriptionType,
     currentPeriodStart: number,
@@ -47,6 +50,18 @@ export const subscriptionRepo = {
       SET current_period_start = to_timestamp($1), current_period_end = to_timestamp($2), updated_at = NOW()
       WHERE id = $3`,
       [currentPeriodStart, currentPeriodEnd, subscriptionId]
+    )
+  },
+  updateSubscriptionStatus: (
+    status: SubscriptionStatus,
+    subscriptionId: number
+  ) => {
+    return pool.query(
+      `UPDATE subscriptions
+      SET status = $1
+      WHERE id = $2
+      RETURNING *`,
+      [status, subscriptionId]
     )
   },
 }

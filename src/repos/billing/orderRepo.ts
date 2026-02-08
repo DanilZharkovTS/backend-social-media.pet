@@ -1,6 +1,10 @@
-import type { SubscriptionPeriod, SubscriptionPlan } from '../../interfaces/billing/subscriptionInterfaces.ts'
 import type {
-  paymentCurrency,
+  SubscriptionPeriod,
+  SubscriptionPlan,
+} from '../../interfaces/billing/subscriptionInterfaces.ts'
+import type {
+  orderCurrency,
+  orderStatus,
   orderType,
 } from '../../interfaces/billing/orderInterfaces.ts'
 import Stripe from 'stripe'
@@ -11,7 +15,7 @@ export const orderRepo = {
     userId: number,
     type: orderType,
     amount: number,
-    currency: paymentCurrency
+    currency: orderCurrency
   ) => {
     return pool.query(
       `INSERT INTO orders (user_id, type, amount, currency, billing_type)
@@ -24,7 +28,7 @@ export const orderRepo = {
     userId: number,
     type: orderType,
     amount: number,
-    currency: paymentCurrency,
+    currency: orderCurrency,
     plan: SubscriptionPlan,
     period: SubscriptionPeriod
   ) => {
@@ -42,7 +46,9 @@ export const orderRepo = {
       [orderId]
     )
   },
-  findOrderByStripeSubscriptionId: (stripeSubscriptionId: string) => {
+  findOrderByStripeSubscriptionId: (
+    stripeSubscriptionId: string | Stripe.Subscription
+  ) => {
     return pool.query(
       `SELECT * FROM orders
       WHERE stripe_subscription_id = $1`,
@@ -79,6 +85,16 @@ export const orderRepo = {
       WHERE id = $3
       RETURNING *`,
       ['paid', stripeSubscriptionId, orderId]
+    )
+  },
+  updateOrderStatusById: (status: orderStatus, orderId: number) => {
+    return pool.query(
+      `UPDATE orders
+      SET status = $1
+      WHERE id = $2
+      RETURNING *`,
+      status,
+      orderId
     )
   },
 }
