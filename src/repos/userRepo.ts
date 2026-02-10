@@ -49,8 +49,7 @@ export const userRepo = {
       `UPDATE users 
       SET has_checkmark = $1
       WHERE id = $2`,
-      [value,
-      userId]
+      [value, userId]
     )
   },
   updateMyInfoById: (userId: number, data: dynamicUpdateMyInfo) => {
@@ -87,6 +86,15 @@ export const userRepo = {
       WHERE id = $2
       RETURNING avatar_url`,
       [avatarUrl, userId]
+    )
+  },
+  updateStripeCustomerIdById: (stripeCustomerId: string, userId: number) => {
+    return pool.query(
+      `UPDATE users
+      SET stripe_customer_id = $1
+      WHERE id = $2
+      RETURNING *`,
+      [stripeCustomerId, userId]
     )
   },
   deleteUserById: (userId: number) => {
