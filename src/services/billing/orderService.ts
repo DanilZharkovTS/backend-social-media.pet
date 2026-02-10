@@ -10,14 +10,29 @@ import { stripeService } from './stripeService.ts'
 import { subscriptionService } from './subscriptionService.ts'
 import { orderRepo } from '../../repos/billing/orderRepo.ts'
 import { userRepo } from '../../repos/userRepo.ts'
+import { User } from '../../interfaces/user/userInterfaces.ts'
 
 export const orderService = {
   handleOneTimeCheckout: async (user: TokenPayload, data: checkoutDTO) => {
+    let dbUser: User
+
     const userResult = await userRepo.findUserById(user.userId)
-    const dbUser = userResult.rows[0]
+    dbUser = userResult.rows[0]
 
     if (!dbUser) {
       throw ApiError('User was not found', 404)
+    }
+
+    if (!dbUser.stripe_customer_id) {
+      const customer = await stripeService.createStripeCustomer(
+        dbUser.name,
+        dbUser.email
+      )
+      const updatedUserResult = await userRepo.updateStripeCustomerIdById(
+        customer.id,
+        dbUser.id
+      )
+      dbUser = updatedUserResult.rows[0]
     }
 
     switch (data.product) {
@@ -35,6 +50,7 @@ export const orderService = {
         const dbOrder = orderResult.rows[0]
 
         const session = await stripeService.createOneTimeCheckoutSession(
+          dbUser.stripe_customer_id,
           process.env.STRIPE_CHECKMARK_PRICE_ID,
           dbOrder.id
         )
@@ -50,11 +66,25 @@ export const orderService = {
   },
 
   handleSubscriptionCheckout: async (user: TokenPayload, data: checkoutDTO) => {
+    let dbUser: User
+
     const userResult = await userRepo.findUserById(user.userId)
-    const dbUser = userResult.rows[0]
+    dbUser = userResult.rows[0]
 
     if (!dbUser) {
-      throw ApiError('User not found', 404)
+      throw ApiError('User was not found', 404)
+    }
+
+    if (!dbUser.stripe_customer_id) {
+      const customer = await stripeService.createStripeCustomer(
+        dbUser.name,
+        dbUser.email
+      )
+      const updatedUserResult = await userRepo.updateStripeCustomerIdById(
+        customer.id,
+        dbUser.id
+      )
+      dbUser = updatedUserResult.rows[0]
     }
 
     switch (data.product) {
@@ -88,6 +118,7 @@ export const orderService = {
 
         const { checkoutUrl, sessionId } =
           await stripeService.createSubscriptionCheckoutSession(
+            dbUser.stripe_customer_id,
             validPeriod.priceId,
             dbOrder.id
           )

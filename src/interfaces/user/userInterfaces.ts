@@ -1,3 +1,18 @@
+export interface User {
+  id: number
+  email: string
+  password: string
+  name: string
+  created_at: Date
+  role: 'user' | 'admin'
+  birth_date: Date | null
+  bio: string | null
+  avatar_url: string | null
+  email_is_verified: boolean
+  has_checkmark: boolean
+  stripe_customer_id: string | null
+}
+
 export interface updateMyInfoDTO {
   name?: string
   bio?: string | null

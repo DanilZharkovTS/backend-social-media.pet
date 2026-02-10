@@ -29,6 +29,7 @@ export type orderCurrency = 'usd' | 'euro' | 'uah'
 
 
 
+
 export interface checkoutDTO {
   type: checkoutType
   product: orderType

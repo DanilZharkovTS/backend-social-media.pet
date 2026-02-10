@@ -5,7 +5,7 @@ import { billingController } from '../../controllers/billingController.ts'
 
 const router = Router()
 
-router.get(
+router.post(
   '/checkout',
   authMiddlewares.verifyAccessToken,
   billingMiddlewares.validateCheckout,
