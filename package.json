@@ -19,7 +19,8 @@
     "zod": "^4.1.12"
   },
   "scripts": {
-    "dev": "tsx watch src/app.ts"
+    "dev": "tsx watch src/app.ts",
+    "test": "jest"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
