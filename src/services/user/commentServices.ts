@@ -6,18 +6,34 @@ import type {
 } from '../../interfaces/user/commentInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { commentRepo } from '../../repos/commentRepo.ts'
+import { getRedis } from '../../lib/redisClient.ts'
 
 export const commentServices = {
   //me
-  add: async (data: addCommentDTO, postId: number, user: TokenPayload) => {
+  add: async (data: addCommentDTO, postId: number, user: TokenPayload) => {    
     const result = await commentRepo.insert(data.content, postId, user.userId)
+    
     return { result: result.rows[0] }
   },
   getAll: async (postId: number, pagination: paginationDTO) => {
-    const result = await commentRepo.selectAll(postId, pagination)
+    const redis = getRedis()
+    const redisKey = `posts:${postId}:comments:page:${pagination.page}:limit:${pagination.limit}`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      return {
+        pagination: { limit: pagination.limit, page: pagination.page },
+        result: JSON.parse(redisResult),
+      }
+    }
+    const { rows: dbComments } = await commentRepo.selectAll(postId, pagination)
+
+    await redis.set(redisKey, JSON.stringify(dbComments))
+
     return {
       pagination: { limit: pagination.limit, page: pagination.page },
-      result: result.rows,
+      result: dbComments,
     }
   },
   update: async (
