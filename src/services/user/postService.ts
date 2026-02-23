@@ -6,6 +6,7 @@ import type {
   updatePostDTO,
 } from '../../interfaces/user/postInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
+import { getRedis } from '../../lib/redisClient.ts'
 import { postRepo } from '../../repos/postRepo.ts'
 
 export const postService = {
@@ -15,6 +16,17 @@ export const postService = {
     return { created: result.rows[0] }
   },
   getAll: async (pagination: paginationDTO) => {
+    const redis = getRedis()
+
+    const redisResult = await redis.get(
+      `posts:page:${pagination.page}:limit:${pagination.limit}`
+    )
+    if (redisResult) {
+      return {
+        pagination: { page: pagination.page, limit: pagination.limit },
+        posts: JSON.parse(redisResult),
+      }
+    }
     const result = await postRepo.selectAll(pagination)
     return {
       pagination: { page: pagination.page, limit: pagination.limit },
@@ -48,10 +60,33 @@ export const postService = {
     return { deleted: result.rows[0] }
   },
   find: async (query: findPostDTO, pagination: paginationDTO) => {
-    const result = await postRepo.selectBySearch(query, pagination)
+    const redis = getRedis()
+    const search = query.search ? query.search : 'all'
+
+    const redisResult = await redis.get(
+      `posts:search:${search}:page:${pagination.page}:limit:${pagination.limit}`
+    )
+    if (redisResult) {
+      return {
+        search: query.search,
+        pagination: { page: pagination.page, limit: pagination.limit },
+        posts: JSON.parse(redisResult),
+      }
+    }
+
+    const { rows: dbPosts } = await postRepo.selectBySearch(query, pagination)
+
+    await redis.set(
+      `posts:search:${search}:page:${pagination.page}:limit:${pagination.limit}`,
+      JSON.stringify(dbPosts),
+      'EX',
+      60
+    )
+
     return {
       search: query.search,
-      result: result.rows,
+      pagination: { page: pagination.page, limit: pagination.limit },
+      posts: dbPosts,
     }
   },
   //admin
