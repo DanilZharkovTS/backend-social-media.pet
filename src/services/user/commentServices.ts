@@ -7,12 +7,15 @@ import type {
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { commentRepo } from '../../repos/commentRepo.ts'
 import { getRedis } from '../../lib/redisClient.ts'
+import { cacheService } from '../shared/cacheService.ts'
 
 export const commentServices = {
   //me
-  add: async (data: addCommentDTO, postId: number, user: TokenPayload) => {    
+  add: async (data: addCommentDTO, postId: number, user: TokenPayload) => {
     const result = await commentRepo.insert(data.content, postId, user.userId)
-    
+
+    await cacheService.invalidateByPrefix(`posts:${postId}:comments:*`)
+
     return { result: result.rows[0] }
   },
   getAll: async (postId: number, pagination: paginationDTO) => {
@@ -41,34 +44,49 @@ export const commentServices = {
     data: updateCommentDTO,
     user: TokenPayload
   ) => {
-    const commentUser = await commentRepo.selectById(commentId)
+    const commentResult = await commentRepo.selectById(commentId)
+    const dbComment = commentResult.rows[0]
 
-    if (user.userId !== commentUser.rows[0].user_id) {
+    if (user.userId !== dbComment.user_id) {
       throw ApiError('You are not allowed to modify this comment', 403)
     }
 
     const result = await commentRepo.updateById(commentId, data)
 
+    await cacheService.invalidateByPrefix(
+      `posts:${dbComment.post_id}:comments:*`
+    )
+
     return { updated: result.rows[0] }
   },
   delete: async (commentId: number, user: TokenPayload) => {
-    const commentUser = await commentRepo.selectById(commentId)
+    const commentResult = await commentRepo.selectById(commentId)
+    const dbComment = commentResult.rows[0]
 
-    if (user.userId !== commentUser.rows[0].user_id) {
+    if (user.userId !== dbComment.user_id) {
       throw ApiError('You are not allowed to delete this comment', 403)
     }
 
     const result = await commentRepo.deleteById(commentId)
+
+    await cacheService.invalidateByPrefix(
+      `posts:${dbComment.post_id}:comments:*`
+    )
 
     return { deleted: result.rows[0] }
   },
   //admin
   deleteAsAdmin: async (commentId: number) => {
     const commentResult = await commentRepo.deleteById(commentId)
-    if (commentResult.rows.length === 0) {
+    const dbComment = commentResult.rows[0]
+
+    if (!dbComment) {
       throw ApiError('Comment is not found', 404)
     }
 
+    await cacheService.invalidateByPrefix(
+      `posts:${dbComment.post_id}:comments:*`
+    )
     return { deleted: commentResult.rows[0] }
   },
 }
