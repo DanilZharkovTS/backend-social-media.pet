@@ -19,6 +19,7 @@ import { generateLoginEmailConfirmToken } from '../../utils/helpers/auth/loginEm
 import { generateResetPasswordToken } from '../../utils/helpers/auth/resetPasswordToken.ts'
 import { generateTrustedDeviceToken } from '../../utils/helpers/auth/trustedDeviceToken.ts'
 import { generateEmailChangeToken } from '../../utils/helpers/auth/emailChangeToken.ts'
+import { getRedis } from '../../lib/redisClient.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
@@ -205,6 +206,51 @@ export const authService = {
     }
   },
   refresh: async (clientRefreshToken: string) => {
+    console.log('HIT SERVICE -------------')
+
+    const redis = getRedis()
+
+    const redisResult = await redis.get(`refresh:${clientRefreshToken}`)
+    //////////
+    if (redisResult) {
+      console.log('START REDIS CONDITION')
+
+      const redisToken = JSON.parse(redisResult)
+
+      await authRepo.revokeRefreshTokenById(redisToken.id)
+
+      const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
+        generateRefreshToken()
+
+      await authRepo.insertRefreshToken(
+        redisToken.user_id,
+        hashedRefreshToken,
+        refreshExpiresAt
+      )
+
+      const accessToken = generateAccessToken(
+        redisToken.user_id,
+        redisToken.email,
+        redisToken.role
+      )
+
+      console.log('FINISH REDIS CONDITION')
+
+      return {
+        refreshToken: rawRefreshToken,
+        logined: {
+          accessToken,
+          user: {
+            email: redisToken.email,
+            role: redisToken.role,
+            userId: redisToken.user_id,
+          },
+        },
+      }
+    }
+    /////////
+    console.log('START DB CONDITION')
+
     const dbTokenResult = await authRepo.selectRefreshTokenByToken(
       clientRefreshToken
     )
@@ -225,11 +271,20 @@ export const authService = {
       refreshExpiresAt
     )
 
+    await redis.set(
+      `refresh:${hashedRefreshToken}`,
+      JSON.stringify(dbToken),
+      'EX',
+      60 * 60 * 24 * 30
+    )
+
     const accessToken = generateAccessToken(
       dbToken.user_id,
       dbToken.email,
       dbToken.role
     )
+
+    console.log('FINISH DB CONDITION')
 
     return {
       refreshToken: rawRefreshToken,
