@@ -63,20 +63,20 @@ export const userService = {
     }
 
     const userResult = await userRepo.findUserById(user.userId)
-    const dbuser = userResult.rows[0]
+    const dbUser = userResult.rows[0]
 
-    if (!dbuser) {
+    if (!dbUser) {
       throw ApiError('User not found', 404)
     }
 
     await redis.set(
       `users:${user.userId}`,
-      JSON.stringify(dbuser),
+      JSON.stringify(dbUser),
       'EX',
       60 * 3
     )
 
-    return toUserResponse(dbuser)
+    return toUserResponse(dbUser)
   },
   updateMyInfo: async (user: TokenPayload, data: dynamicUpdateMyInfo) => {
     const userResult = await userRepo.updateMyInfoById(user.userId, data)
@@ -134,12 +134,35 @@ export const userService = {
   },
   //users
   readUserInfo: async (userId: number) => {
+    const redis = getRedis()
+    const toUserResponse = (user: User) => {
+      return {
+        id: user.id,
+        name: user.name,
+        bio: user.bio,
+        birth_date: user.birth_date,
+        created_at: user.created_at,
+        avatar_url: user.avatar_url,
+      }
+    }
+
+    const redisResult = await redis.get(`user:${userId}`)
+
+    if (redisResult) {
+      const redisUser = JSON.parse(redisResult)
+      return toUserResponse(redisUser)
+    }
+
     const userResult = await userRepo.findUserById(userId)
+    const dbUser = userResult.rows[0]
 
-    const { id, name, bio, birth_date, created_at, avatar_url } =
-      userResult.rows[0]
+    if (!dbUser) {
+      throw ApiError('Uset not found', 404)
+    }
 
-    return { info: { id, name, bio, birth_date, created_at, avatar_url } }
+    await redis.set(`user:${userId}`, JSON.stringify(dbUser))
+
+    return toUserResponse(dbUser)
   },
   //admin
   findAsAdmin: async (search: string, pagination: paginationDTO) => {
