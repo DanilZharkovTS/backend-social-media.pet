@@ -5,11 +5,13 @@ import type {
   updateAvatarUrlDTO,
   updateEmail,
   updatePassword,
+  User,
 } from '../../interfaces/user/userInterfaces.ts'
 import bcrypt from 'bcrypt'
 import { getSupabaseClient } from '../../lib/supabaseClient.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { userRepo } from '../../repos/userRepo.ts'
+import { getRedis } from '../../lib/redisClient.ts'
 
 export const userService = {
   //me
@@ -38,33 +40,43 @@ export const userService = {
     return { avatarUrl: urlData.publicUrl }
   },
   readMyInfo: async (user: TokenPayload) => {
-    const userResult = await userRepo.findUserById(user.userId)
-
-    const {
-      id,
-      role,
-      email,
-      name,
-      bio,
-      birth_date,
-      created_at,
-      avatar_url,
-      has_checkmark,
-    } = userResult.rows[0]
-
-    return {
-      info: {
-        id,
-        role,
-        email,
-        name,
-        bio,
-        birth_date,
-        created_at,
-        avatar_url,
-        has_checkmark,
-      },
+    const redis = getRedis()
+    const toUserResponse = (user: User) => {
+      return {
+        id: user.id,
+        role: user.role,
+        email: user.email,
+        name: user.name,
+        bio: user.bio,
+        birth_date: user.birth_date,
+        created_at: user.created_at,
+        avatar_url: user.avatar_url,
+        has_checkmark: user.has_checkmark,
+      }
     }
+
+    const redisResult = await redis.get(`users:${user.userId}`)
+
+    if (redisResult) {
+      const redisUser = JSON.parse(redisResult)
+      return toUserResponse(redisUser)
+    }
+
+    const userResult = await userRepo.findUserById(user.userId)
+    const dbuser = userResult.rows[0]
+
+    if (!dbuser) {
+      throw ApiError('User not found', 404)
+    }
+
+    await redis.set(
+      `users:${user.userId}`,
+      JSON.stringify(dbuser),
+      'EX',
+      60 * 3
+    )
+
+    return toUserResponse(dbuser)
   },
   updateMyInfo: async (user: TokenPayload, data: dynamicUpdateMyInfo) => {
     const userResult = await userRepo.updateMyInfoById(user.userId, data)
