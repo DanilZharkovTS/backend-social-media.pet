@@ -12,6 +12,7 @@ import { getSupabaseClient } from '../../lib/supabaseClient.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { userRepo } from '../../repos/userRepo.ts'
 import { getRedis } from '../../lib/redisClient.ts'
+import { cacheService } from '../shared/cacheService.ts'
 
 export const userService = {
   //me
@@ -81,6 +82,8 @@ export const userService = {
   updateMyInfo: async (user: TokenPayload, data: dynamicUpdateMyInfo) => {
     const userResult = await userRepo.updateMyInfoById(user.userId, data)
 
+    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
+
     return { updated: userResult.rows[0] }
   },
   updateMyEmail: async (user: TokenPayload, data: updateEmail) => {
@@ -98,6 +101,8 @@ export const userService = {
     }
 
     await userRepo.updateMyEmailById(user.userId, data.newEmail)
+
+    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
 
     return { newEmail: data.newEmail }
   },
@@ -122,6 +127,8 @@ export const userService = {
     const hashedPassword = await bcrypt.hash(data.newPassword, saltRounds)
     await userRepo.updateMyPasswordById(user.userId, hashedPassword)
 
+    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
+
     return { isChangedPassword: true }
   },
   updateMyAvatarUrl: async (user: TokenPayload, data: updateAvatarUrlDTO) => {
@@ -129,6 +136,8 @@ export const userService = {
       data.avatar_url,
       user.userId
     )
+
+    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
 
     return { avatarUrl: avatarResult.rows[0].avatar_url }
   },
