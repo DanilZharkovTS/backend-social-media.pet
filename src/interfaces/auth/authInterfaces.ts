@@ -12,6 +12,30 @@ export interface TokenPayload {
   role: string
 }
 
+export interface RefreshToken {
+  id: number
+  user_id: number
+  token: string
+  device: string | null
+  ip: string | null
+  expires_at: Date
+  created_at: Date
+  revoked: boolean
+}
+
+export interface RefreshTokenWithUser {
+  id: number
+  user_id: number
+  token: string
+  device: string | null
+  ip: string | null
+  expires_at: Date
+  created_at: Date
+  revoked: boolean
+  email: string
+  role: string
+}
+
 export interface registerUserDTO {
   email: string
   password: string

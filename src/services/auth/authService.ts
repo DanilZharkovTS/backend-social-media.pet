@@ -7,6 +7,7 @@ import type {
   loginEmailConfirmDTO,
   requestChangeEmailDTO,
   resetPasswordDTO,
+  RefreshTokenWithUser,
 } from '../../interfaces/auth/authInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { emailService } from '../email/emailService.ts'
@@ -206,98 +207,79 @@ export const authService = {
     }
   },
   refresh: async (clientRefreshToken: string) => {
-    console.log('HIT SERVICE -------------')
-
     const redis = getRedis()
 
-    const redisResult = await redis.get(`refresh:${clientRefreshToken}`)
-    //////////
+    const redisKey = `refresh:${clientRefreshToken}`
+    const redisResult = await redis.get(redisKey)
+
     if (redisResult) {
-      console.log('START REDIS CONDITION')
-
       const redisToken = JSON.parse(redisResult)
-
-      await authRepo.revokeRefreshTokenById(redisToken.id)
-
-      const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
-        generateRefreshToken()
-
-      await authRepo.insertRefreshToken(
-        redisToken.user_id,
-        hashedRefreshToken,
-        refreshExpiresAt
-      )
-
-      const accessToken = generateAccessToken(
-        redisToken.user_id,
-        redisToken.email,
-        redisToken.role
-      )
-
-      console.log('FINISH REDIS CONDITION')
-
-      return {
-        refreshToken: rawRefreshToken,
-        logined: {
-          accessToken,
-          user: {
-            email: redisToken.email,
-            role: redisToken.role,
-            userId: redisToken.user_id,
-          },
-        },
-      }
+      return authService.handleRefreshCondition(redisToken, 'redis')
     }
-    /////////
-    console.log('START DB CONDITION')
 
-    const dbTokenResult = await authRepo.selectRefreshTokenByToken(
+    const dbResult = await authRepo.selectRefreshTokenByToken(
       clientRefreshToken
     )
-    const dbToken = dbTokenResult.rows[0]
 
-    if (!dbToken || new Date() > dbToken.expires_at || dbToken.revoked) {
-      throw ApiError('Invalid or expired refresh token', 401)
+    const dbToken = dbResult.rows[0]
+
+    if (!dbToken) {
+      throw ApiError('Refresh token not found', 401)
     }
 
-    await authRepo.revokeRefreshTokenById(dbToken.id)
+    return authService.handleRefreshCondition(dbToken, 'db')
+  },
+
+  handleRefreshCondition: async (token: RefreshTokenWithUser, source: 'redis' | 'db') => {
+    const redis = getRedis()
+
+    if (source === 'db') {
+      if (!token || new Date() > token.expires_at || token.revoked) {
+        throw ApiError('Invalid or expired refresh token', 401)
+      }
+    }
+
+    await authRepo.revokeRefreshTokenById(token.id)
 
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
     await authRepo.insertRefreshToken(
-      dbToken.user_id,
+      token.user_id,
       hashedRefreshToken,
       refreshExpiresAt
     )
 
     await redis.set(
       `refresh:${hashedRefreshToken}`,
-      JSON.stringify(dbToken),
+      JSON.stringify(token),
       'EX',
       60 * 60 * 24 * 30
     )
 
-    const accessToken = generateAccessToken(
-      dbToken.user_id,
-      dbToken.email,
-      dbToken.role
-    )
+    if (source === 'redis') {
+      await redis.del(`refresh:${token.token}`)
+    }
 
-    console.log('FINISH DB CONDITION')
+    const accessToken = generateAccessToken(
+      token.user_id,
+      token.email,
+      token.role
+    )
 
     return {
       refreshToken: rawRefreshToken,
       logined: {
         accessToken,
         user: {
-          email: dbToken.email,
-          role: dbToken.role,
-          userId: dbToken.user_id,
+          email: token.email,
+          role: token.role,
+          userId: token.user_id,
         },
       },
     }
   },
+
   logout: async (clientRefreshToken: string) => {
     const refreshTokenResult = await authRepo.selectRefreshTokenByToken(
       clientRefreshToken
