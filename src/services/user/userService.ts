@@ -5,11 +5,14 @@ import type {
   updateAvatarUrlDTO,
   updateEmail,
   updatePassword,
+  User,
 } from '../../interfaces/user/userInterfaces.ts'
 import bcrypt from 'bcrypt'
 import { getSupabaseClient } from '../../lib/supabaseClient.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { userRepo } from '../../repos/userRepo.ts'
+import { getRedis } from '../../lib/redisClient.ts'
+import { cacheService } from '../shared/cacheService.ts'
 
 export const userService = {
   //me
@@ -38,36 +41,48 @@ export const userService = {
     return { avatarUrl: urlData.publicUrl }
   },
   readMyInfo: async (user: TokenPayload) => {
-    const userResult = await userRepo.findUserById(user.userId)
-
-    const {
-      id,
-      role,
-      email,
-      name,
-      bio,
-      birth_date,
-      created_at,
-      avatar_url,
-      has_checkmark,
-    } = userResult.rows[0]
-
-    return {
-      info: {
-        id,
-        role,
-        email,
-        name,
-        bio,
-        birth_date,
-        created_at,
-        avatar_url,
-        has_checkmark,
-      },
+    const redis = getRedis()
+    const toUserResponse = (user: User) => {
+      return {
+        id: user.id,
+        role: user.role,
+        email: user.email,
+        name: user.name,
+        bio: user.bio,
+        birth_date: user.birth_date,
+        created_at: user.created_at,
+        avatar_url: user.avatar_url,
+        has_checkmark: user.has_checkmark,
+      }
     }
+
+    const redisResult = await redis.get(`users:${user.userId}`)
+
+    if (redisResult) {
+      const redisUser = JSON.parse(redisResult)
+      return toUserResponse(redisUser)
+    }
+
+    const userResult = await userRepo.findUserById(user.userId)
+    const dbUser = userResult.rows[0]
+
+    if (!dbUser) {
+      throw ApiError('User not found', 404)
+    }
+
+    await redis.set(
+      `users:${user.userId}`,
+      JSON.stringify(dbUser),
+      'EX',
+      60 * 3
+    )
+
+    return toUserResponse(dbUser)
   },
   updateMyInfo: async (user: TokenPayload, data: dynamicUpdateMyInfo) => {
     const userResult = await userRepo.updateMyInfoById(user.userId, data)
+
+    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
 
     return { updated: userResult.rows[0] }
   },
@@ -86,6 +101,8 @@ export const userService = {
     }
 
     await userRepo.updateMyEmailById(user.userId, data.newEmail)
+
+    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
 
     return { newEmail: data.newEmail }
   },
@@ -110,6 +127,8 @@ export const userService = {
     const hashedPassword = await bcrypt.hash(data.newPassword, saltRounds)
     await userRepo.updateMyPasswordById(user.userId, hashedPassword)
 
+    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
+
     return { isChangedPassword: true }
   },
   updateMyAvatarUrl: async (user: TokenPayload, data: updateAvatarUrlDTO) => {
@@ -118,16 +137,41 @@ export const userService = {
       user.userId
     )
 
+    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
+
     return { avatarUrl: avatarResult.rows[0].avatar_url }
   },
   //users
   readUserInfo: async (userId: number) => {
+    const redis = getRedis()
+    const toUserResponse = (user: User) => {
+      return {
+        id: user.id,
+        name: user.name,
+        bio: user.bio,
+        birth_date: user.birth_date,
+        created_at: user.created_at,
+        avatar_url: user.avatar_url,
+      }
+    }
+
+    const redisResult = await redis.get(`user:${userId}`)
+
+    if (redisResult) {
+      const redisUser = JSON.parse(redisResult)
+      return toUserResponse(redisUser)
+    }
+
     const userResult = await userRepo.findUserById(userId)
+    const dbUser = userResult.rows[0]
 
-    const { id, name, bio, birth_date, created_at, avatar_url } =
-      userResult.rows[0]
+    if (!dbUser) {
+      throw ApiError('Uset not found', 404)
+    }
 
-    return { info: { id, name, bio, birth_date, created_at, avatar_url } }
+    await redis.set(`user:${userId}`, JSON.stringify(dbUser))
+
+    return toUserResponse(dbUser)
   },
   //admin
   findAsAdmin: async (search: string, pagination: paginationDTO) => {

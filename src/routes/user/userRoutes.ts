@@ -4,6 +4,7 @@ import { userController } from '../../controllers/user/userController.ts'
 import { setParamsId } from '../../middlewares/helpers/paramsId.ts'
 import { userMiddlewares } from '../../middlewares/user/userMiddlewares.ts'
 import { upload } from '../../lib/uploadMiddleware.ts'
+import { rateLimiter } from '../../middlewares/helpers/rateLimiter.ts'
 
 const router = Router()
 
@@ -13,6 +14,7 @@ router.get('/me', authMiddlewares.verifyAccessToken, userController.readMyInfo)
 
 router.patch(
   '/me',
+  rateLimiter(60, 60, 'myInfo'),
   authMiddlewares.verifyAccessToken,
   userMiddlewares.validateBirthDate,
   userMiddlewares.updateMyInfo,
@@ -21,6 +23,7 @@ router.patch(
 
 router.patch(
   '/me/email',
+  rateLimiter(5, 60, 'myEmail'),
   authMiddlewares.verifyAccessToken,
   userMiddlewares.updateMyEmail,
   userController.updateMyEmail
@@ -28,6 +31,7 @@ router.patch(
 
 router.patch(
   '/me/password',
+  rateLimiter(5, 60, 'myPassword'),
   authMiddlewares.verifyAccessToken,
   userMiddlewares.updateMyPassword,
   userController.updateMyPassword
@@ -35,6 +39,7 @@ router.patch(
 
 router.patch(
   '/me/avatar',
+  rateLimiter(10, 60, 'myAvatar'),
   authMiddlewares.verifyAccessToken,
   userMiddlewares.updateMyAvatarUrl,
   userController.updateMyAvatarUrl
@@ -42,6 +47,7 @@ router.patch(
 
 router.post(
   '/me/avatar/upload',
+  rateLimiter(10, 60, 'uploadMyAvatar'),
   authMiddlewares.verifyAccessToken,
   upload.single('avatar'),
   userController.uploadMyAvatar
@@ -51,6 +57,7 @@ router.post(
 
 router.get(
   '/:userId',
+  rateLimiter(60, 60, 'getUser'),
   authMiddlewares.verifyAccessToken,
   setParamsId(['userId']),
   userController.readUserInfo
