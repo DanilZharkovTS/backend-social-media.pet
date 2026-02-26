@@ -105,6 +105,8 @@ export const postService = {
   },
   //likes
   toggleLike: async (user: TokenPayload, postId: number) => {
+    const redis = getRedis()
+
     const likeResult = await postLikesRepo.findByUserIdAndPostId(
       user.userId,
       postId
@@ -114,10 +116,15 @@ export const postService = {
     if (dbLike) {
       await postLikesRepo.deleteLikeById(dbLike.id)
       await postRepo.decreaseLikesCount(dbLike.post_id)
+      await cacheService.invalidateByPrefix('posts:search:*')
+
       return
     }
+
     await postLikesRepo.addLike(user.userId, postId)
     await postRepo.increaseLikesCount(postId)
+    await cacheService.invalidateByPrefix('posts:search:*')
+
     return
   },
 }
