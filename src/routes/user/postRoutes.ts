@@ -7,6 +7,7 @@ import { commentMiddlewares } from '../../middlewares/user/commentMiddlewares.ts
 import { commentController } from '../../controllers/user/commentController.ts'
 import { authMiddlewares } from '../../middlewares/auth/authMiddlewares.ts'
 import { requiresRole } from '../../middlewares/helpers/role.ts'
+import { rateLimiter } from '../../middlewares/helpers/rateLimiter.ts'
 
 const router = Router()
 
@@ -14,15 +15,22 @@ const router = Router()
 
 router.post(
   '/add',
+  rateLimiter(10, 60, 'addPost'),
   authMiddlewares.verifyAccessToken,
   postMiddlewares.add,
   postController.add
 )
 
-router.get('/getAll', paginate, postController.readAll)
+router.get(
+  '/getAll',
+  rateLimiter(60, 60, 'getPosts'),
+  paginate,
+  postController.readAll
+)
 
 router.patch(
   '/update/:postId',
+  rateLimiter(10, 60, 'updatePost'),
   authMiddlewares.verifyAccessToken,
   setParamsId(['postId']),
   postMiddlewares.update,
@@ -31,6 +39,7 @@ router.patch(
 
 router.delete(
   '/delete/:postId',
+  rateLimiter(5, 60, 'deletePost'),
   authMiddlewares.verifyAccessToken,
   setParamsId(['postId']),
   postController.delete
@@ -38,6 +47,7 @@ router.delete(
 
 router.get(
   '/find',
+  rateLimiter(60, 60, 'findPost'),
   authMiddlewares.verifyAccessToken,
   paginate,
   postMiddlewares.find,
@@ -50,6 +60,7 @@ router.get(
 
 router.post(
   '/:postId/comments/add',
+  rateLimiter(10, 60, 'addComment'),
   authMiddlewares.verifyAccessToken,
   setParamsId(['postId']),
   commentMiddlewares.add,
@@ -58,6 +69,7 @@ router.post(
 
 router.get(
   '/:postId/comments',
+  rateLimiter(60, 60, 'getComments'),
   authMiddlewares.verifyAccessToken,
   paginate,
   setParamsId(['postId']),
@@ -66,6 +78,8 @@ router.get(
 
 router.patch(
   '/:postId/comments/:commentId/update',
+  rateLimiter(10, 60, 'updateComment'),
+
   authMiddlewares.verifyAccessToken,
   setParamsId(['postId', 'commentId']),
   commentMiddlewares.update,
@@ -74,6 +88,8 @@ router.patch(
 
 router.delete(
   '/:postId/comments/:commentId/delete',
+  rateLimiter(5, 60, 'deleteComment'),
+
   setParamsId(['postId', 'commentId']),
   authMiddlewares.verifyAccessToken,
   commentController.delete
@@ -83,6 +99,7 @@ router.delete(
 
 router.delete(
   '/:postId/comments/:commentId/delete/admin',
+  rateLimiter(30, 60, 'deleteCommentAdmin'),
   authMiddlewares.verifyAccessToken,
   requiresRole('admin'),
   setParamsId(['postId', 'commentId']),
