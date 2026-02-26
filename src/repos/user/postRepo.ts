@@ -59,4 +59,21 @@ export const postRepo = {
       [query.search, pagination.limit, pagination.offset]
     )
   },
+  //likes
+  increaseLikesCount: (postId: number) => {
+    return pool.query(
+      `UPDATE posts
+      SET likes_count = likes_count + 1
+      WHERE id = $1`,
+      [postId]
+    )
+  },
+  decreaseLikesCount: (postId: number) => {
+    return pool.query(
+      `UPDATE posts
+      SET likes_count = likes_count - 1
+      WHERE id = $1`,
+      [postId]
+    )
+  },
 }
