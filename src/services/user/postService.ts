@@ -7,7 +7,7 @@ import type {
 } from '../../interfaces/user/postInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { getRedis } from '../../lib/redisClient.ts'
-import { postRepo } from '../../repos/postRepo.ts'
+import { postRepo } from '../../repos/user/postRepo.ts'
 import { cacheService } from '../shared/cacheService.ts'
 
 export const postService = {
@@ -102,4 +102,6 @@ export const postService = {
 
     return { deleted: deletedPost.rows[0] }
   },
+  //likes
+  toggleLike: async (user: TokenPayload, postId: number) => {},
 }

@@ -5,6 +5,7 @@
     "@types/express": "^5.0.3",
     "@types/multer": "^2.0.0",
     "@types/nodemailer": "^7.0.4",
+    "@types/pg": "^8.16.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

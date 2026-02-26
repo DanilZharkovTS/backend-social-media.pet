@@ -1,4 +1,4 @@
-import { postRepo } from '../../repos/postRepo'
+import { postRepo } from '../../repos/user/postRepo'
 import { postService } from './postService'
 
 jest.mock('../../repos/postRepo')

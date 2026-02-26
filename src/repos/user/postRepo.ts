@@ -1,10 +1,10 @@
-import pool from '../pool.ts'
+import pool from '../../pool.ts'
 import type {
   addPostInterface,
   findPostDTO,
   paginationDTO,
   updatePostDTO,
-} from '../interfaces/user/postInterfaces.ts'
+} from '../../interfaces/user/postInterfaces.ts'
 
 export const postRepo = {
   insert: (id: number, description: string) => {

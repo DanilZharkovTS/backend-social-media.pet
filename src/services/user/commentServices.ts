@@ -5,7 +5,7 @@ import type {
   updateCommentDTO,
 } from '../../interfaces/user/commentInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
-import { commentRepo } from '../../repos/commentRepo.ts'
+import { commentRepo } from '../../repos/user/commentRepo.ts'
 import { getRedis } from '../../lib/redisClient.ts'
 import { cacheService } from '../shared/cacheService.ts'
 
