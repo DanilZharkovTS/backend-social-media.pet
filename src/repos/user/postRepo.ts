@@ -1,10 +1,10 @@
-import pool from '../pool.ts'
+import pool from '../../pool.ts'
 import type {
   addPostInterface,
   findPostDTO,
   paginationDTO,
   updatePostDTO,
-} from '../interfaces/user/postInterfaces.ts'
+} from '../../interfaces/user/postInterfaces.ts'
 
 export const postRepo = {
   insert: (id: number, description: string) => {
@@ -57,6 +57,23 @@ export const postRepo = {
        LOWER(description) LIKE LOWER($1))
        LIMIT $2 OFFSET $3`,
       [query.search, pagination.limit, pagination.offset]
+    )
+  },
+  //likes
+  increaseLikesCount: (postId: number) => {
+    return pool.query(
+      `UPDATE posts
+      SET likes_count = likes_count + 1
+      WHERE id = $1`,
+      [postId]
+    )
+  },
+  decreaseLikesCount: (postId: number) => {
+    return pool.query(
+      `UPDATE posts
+      SET likes_count = likes_count - 1
+      WHERE id = $1`,
+      [postId]
     )
   },
 }

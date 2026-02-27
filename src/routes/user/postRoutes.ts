@@ -106,4 +106,13 @@ router.delete(
   commentController.deleteAsAdmin
 )
 
+//likes
+
+router.patch(
+  '/:postId/like',
+  authMiddlewares.verifyAccessToken,
+  setParamsId(['postId']),
+  postController.toggleLike
+)
+
 export default router
