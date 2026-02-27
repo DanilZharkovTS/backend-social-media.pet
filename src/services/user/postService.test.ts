@@ -73,16 +73,28 @@ describe('postService', () => {
         ])
       )
 
+      mockedPostLikesRepo.findByUserIdAndPostsIds.mockResolvedValue(
+        mockQueryResult([])
+      )
+
       const result = await postService.find(mockUser, mockQuery, mockPagination)
 
       expect(mockedPostRepo.selectBySearch).toHaveBeenCalledWith(
         mockQuery,
         mockPagination
       )
+
       expect(result).toStrictEqual({
         search: 'Hello',
         pagination: { page: 1, limit: 50 },
-        posts: [{ id: 123, user_id: 15, description: 'Hello this is test' }],
+        posts: [
+          {
+            id: 123,
+            user_id: 15,
+            description: 'Hello this is test',
+            isLiked: false,
+          },
+        ],
       })
     })
   })
