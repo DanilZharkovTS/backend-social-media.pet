@@ -3,6 +3,7 @@ import type {
   addPostInterface,
   findPostDTO,
   paginationDTO,
+  Post,
   updatePostDTO,
 } from '../../interfaces/user/postInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
@@ -70,29 +71,59 @@ export const postService = {
 
     return { deleted: result.rows[0] }
   },
-  find: async (query: findPostDTO, pagination: paginationDTO) => {
+  find: async (
+    user: TokenPayload,
+    query: findPostDTO,
+    pagination: paginationDTO
+  ) => {
     const redis = getRedis()
     const search = query.search ? query.search : 'all'
     const redisKey = `posts:search:${search}:page:${pagination.page}:limit:${pagination.limit}`
 
     const redisResult = await redis.get(redisKey)
     if (redisResult) {
+      console.log('HIT REDIS CONDITION')
+
+      const redisPosts: Post[] = JSON.parse(redisResult)
+      const postsWithLike = await postService.attachUserLikes(user, redisPosts)
+
       return {
         search: query.search,
         pagination: { page: pagination.page, limit: pagination.limit },
-        posts: JSON.parse(redisResult),
+        posts: postsWithLike,
       }
     }
+    console.log('HIT DB CONDITION')
 
-    const { rows: dbPosts } = await postRepo.selectBySearch(query, pagination)
+    const postsResult = await postRepo.selectBySearch(query, pagination)
+    const dbPosts: Post[] = postsResult.rows
 
     await redis.set(redisKey, JSON.stringify(dbPosts), 'EX', 60)
+
+    const postsWithLike = await postService.attachUserLikes(user, dbPosts)
+    console.log('EXIT DB CONDITION')
 
     return {
       search: query.search,
       pagination: { page: pagination.page, limit: pagination.limit },
-      posts: dbPosts,
+      posts: postsWithLike,
     }
+  },
+  attachUserLikes: async (user: TokenPayload, posts: Post[]) => {
+    const postsIds = posts.map((post) => post.id)
+
+    const userPostLikesResult = await postLikesRepo.findByUserIdAndPostsIds(
+      user.userId,
+      postsIds
+    )
+    const dbUserPostLikes = userPostLikesResult.rows
+    const likedPostIds = dbUserPostLikes.map((like) => like.post_id)
+
+    const postsWithLike = posts.map((post) => {
+      return { ...post, isLiked: likedPostIds.includes(post.id) }
+    })
+
+    return postsWithLike
   },
   //admin
   deleteAsAdmin: async (postId: number) => {

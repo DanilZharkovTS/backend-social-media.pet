@@ -73,7 +73,7 @@ describe('postService', () => {
         ])
       )
 
-      const result = await postService.find(mockQuery, mockPagination)
+      const result = await postService.find(mockUser, mockQuery, mockPagination)
 
       expect(mockedPostRepo.selectBySearch).toHaveBeenCalledWith(
         mockQuery,

@@ -17,6 +17,14 @@ export const postLikesRepo = {
       [userId, postId]
     )
   },
+  findByUserIdAndPostsIds: (userId: number, postsIds: number[]) => {
+    return pool.query(
+      `SELECT * FROM post_likes
+      WHERE user_id = $1
+      AND post_id = ANY($2)`,
+      [userId, postsIds]
+    )
+  },
   deleteLikeById: (likeId: number) => {
     return pool.query(
       `DELETE FROM post_likes 
