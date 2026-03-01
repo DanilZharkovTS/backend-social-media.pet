@@ -4,7 +4,6 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import { errHandler } from './middlewares/app/errHandler.ts'
-import { jsonMiddleware } from './middlewares/app/jsonMiddleware.ts'
 import appRoutes from './routes/appRoutes.ts'
 import { billingMiddlewares, } from './middlewares/billingMiddlewares.ts'
 import { billingController } from './controllers/billingController.ts'
@@ -40,8 +39,6 @@ app.use(
     },
   })
 )
-
-app.use(jsonMiddleware)
 
 app.use('/api', appRoutes)
 
