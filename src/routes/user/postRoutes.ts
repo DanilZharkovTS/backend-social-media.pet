@@ -106,14 +106,22 @@ router.delete(
   commentController.deleteAsAdmin
 )
 
-//likes
+//post_actions
 
 router.patch(
   '/:postId/like',
-  rateLimiter(30, 60, 'deleteCommentAdmin'),
+  rateLimiter(30, 60, 'togglePostLike'),
   authMiddlewares.verifyAccessToken,
   setParamsId(['postId']),
   postController.toggleLike
+)
+
+router.patch(
+  '/:postId/favorite',
+  rateLimiter(30, 60, 'togglePostFavorite'),
+  authMiddlewares.verifyAccessToken,
+  setParamsId(['postId']),
+  postController.toggleFavorite
 )
 
 export default router

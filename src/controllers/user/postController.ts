@@ -63,7 +63,7 @@ export const postController = {
       next(err)
     }
   },
-  //likes
+  //post_actions
   toggleLike: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await postService.toggleLike(
@@ -76,4 +76,5 @@ export const postController = {
       next(err)
     }
   },
+  toggleFavorite: async (req: Request, res: Response, next: NextFunction) => {},
 }

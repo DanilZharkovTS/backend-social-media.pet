@@ -158,4 +158,7 @@ export const postService = {
 
     return { isLiked: true }
   },
+  toggleFavorite: async () => {
+    
+  }
 }
