@@ -51,7 +51,7 @@ export const postRepo = {
   },
   selectBySearch: (query: findPostDTO, pagination: paginationDTO) => {
     return pool.query(
-      `SELECT posts.id, posts.user_id, posts.description, posts.created_at, users.name FROM posts
+      `SELECT posts.id, posts.user_id, posts.description, posts.created_at, users.name, posts.likes_count FROM posts
        JOIN users ON posts.user_id = users.id
        WHERE ($1::text IS NULL OR
        LOWER(description) LIKE LOWER($1))

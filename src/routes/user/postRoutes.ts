@@ -110,6 +110,7 @@ router.delete(
 
 router.patch(
   '/:postId/like',
+  rateLimiter(30, 60, 'deleteCommentAdmin'),
   authMiddlewares.verifyAccessToken,
   setParamsId(['postId']),
   postController.toggleLike

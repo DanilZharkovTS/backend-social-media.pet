@@ -66,8 +66,11 @@ export const postController = {
   //likes
   toggleLike: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await postService.toggleLike(req.user, req.paramsMap.postId)
-      res.sendStatus(200)
+      const result = await postService.toggleLike(
+        req.user,
+        req.paramsMap.postId
+      )
+      res.status(200).json(result)
     } catch (err) {
       console.log(err)
       next(err)

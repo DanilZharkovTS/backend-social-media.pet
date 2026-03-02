@@ -149,13 +149,13 @@ export const postService = {
       await postRepo.decreaseLikesCount(dbLike.post_id)
       await cacheService.invalidateByPrefix('posts:search:*')
 
-      return
+      return { isLiked: false }
     }
 
     await postLikesRepo.addLike(user.userId, postId)
     await postRepo.increaseLikesCount(postId)
     await cacheService.invalidateByPrefix('posts:search:*')
 
-    return
+    return { isLiked: true }
   },
 }
