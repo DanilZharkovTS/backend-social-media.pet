@@ -76,5 +76,13 @@ export const postController = {
       next(err)
     }
   },
-  toggleFavorite: async (req: Request, res: Response, next: NextFunction) => {},
+  toggleFavorite: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await postService.toggleFavorite(req.user, req.paramsMap.postId)
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err);
+      next(err)
+    }
+  },
 }

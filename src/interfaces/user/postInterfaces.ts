@@ -13,6 +13,13 @@ export interface PostLike {
   created_at: Date
 }
 
+export interface PostFavorite {
+  id: number
+  user_id: number
+  post_id: number
+  created_at: Date
+}
+
 export interface addPostInterface {
   description: string
 }

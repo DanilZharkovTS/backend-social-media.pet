@@ -4,10 +4,12 @@ import type {
   findPostDTO,
   paginationDTO,
   Post,
+  PostFavorite,
   updatePostDTO,
 } from '../../interfaces/user/postInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { getRedis } from '../../lib/redisClient.ts'
+import { postFavoritiesRepo } from '../../repos/user/postFavoritiesRepo.ts'
 import { postLikesRepo } from '../../repos/user/postLikesRepo.ts'
 import { postRepo } from '../../repos/user/postRepo.ts'
 import { cacheService } from '../shared/cacheService.ts'
@@ -136,7 +138,12 @@ export const postService = {
   },
   //likes
   toggleLike: async (user: TokenPayload, postId: number) => {
-    const redis = getRedis()
+    const postResult = await postRepo.findById(postId)
+    const dbPost = postResult.rows[0]
+
+    if (!dbPost) {
+      throw ApiError('Post not found', 404)
+    }
 
     const likeResult = await postLikesRepo.findByUserIdAndPostId(
       user.userId,
@@ -158,7 +165,28 @@ export const postService = {
 
     return { isLiked: true }
   },
-  toggleFavorite: async () => {
-    
-  }
+  toggleFavorite: async (user: TokenPayload, postId: number) => {
+    const postResult = await postRepo.findById(postId)
+    const dbPost = postResult.rows[0]
+
+    if (!dbPost) {
+      throw ApiError('Post not found', 404)
+    }
+
+    const favoriteResult = await postFavoritiesRepo.findByUserIdAndPostId(
+      user.userId,
+      postId
+    )
+    const dbFavorite: PostFavorite = favoriteResult.rows[0]
+
+    if (dbFavorite) {
+      await postFavoritiesRepo.deleteFavoriteById(dbFavorite.id)
+
+      return { isFavorite: false }
+    }
+
+    await postFavoritiesRepo.addFavorite(user.userId, postId)
+
+    return { isFavorite: true }
+  },
 }
