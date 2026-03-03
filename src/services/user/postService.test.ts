@@ -3,9 +3,11 @@ import { postRepo } from '../../repos/user/postRepo'
 import { postService } from './postService'
 import { cacheService } from '../shared/cacheService'
 import { postLikesRepo } from '../../repos/user/postLikesRepo'
+import { postFavoritiesRepo } from '../../repos/user/postFavoritiesRepo'
 
 jest.mock('../../repos/user/postRepo')
 jest.mock('../../repos/user/postLikesRepo')
+jest.mock('../../repos/user/postFavoritiesRepo')
 jest.mock('../shared/cacheService', () => ({
   cacheService: {
     invalidateByPrefix: jest.fn(),
@@ -20,6 +22,9 @@ jest.mock('../../lib/redisClient', () => ({
 
 const mockedPostRepo = postRepo as jest.Mocked<typeof postRepo>
 const mockedPostLikesRepo = postLikesRepo as jest.Mocked<typeof postLikesRepo>
+const mockedPostFavoritiesRepo = postFavoritiesRepo as jest.Mocked<
+  typeof postFavoritiesRepo
+>
 const mockedCacheService = cacheService as jest.Mocked<typeof cacheService>
 
 describe('postService', () => {
@@ -77,6 +82,10 @@ describe('postService', () => {
         mockQueryResult([])
       )
 
+      mockedPostFavoritiesRepo.findByUserIdAndPostIds.mockResolvedValue(
+        mockQueryResult([])
+      )
+
       const result = await postService.find(mockUser, mockQuery, mockPagination)
 
       expect(mockedPostRepo.selectBySearch).toHaveBeenCalledWith(
@@ -93,6 +102,7 @@ describe('postService', () => {
             user_id: 15,
             description: 'Hello this is test',
             isLiked: false,
+            isFavorite: false,
           },
         ],
       })
@@ -151,40 +161,39 @@ describe('postService', () => {
         )
       })
     })
+  })
+  describe('toggleLike', () => {
+    test('removes like from post', async () => {
+      mockedPostLikesRepo.findByUserIdAndPostId.mockResolvedValue(
+        mockQueryResult([{ id: 123, user_id: 15, post_id: 321 }])
+      )
 
-    describe('likePost', () => {
-      test('removes like from post', async () => {
-        mockedPostLikesRepo.findByUserIdAndPostId.mockResolvedValue(
-          mockQueryResult([{ id: 123, user_id: 15, post_id: 321 }])
-        )
+      const result = await postService.toggleLike(mockUser, 321)
 
-        const result = await postService.toggleLike(mockUser, 321)
+      expect(result).toStrictEqual({ isLiked: false })
 
-        expect(result).toBeUndefined()
+      expect(mockedPostLikesRepo.findByUserIdAndPostId).toHaveBeenCalledWith(
+        15,
+        321
+      )
+      expect(mockedPostLikesRepo.deleteLikeById).toHaveBeenCalledWith(123)
+      expect(mockedPostRepo.decreaseLikesCount).toHaveBeenCalledWith(321)
+    })
+    test('adds like to post', async () => {
+      mockedPostLikesRepo.findByUserIdAndPostId.mockResolvedValue(
+        mockQueryResult([])
+      )
 
-        expect(mockedPostLikesRepo.findByUserIdAndPostId).toHaveBeenCalledWith(
-          15,
-          321
-        )
-        expect(mockedPostLikesRepo.deleteLikeById).toHaveBeenCalledWith(123)
-        expect(mockedPostRepo.decreaseLikesCount).toHaveBeenCalledWith(321)
-      })
-      test('adds like to post', async () => {
-        mockedPostLikesRepo.findByUserIdAndPostId.mockResolvedValue(
-          mockQueryResult([])
-        )
+      const result = await postService.toggleLike(mockUser, 321)
 
-        const result = await postService.toggleLike(mockUser, 321)
+      expect(result).toStrictEqual({ isLiked: true })
 
-        expect(result).toBeUndefined()
-
-        expect(mockedPostLikesRepo.findByUserIdAndPostId).toHaveBeenCalledWith(
-          15,
-          321
-        )
-        expect(mockedPostLikesRepo.addLike).toHaveBeenCalledWith(15, 321)
-        expect(mockedPostRepo.increaseLikesCount).toHaveBeenCalledWith(321)
-      })
+      expect(mockedPostLikesRepo.findByUserIdAndPostId).toHaveBeenCalledWith(
+        15,
+        321
+      )
+      expect(mockedPostLikesRepo.addLike).toHaveBeenCalledWith(15, 321)
+      expect(mockedPostRepo.increaseLikesCount).toHaveBeenCalledWith(321)
     })
   })
 })

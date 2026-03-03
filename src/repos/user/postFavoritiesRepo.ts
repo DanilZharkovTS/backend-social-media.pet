@@ -23,4 +23,12 @@ export const postFavoritiesRepo = {
       [favoriteId]
     )
   },
+  findByUserIdAndPostIds: (userId: number, postIds: number[]) => {
+    return pool.query(
+      `SELECT * FROM post_favorities
+      WHERE user_id = $1
+      AND post_id = ANY($2)`,
+      [userId, postIds]
+    )
+  },
 }

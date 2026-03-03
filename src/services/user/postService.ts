@@ -85,14 +85,18 @@ export const postService = {
     const redisResult = await redis.get(redisKey)
     if (redisResult) {
       console.log('HIT REDIS CONDITION')
-
       const redisPosts: Post[] = JSON.parse(redisResult)
+
       const postsWithLike = await postService.attachUserLikes(user, redisPosts)
+      const postsWithFavorite = await postService.atachUserFavorities(
+        user,
+        postsWithLike
+      )
 
       return {
         search: query.search,
         pagination: { page: pagination.page, limit: pagination.limit },
-        posts: postsWithLike,
+        posts: postsWithFavorite,
       }
     }
     console.log('HIT DB CONDITION')
@@ -103,12 +107,16 @@ export const postService = {
     await redis.set(redisKey, JSON.stringify(dbPosts), 'EX', 60)
 
     const postsWithLike = await postService.attachUserLikes(user, dbPosts)
+    const postsWithFavorite = await postService.atachUserFavorities(
+      user,
+      postsWithLike
+    )
     console.log('EXIT DB CONDITION')
 
     return {
       search: query.search,
       pagination: { page: pagination.page, limit: pagination.limit },
-      posts: postsWithLike,
+      posts: postsWithFavorite,
     }
   },
   attachUserLikes: async (user: TokenPayload, posts: Post[]) => {
@@ -126,6 +134,23 @@ export const postService = {
     })
 
     return postsWithLike
+  },
+  atachUserFavorities: async (user: TokenPayload, posts: Post[]) => {
+    const postIds = posts.map((p) => p.id)
+
+    const userPostFavoritiesResult =
+      await postFavoritiesRepo.findByUserIdAndPostIds(user.userId, postIds)
+    const dbUserPostFavorities = userPostFavoritiesResult.rows
+    const favoritePostIds = dbUserPostFavorities.map((f) => f.post_id)
+
+    const postsWithFavorite = posts.map((p) => {
+      return {
+        ...p,
+        isFavorite: favoritePostIds.includes(p.id),
+      }
+    })
+
+    return postsWithFavorite
   },
   //admin
   deleteAsAdmin: async (postId: number) => {
