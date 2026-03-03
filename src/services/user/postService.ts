@@ -4,10 +4,12 @@ import type {
   findPostDTO,
   paginationDTO,
   Post,
+  PostFavorite,
   updatePostDTO,
 } from '../../interfaces/user/postInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { getRedis } from '../../lib/redisClient.ts'
+import { postFavoritiesRepo } from '../../repos/user/postFavoritiesRepo.ts'
 import { postLikesRepo } from '../../repos/user/postLikesRepo.ts'
 import { postRepo } from '../../repos/user/postRepo.ts'
 import { cacheService } from '../shared/cacheService.ts'
@@ -83,14 +85,18 @@ export const postService = {
     const redisResult = await redis.get(redisKey)
     if (redisResult) {
       console.log('HIT REDIS CONDITION')
-
       const redisPosts: Post[] = JSON.parse(redisResult)
+
       const postsWithLike = await postService.attachUserLikes(user, redisPosts)
+      const postsWithFavorite = await postService.atachUserFavorities(
+        user,
+        postsWithLike
+      )
 
       return {
         search: query.search,
         pagination: { page: pagination.page, limit: pagination.limit },
-        posts: postsWithLike,
+        posts: postsWithFavorite,
       }
     }
     console.log('HIT DB CONDITION')
@@ -101,12 +107,16 @@ export const postService = {
     await redis.set(redisKey, JSON.stringify(dbPosts), 'EX', 60)
 
     const postsWithLike = await postService.attachUserLikes(user, dbPosts)
+    const postsWithFavorite = await postService.atachUserFavorities(
+      user,
+      postsWithLike
+    )
     console.log('EXIT DB CONDITION')
 
     return {
       search: query.search,
       pagination: { page: pagination.page, limit: pagination.limit },
-      posts: postsWithLike,
+      posts: postsWithFavorite,
     }
   },
   attachUserLikes: async (user: TokenPayload, posts: Post[]) => {
@@ -125,6 +135,23 @@ export const postService = {
 
     return postsWithLike
   },
+  atachUserFavorities: async (user: TokenPayload, posts: Post[]) => {
+    const postIds = posts.map((p) => p.id)
+
+    const userPostFavoritiesResult =
+      await postFavoritiesRepo.findByUserIdAndPostIds(user.userId, postIds)
+    const dbUserPostFavorities = userPostFavoritiesResult.rows
+    const favoritePostIds = dbUserPostFavorities.map((f) => f.post_id)
+
+    const postsWithFavorite = posts.map((p) => {
+      return {
+        ...p,
+        isFavorite: favoritePostIds.includes(p.id),
+      }
+    })
+
+    return postsWithFavorite
+  },
   //admin
   deleteAsAdmin: async (postId: number) => {
     const deletedPost = await postRepo.deleteById(postId)
@@ -136,7 +163,12 @@ export const postService = {
   },
   //likes
   toggleLike: async (user: TokenPayload, postId: number) => {
-    const redis = getRedis()
+    const postResult = await postRepo.findById(postId)
+    const dbPost = postResult.rows[0]
+
+    if (!dbPost) {
+      throw ApiError('Post not found', 404)
+    }
 
     const likeResult = await postLikesRepo.findByUserIdAndPostId(
       user.userId,
@@ -157,5 +189,29 @@ export const postService = {
     await cacheService.invalidateByPrefix('posts:search:*')
 
     return { isLiked: true }
+  },
+  toggleFavorite: async (user: TokenPayload, postId: number) => {
+    const postResult = await postRepo.findById(postId)
+    const dbPost = postResult.rows[0]
+
+    if (!dbPost) {
+      throw ApiError('Post not found', 404)
+    }
+
+    const favoriteResult = await postFavoritiesRepo.findByUserIdAndPostId(
+      user.userId,
+      postId
+    )
+    const dbFavorite: PostFavorite = favoriteResult.rows[0]
+
+    if (dbFavorite) {
+      await postFavoritiesRepo.deleteFavoriteById(dbFavorite.id)
+
+      return { isFavorite: false }
+    }
+
+    await postFavoritiesRepo.addFavorite(user.userId, postId)
+
+    return { isFavorite: true }
   },
 }
