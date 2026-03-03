@@ -196,4 +196,59 @@ describe('postService', () => {
       expect(mockedPostRepo.increaseLikesCount).toHaveBeenCalledWith(321)
     })
   })
+
+  describe('toggleFavorite', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    test('throws 404 if post not found', async () => {
+      mockedPostRepo.findById.mockResolvedValue(mockQueryResult([]))
+
+      await expect(postService.toggleFavorite(mockUser, 123)).rejects.toEqual({
+        message: 'Post not found',
+        status: 404,
+      })
+
+      expect(mockedPostRepo.findById).toHaveBeenCalledWith(123)
+
+      expect(
+        mockedPostFavoritiesRepo.findByUserIdAndPostId
+      ).not.toHaveBeenCalled()
+    })
+
+    test('removes favorite if already exists', async () => {
+      mockedPostRepo.findById.mockResolvedValue(mockQueryResult([{ id: 123 }]))
+
+      mockedPostFavoritiesRepo.findByUserIdAndPostId.mockResolvedValue(
+        mockQueryResult([{ id: 999, user_id: 15, post_id: 123 }])
+      )
+
+      const result = await postService.toggleFavorite(mockUser, 123)
+
+      expect(result).toEqual({ isFavorite: false })
+
+      expect(mockedPostFavoritiesRepo.deleteFavoriteById).toHaveBeenCalledWith(
+        999
+      )
+
+      expect(mockedPostFavoritiesRepo.addFavorite).not.toHaveBeenCalled()
+    })
+
+    test('adds favorite if not exists', async () => {
+      mockedPostRepo.findById.mockResolvedValue(mockQueryResult([{ id: 123 }]))
+
+      mockedPostFavoritiesRepo.findByUserIdAndPostId.mockResolvedValue(
+        mockQueryResult([])
+      )
+
+      const result = await postService.toggleFavorite(mockUser, 123)
+
+      expect(result).toEqual({ isFavorite: true })
+
+      expect(mockedPostFavoritiesRepo.addFavorite).toHaveBeenCalledWith(15, 123)
+
+      expect(mockedPostFavoritiesRepo.deleteFavoriteById).not.toHaveBeenCalled()
+    })
+  })
 })
