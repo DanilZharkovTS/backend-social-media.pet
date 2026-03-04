@@ -106,6 +106,17 @@ export const userService = {
     return { posts: dbLikedPosts }
   },
   getFavoritePosts: async (user: TokenPayload) => {
+    const redis = getRedis()
+    const redisKey = `users:${user.userId}:favorite-posts`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      const redisPosts = JSON.parse(redisResult)
+
+      return { posts: redisPosts }
+    }
+
     const userPostFavoritiesResult = await postFavoritiesRepo.findByUserId(
       user.userId
     )
@@ -114,6 +125,8 @@ export const userService = {
 
     const favoritePostsResult = await postRepo.findByIds(favoritePostsIds)
     const dbFavoritePosts = favoritePostsResult.rows
+
+    await redis.set(redisKey, JSON.stringify(dbFavoritePosts))
 
     return { posts: dbFavoritePosts }
   },
