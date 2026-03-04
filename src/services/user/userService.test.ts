@@ -47,6 +47,7 @@ describe('userService', () => {
       get: jest.fn(),
       set: jest.fn(),
     }
+
     ;(getRedis as jest.Mock).mockReturnValue(mockRedis)
   })
 
@@ -63,7 +64,18 @@ describe('userService', () => {
         mockedPagination
       )
 
-      expect(result).toEqual({ posts: cachedPosts, mockedPagination })
+      expect(mockRedis.get).toHaveBeenCalledWith(
+        `users:${mockUserId}:liked-posts:page:${mockedPagination.page}:limit:${mockedPagination.limit}`
+      )
+
+      expect(mockedPostLikesRepo.findByUserId).not.toHaveBeenCalled()
+      expect(mockedPostRepo.findByIds).not.toHaveBeenCalled()
+      expect(mockRedis.set).not.toHaveBeenCalled()
+
+      expect(result).toEqual({
+        posts: cachedPosts,
+        pagination: mockedPagination,
+      })
     })
 
     test('fetches from db and saves to redis if cache is empty', async () => {
@@ -82,36 +94,82 @@ describe('userService', () => {
         mockedPagination
       )
 
-      expect(mockedPostRepo.findByIds).toHaveBeenCalledWith([1])
+      expect(mockedPostLikesRepo.findByUserId).toHaveBeenCalledWith(
+        mockUserId
+      )
+
+      expect(mockedPostRepo.findByIds).toHaveBeenCalledWith(
+        [1],
+        mockedPagination
+      )
+
+      expect(mockRedis.set).toHaveBeenCalledWith(
+        `users:${mockUserId}:liked-posts:page:${mockedPagination.page}:limit:${mockedPagination.limit}`,
+        JSON.stringify([{ id: 1, description: 'post1' }])
+      )
 
       expect(result).toEqual({
         posts: [{ id: 1, description: 'post1' }],
-        mockedPagination,
+        pagination: mockedPagination,
       })
+    })
+
+    test('handles empty liked posts correctly', async () => {
+      mockRedis.get.mockResolvedValue(null)
+
+      mockedPostLikesRepo.findByUserId.mockResolvedValue(
+        mockQueryResult([])
+      )
+
+      mockedPostRepo.findByIds.mockResolvedValue(
+        mockQueryResult([])
+      )
+
+      const result = await userService.getLikedPosts(
+        mockUserId,
+        mockedPagination
+      )
+
+      expect(result).toEqual({
+        posts: [],
+        pagination: mockedPagination,
+      })
+
+      expect(mockRedis.set).toHaveBeenCalledWith(
+        `users:${mockUserId}:liked-posts:page:${mockedPagination.page}:limit:${mockedPagination.limit}`,
+        JSON.stringify([])
+      )
     })
   })
 
   describe('getFavoritePosts', () => {
     const mockUser = { userId: 15 } as any
 
-    test('returns favorite posts from redis if cache exists', async () => {
+    test('returns posts from redis if cache exists', async () => {
       const cachedPosts = [{ id: 10, description: 'cached favorite' }]
 
       mockRedis.get.mockResolvedValue(JSON.stringify(cachedPosts))
 
-      const result = await userService.getFavoritePosts(mockUser)
+      const result = await userService.getFavoritePosts(
+        mockUser,
+        mockedPagination
+      )
 
       expect(mockRedis.get).toHaveBeenCalledWith(
-        `users:${mockUser.userId}:favorite-posts`
+        `users:${mockUser.userId}:favorite-posts:page:${mockedPagination.page}:limit:${mockedPagination.limit}`
       )
 
       expect(mockedPostFavoritiesRepo.findByUserId).not.toHaveBeenCalled()
       expect(mockedPostRepo.findByIds).not.toHaveBeenCalled()
+      expect(mockRedis.set).not.toHaveBeenCalled()
 
-      expect(result).toEqual({ posts: cachedPosts })
+      expect(result).toEqual({
+        posts: cachedPosts,
+        pagination: mockedPagination,
+      })
     })
 
-    test('fetches favorite posts from db and saves to redis if cache is empty', async () => {
+    test('fetches from db and saves to redis if cache is empty', async () => {
       mockRedis.get.mockResolvedValue(null)
 
       mockedPostFavoritiesRepo.findByUserId.mockResolvedValue(
@@ -125,16 +183,22 @@ describe('userService', () => {
         ])
       )
 
-      const result = await userService.getFavoritePosts(mockUser)
+      const result = await userService.getFavoritePosts(
+        mockUser,
+        mockedPagination
+      )
 
       expect(mockedPostFavoritiesRepo.findByUserId).toHaveBeenCalledWith(
         mockUser.userId
       )
 
-      expect(mockedPostRepo.findByIds).toHaveBeenCalledWith([3, 4])
+      expect(mockedPostRepo.findByIds).toHaveBeenCalledWith(
+        [3, 4],
+        mockedPagination
+      )
 
       expect(mockRedis.set).toHaveBeenCalledWith(
-        `users:${mockUser.userId}:favorite-posts`,
+        `users:${mockUser.userId}:favorite-posts:page:${mockedPagination.page}:limit:${mockedPagination.limit}`,
         JSON.stringify([
           { id: 3, description: 'fav1' },
           { id: 4, description: 'fav2' },
@@ -146,6 +210,7 @@ describe('userService', () => {
           { id: 3, description: 'fav1' },
           { id: 4, description: 'fav2' },
         ],
+        pagination: mockedPagination,
       })
     })
 
@@ -156,14 +221,22 @@ describe('userService', () => {
         mockQueryResult([])
       )
 
-      mockedPostRepo.findByIds.mockResolvedValue(mockQueryResult([]))
+      mockedPostRepo.findByIds.mockResolvedValue(
+        mockQueryResult([])
+      )
 
-      const result = await userService.getFavoritePosts(mockUser)
+      const result = await userService.getFavoritePosts(
+        mockUser,
+        mockedPagination
+      )
 
-      expect(result).toEqual({ posts: [] })
+      expect(result).toEqual({
+        posts: [],
+        pagination: mockedPagination,
+      })
 
       expect(mockRedis.set).toHaveBeenCalledWith(
-        `users:${mockUser.userId}:favorite-posts`,
+        `users:${mockUser.userId}:favorite-posts:page:${mockedPagination.page}:limit:${mockedPagination.limit}`,
         JSON.stringify([])
       )
     })

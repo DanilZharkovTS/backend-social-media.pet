@@ -105,16 +105,16 @@ export const userService = {
 
     return { posts: dbLikedPosts, pagination }
   },
-  getFavoritePosts: async (user: TokenPayload) => {
+  getFavoritePosts: async (user: TokenPayload, pagination: paginationDTO) => {
     const redis = getRedis()
-    const redisKey = `users:${user.userId}:favorite-posts`
+    const redisKey = `users:${user.userId}:favorite-posts:page:${pagination.page}:limit:${pagination.limit}`
 
     const redisResult = await redis.get(redisKey)
 
     if (redisResult) {
       const redisPosts = JSON.parse(redisResult)
 
-      return { posts: redisPosts }
+      return { posts: redisPosts, pagination }
     }
 
     const userPostFavoritiesResult = await postFavoritiesRepo.findByUserId(
@@ -123,12 +123,12 @@ export const userService = {
     const dbUserPostFavorities = userPostFavoritiesResult.rows
     const favoritePostsIds = dbUserPostFavorities.map((f) => f.post_id)
 
-    const favoritePostsResult = await postRepo.findByIds(favoritePostsIds)
+    const favoritePostsResult = await postRepo.findByIds(favoritePostsIds, pagination)
     const dbFavoritePosts = favoritePostsResult.rows
 
     await redis.set(redisKey, JSON.stringify(dbFavoritePosts))
 
-    return { posts: dbFavoritePosts }
+    return { posts: dbFavoritePosts, pagination }
   },
   updateMyInfo: async (user: TokenPayload, data: dynamicUpdateMyInfo) => {
     const userResult = await userRepo.updateMyInfoById(user.userId, data)

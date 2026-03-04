@@ -25,6 +25,7 @@ router.patch(
 router.get(
   '/me/favorite-posts',
   rateLimiter(60, 60, 'me_liked_posts'),
+  paginate,
   authMiddlewares.verifyAccessToken,
   userController.getFavoritePosts
 )

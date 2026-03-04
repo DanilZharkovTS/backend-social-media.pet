@@ -21,7 +21,10 @@ export const userController = {
   },
   getFavoritePosts: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await userService.getFavoritePosts(req.user)
+      const result = await userService.getFavoritePosts(
+        req.user,
+        req.pagination
+      )
       res.status(200).json(result)
     } catch (err) {
       console.log(err)
