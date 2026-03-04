@@ -82,12 +82,25 @@ export const userService = {
     return toUserResponse(dbUser)
   },
   getLikedPosts: async (userId: number) => {
+    const redis = getRedis()
+    const redisKey = `users:${userId}:liked-posts`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      const redisLikedPosts = JSON.parse(redisResult)
+
+      return { posts: redisLikedPosts }
+    }
+
     const userPostLikesResult = await postLikesRepo.findByUserId(userId)
     const dbUserPostLikes = userPostLikesResult.rows
     const likedPostsIds = dbUserPostLikes.map((l) => l.post_id)
 
     const likedPostsResult = await postRepo.findByIds(likedPostsIds)
     const dbLikedPosts = likedPostsResult.rows
+
+    await redis.set(redisKey, JSON.stringify(dbLikedPosts))
 
     return { posts: dbLikedPosts }
   },
