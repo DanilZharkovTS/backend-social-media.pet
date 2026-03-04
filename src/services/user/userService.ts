@@ -13,6 +13,9 @@ import { ApiError } from '../../lib/ApiErrors.ts'
 import { userRepo } from '../../repos/userRepo.ts'
 import { getRedis } from '../../lib/redisClient.ts'
 import { cacheService } from '../shared/cacheService.ts'
+import { postLikesRepo } from '../../repos/user/postLikesRepo.ts'
+import { postRepo } from '../../repos/user/postRepo.ts'
+import { postFavoritiesRepo } from '../../repos/user/postFavoritiesRepo.ts'
 
 export const userService = {
   //me
@@ -78,6 +81,54 @@ export const userService = {
     )
 
     return toUserResponse(dbUser)
+  },
+  getLikedPosts: async (userId: number, pagination: paginationDTO) => {
+    const redis = getRedis()
+    const redisKey = `users:${userId}:liked-posts:page:${pagination.page}:limit:${pagination.limit}`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      const redisLikedPosts = JSON.parse(redisResult)
+
+      return { posts: redisLikedPosts, pagination }
+    }
+
+    const userPostLikesResult = await postLikesRepo.findByUserId(userId)
+    const dbUserPostLikes = userPostLikesResult.rows
+    const likedPostsIds = dbUserPostLikes.map((l) => l.post_id)
+
+    const likedPostsResult = await postRepo.findByIds(likedPostsIds, pagination)
+    const dbLikedPosts = likedPostsResult.rows
+
+    await redis.set(redisKey, JSON.stringify(dbLikedPosts))
+
+    return { posts: dbLikedPosts, pagination }
+  },
+  getFavoritePosts: async (user: TokenPayload, pagination: paginationDTO) => {
+    const redis = getRedis()
+    const redisKey = `users:${user.userId}:favorite-posts:page:${pagination.page}:limit:${pagination.limit}`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      const redisPosts = JSON.parse(redisResult)
+
+      return { posts: redisPosts, pagination }
+    }
+
+    const userPostFavoritiesResult = await postFavoritiesRepo.findByUserId(
+      user.userId
+    )
+    const dbUserPostFavorities = userPostFavoritiesResult.rows
+    const favoritePostsIds = dbUserPostFavorities.map((f) => f.post_id)
+
+    const favoritePostsResult = await postRepo.findByIds(favoritePostsIds, pagination)
+    const dbFavoritePosts = favoritePostsResult.rows
+
+    await redis.set(redisKey, JSON.stringify(dbFavoritePosts))
+
+    return { posts: dbFavoritePosts, pagination }
   },
   updateMyInfo: async (user: TokenPayload, data: dynamicUpdateMyInfo) => {
     const userResult = await userRepo.updateMyInfoById(user.userId, data)

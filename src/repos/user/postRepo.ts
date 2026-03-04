@@ -34,11 +34,21 @@ export const postRepo = {
   },
   findById: (id: number) => {
     return pool.query(
-      `SELECT posts.id, posts.user_id, posts.description, users.name
+      `SELECT posts.id, posts.user_id, posts.description, posts.created_at, users.name, users.avatar_url
      FROM posts
      JOIN users ON posts.user_id = users.id
      WHERE posts.id = $1`,
       [id]
+    )
+  },
+  findByIds: (postIds: number[], pagination: paginationDTO) => {
+    return pool.query(
+      `SELECT posts.id, posts.user_id, posts.description, posts.created_at, users.name, users.avatar_url
+      FROM posts
+      JOIN users ON posts.user_id = users.id
+      WHERE posts.id = ANY($1)
+      LIMIT $2 OFFSET $3`,
+      [postIds, pagination.limit, pagination.offset]
     )
   },
   deleteById: (id: number) => {
