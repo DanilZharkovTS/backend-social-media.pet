@@ -39,7 +39,7 @@ router.patch(
 
 router.patch(
   '/me/avatar',
-  rateLimiter(10, 60, 'myAvatar'),
+  rateLimiter(5, 60, 'myAvatar'),
   authMiddlewares.verifyAccessToken,
   userMiddlewares.updateMyAvatarUrl,
   userController.updateMyAvatarUrl
@@ -47,7 +47,7 @@ router.patch(
 
 router.post(
   '/me/avatar/upload',
-  rateLimiter(10, 60, 'uploadMyAvatar'),
+  rateLimiter(5, 60, 'uploadMyAvatar'),
   authMiddlewares.verifyAccessToken,
   upload.single('avatar'),
   userController.uploadMyAvatar
@@ -61,6 +61,14 @@ router.get(
   authMiddlewares.verifyAccessToken,
   setParamsId(['userId']),
   userController.readUserInfo
+)
+
+router.get(
+  '/:userId/liked-posts',
+  rateLimiter(60, 60, 'me_liked_posts'),
+  authMiddlewares.verifyAccessToken,
+  setParamsId(['userId']),
+  userController.getLikedPosts
 )
 
 export default router

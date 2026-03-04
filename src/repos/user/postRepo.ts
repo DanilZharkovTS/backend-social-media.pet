@@ -34,11 +34,20 @@ export const postRepo = {
   },
   findById: (id: number) => {
     return pool.query(
-      `SELECT posts.id, posts.user_id, posts.description, users.name
+      `SELECT posts.id, posts.user_id, posts.description, posts.created_at, users.name, users.avatar_url
      FROM posts
      JOIN users ON posts.user_id = users.id
      WHERE posts.id = $1`,
       [id]
+    )
+  },
+  findByIds: (postIds: number[]) => {
+    return pool.query(
+      `SELECT posts.id, posts.user_id, posts.description, posts.created_at, users.name, users.avatar_url
+      FROM posts
+      JOIN users ON posts.user_id = users.id
+      WHERE posts.id = ANY($1)`,
+      [postIds]
     )
   },
   deleteById: (id: number) => {

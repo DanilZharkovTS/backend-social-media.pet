@@ -13,6 +13,8 @@ import { ApiError } from '../../lib/ApiErrors.ts'
 import { userRepo } from '../../repos/userRepo.ts'
 import { getRedis } from '../../lib/redisClient.ts'
 import { cacheService } from '../shared/cacheService.ts'
+import { postLikesRepo } from '../../repos/user/postLikesRepo.ts'
+import { postRepo } from '../../repos/user/postRepo.ts'
 
 export const userService = {
   //me
@@ -78,6 +80,16 @@ export const userService = {
     )
 
     return toUserResponse(dbUser)
+  },
+  getLikedPosts: async (userId: number) => {
+    const userPostLikesResult = await postLikesRepo.findByUserId(userId)
+    const dbUserPostLikes = userPostLikesResult.rows
+    const likedPostsIds = dbUserPostLikes.map((l) => l.post_id)
+
+    const likedPostsResult = await postRepo.findByIds(likedPostsIds)
+    const dbLikedPosts = likedPostsResult.rows
+
+    return { posts: dbLikedPosts }
   },
   updateMyInfo: async (user: TokenPayload, data: dynamicUpdateMyInfo) => {
     const userResult = await userRepo.updateMyInfoById(user.userId, data)

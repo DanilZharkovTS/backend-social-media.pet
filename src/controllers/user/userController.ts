@@ -64,6 +64,15 @@ export const userController = {
       next(err)
     }
   },
+  getLikedPosts: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await userService.getLikedPosts(req.paramsMap.userId)
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err)
+      next(err)
+    }
+  },
   //admin
   findAsAdmin: async (req: Request, res: Response, next: NextFunction) => {
     try {
