@@ -19,6 +19,15 @@ export const userController = {
       next(err)
     }
   },
+  getFavoritePosts: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await userService.getFavoritePosts(req.user)
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err)
+      next(err)
+    }
+  },
   updateMyInfo: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await userService.updateMyInfo(req.user, req.body)

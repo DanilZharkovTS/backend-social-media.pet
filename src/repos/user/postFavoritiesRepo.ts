@@ -8,6 +8,13 @@ export const postFavoritiesRepo = {
       [userId, postId]
     )
   },
+  findByUserId: (userId: number) => {
+    return pool.query(
+      `SELECT * FROM post_favorities
+        WHERE user_id = $1`,
+      [userId]
+    )
+  },
   findByUserIdAndPostId: (userId: number, postId: number) => {
     return pool.query(
       `SELECT * FROM post_favorities

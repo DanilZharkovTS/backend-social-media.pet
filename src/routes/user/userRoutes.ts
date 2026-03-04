@@ -21,6 +21,13 @@ router.patch(
   userController.updateMyInfo
 )
 
+router.get(
+  '/me/favorite-posts',
+  rateLimiter(60, 60, 'me_liked_posts'),
+  authMiddlewares.verifyAccessToken,
+  userController.getFavoritePosts
+)
+
 router.patch(
   '/me/email',
   rateLimiter(5, 60, 'myEmail'),
@@ -65,7 +72,7 @@ router.get(
 
 router.get(
   '/:userId/liked-posts',
-  rateLimiter(60, 60, 'me_liked_posts'),
+  rateLimiter(60, 60, 'liked_posts'),
   authMiddlewares.verifyAccessToken,
   setParamsId(['userId']),
   userController.getLikedPosts

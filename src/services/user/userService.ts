@@ -15,6 +15,7 @@ import { getRedis } from '../../lib/redisClient.ts'
 import { cacheService } from '../shared/cacheService.ts'
 import { postLikesRepo } from '../../repos/user/postLikesRepo.ts'
 import { postRepo } from '../../repos/user/postRepo.ts'
+import { postFavoritiesRepo } from '../../repos/user/postFavoritiesRepo.ts'
 
 export const userService = {
   //me
@@ -103,6 +104,18 @@ export const userService = {
     await redis.set(redisKey, JSON.stringify(dbLikedPosts))
 
     return { posts: dbLikedPosts }
+  },
+  getFavoritePosts: async (user: TokenPayload) => {
+    const userPostFavoritiesResult = await postFavoritiesRepo.findByUserId(
+      user.userId
+    )
+    const dbUserPostFavorities = userPostFavoritiesResult.rows
+    const favoritePostsIds = dbUserPostFavorities.map((f) => f.post_id)
+
+    const favoritePostsResult = await postRepo.findByIds(favoritePostsIds)
+    const dbFavoritePosts = favoritePostsResult.rows
+
+    return { posts: dbFavoritePosts }
   },
   updateMyInfo: async (user: TokenPayload, data: dynamicUpdateMyInfo) => {
     const userResult = await userRepo.updateMyInfoById(user.userId, data)
