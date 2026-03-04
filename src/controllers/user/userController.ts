@@ -75,7 +75,10 @@ export const userController = {
   },
   getLikedPosts: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await userService.getLikedPosts(req.paramsMap.userId)
+      const result = await userService.getLikedPosts(
+        req.paramsMap.userId,
+        req.pagination
+      )
       res.status(200).json(result)
     } catch (err) {
       console.log(err)

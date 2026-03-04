@@ -82,28 +82,28 @@ export const userService = {
 
     return toUserResponse(dbUser)
   },
-  getLikedPosts: async (userId: number) => {
+  getLikedPosts: async (userId: number, pagination: paginationDTO) => {
     const redis = getRedis()
-    const redisKey = `users:${userId}:liked-posts`
+    const redisKey = `users:${userId}:liked-posts:page:${pagination.page}:limit:${pagination.limit}`
 
     const redisResult = await redis.get(redisKey)
 
     if (redisResult) {
       const redisLikedPosts = JSON.parse(redisResult)
 
-      return { posts: redisLikedPosts }
+      return { posts: redisLikedPosts, pagination }
     }
 
     const userPostLikesResult = await postLikesRepo.findByUserId(userId)
     const dbUserPostLikes = userPostLikesResult.rows
     const likedPostsIds = dbUserPostLikes.map((l) => l.post_id)
 
-    const likedPostsResult = await postRepo.findByIds(likedPostsIds)
+    const likedPostsResult = await postRepo.findByIds(likedPostsIds, pagination)
     const dbLikedPosts = likedPostsResult.rows
 
     await redis.set(redisKey, JSON.stringify(dbLikedPosts))
 
-    return { posts: dbLikedPosts }
+    return { posts: dbLikedPosts, pagination }
   },
   getFavoritePosts: async (user: TokenPayload) => {
     const redis = getRedis()

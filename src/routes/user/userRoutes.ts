@@ -5,6 +5,7 @@ import { setParamsId } from '../../middlewares/helpers/paramsId.ts'
 import { userMiddlewares } from '../../middlewares/user/userMiddlewares.ts'
 import { upload } from '../../lib/uploadMiddleware.ts'
 import { rateLimiter } from '../../middlewares/helpers/rateLimiter.ts'
+import { paginate } from '../../middlewares/helpers/pagination.ts'
 
 const router = Router()
 
@@ -74,6 +75,7 @@ router.get(
   '/:userId/liked-posts',
   rateLimiter(60, 60, 'liked_posts'),
   authMiddlewares.verifyAccessToken,
+  paginate,
   setParamsId(['userId']),
   userController.getLikedPosts
 )

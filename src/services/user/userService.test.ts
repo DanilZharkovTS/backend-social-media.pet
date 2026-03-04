@@ -34,6 +34,12 @@ const mockQueryResult = <T>(rows: T[]): QueryResult<T> =>
 describe('userService', () => {
   let mockRedis: any
 
+  const mockedPagination = {
+    page: 1,
+    offset: 0,
+    limit: 50,
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
 
@@ -52,9 +58,12 @@ describe('userService', () => {
 
       mockRedis.get.mockResolvedValue(JSON.stringify(cachedPosts))
 
-      const result = await userService.getLikedPosts(mockUserId)
+      const result = await userService.getLikedPosts(
+        mockUserId,
+        mockedPagination
+      )
 
-      expect(result).toEqual({ posts: cachedPosts })
+      expect(result).toEqual({ posts: cachedPosts, mockedPagination })
     })
 
     test('fetches from db and saves to redis if cache is empty', async () => {
@@ -68,12 +77,16 @@ describe('userService', () => {
         mockQueryResult([{ id: 1, description: 'post1' }])
       )
 
-      const result = await userService.getLikedPosts(mockUserId)
+      const result = await userService.getLikedPosts(
+        mockUserId,
+        mockedPagination
+      )
 
       expect(mockedPostRepo.findByIds).toHaveBeenCalledWith([1])
 
       expect(result).toEqual({
         posts: [{ id: 1, description: 'post1' }],
+        mockedPagination,
       })
     })
   })
