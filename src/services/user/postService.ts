@@ -84,11 +84,10 @@ export const postService = {
 
     const redisResult = await redis.get(redisKey)
     if (redisResult) {
-      console.log('HIT REDIS CONDITION')
       const redisPosts: Post[] = JSON.parse(redisResult)
 
       const postsWithLike = await postService.attachUserLikes(user, redisPosts)
-      const postsWithFavorite = await postService.atachUserFavorities(
+      const postsWithFavorite = await postService.attachUserFavorities(
         user,
         postsWithLike
       )
@@ -99,7 +98,6 @@ export const postService = {
         posts: postsWithFavorite,
       }
     }
-    console.log('HIT DB CONDITION')
 
     const postsResult = await postRepo.selectBySearch(query, pagination)
     const dbPosts: Post[] = postsResult.rows
@@ -107,11 +105,10 @@ export const postService = {
     await redis.set(redisKey, JSON.stringify(dbPosts), 'EX', 60)
 
     const postsWithLike = await postService.attachUserLikes(user, dbPosts)
-    const postsWithFavorite = await postService.atachUserFavorities(
+    const postsWithFavorite = await postService.attachUserFavorities(
       user,
       postsWithLike
     )
-    console.log('EXIT DB CONDITION')
 
     return {
       search: query.search,
@@ -135,7 +132,7 @@ export const postService = {
 
     return postsWithLike
   },
-  atachUserFavorities: async (user: TokenPayload, posts: Post[]) => {
+  attachUserFavorities: async (user: TokenPayload, posts: Post[]) => {
     const postIds = posts.map((p) => p.id)
 
     const userPostFavoritiesResult =
@@ -179,14 +176,20 @@ export const postService = {
     if (dbLike) {
       await postLikesRepo.deleteLikeById(dbLike.id)
       await postRepo.decreaseLikesCount(dbLike.post_id)
+
       await cacheService.invalidateByPrefix('posts:search:*')
+      await cacheService.invalidateByPrefix(
+        `users:${user.userId}:liked-posts:*`
+      )
 
       return { isLiked: false }
     }
 
     await postLikesRepo.addLike(user.userId, postId)
     await postRepo.increaseLikesCount(postId)
+
     await cacheService.invalidateByPrefix('posts:search:*')
+    await cacheService.invalidateByPrefix(`users:${user.userId}:liked-posts:*`)
 
     return { isLiked: true }
   },
@@ -206,11 +209,17 @@ export const postService = {
 
     if (dbFavorite) {
       await postFavoritiesRepo.deleteFavoriteById(dbFavorite.id)
+      await cacheService.invalidateByPrefix(
+        `users:${user.userId}:favorite-posts:*`
+      )
 
       return { isFavorite: false }
     }
 
     await postFavoritiesRepo.addFavorite(user.userId, postId)
+    await cacheService.invalidateByPrefix(
+      `users:${user.userId}:favorite-posts:*`
+    )
 
     return { isFavorite: true }
   },
