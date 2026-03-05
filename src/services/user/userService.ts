@@ -1,5 +1,8 @@
 import type { TokenPayload } from '../../interfaces/auth/authInterfaces.ts'
-import type { paginationDTO } from '../../interfaces/user/postInterfaces.ts'
+import type {
+  paginationDTO,
+  Post,
+} from '../../interfaces/user/postInterfaces.ts'
 import type {
   dynamicUpdateMyInfo,
   updateAvatarUrlDTO,
@@ -16,6 +19,7 @@ import { cacheService } from '../shared/cacheService.ts'
 import { postLikesRepo } from '../../repos/user/postLikesRepo.ts'
 import { postRepo } from '../../repos/user/postRepo.ts'
 import { postFavoritiesRepo } from '../../repos/user/postFavoritiesRepo.ts'
+import { postService } from './postService.ts'
 
 export const userService = {
   //me
@@ -82,17 +86,35 @@ export const userService = {
 
     return toUserResponse(dbUser)
   },
-  getLikedPosts: async (userId: number, pagination: paginationDTO) => {
+  getLikedPosts: async (
+    user: TokenPayload,
+    userId: number,
+    pagination: paginationDTO
+  ) => {
     const redis = getRedis()
     const redisKey = `users:${userId}:liked-posts:page:${pagination.page}:limit:${pagination.limit}`
 
     const redisResult = await redis.get(redisKey)
 
     if (redisResult) {
-      const redisLikedPosts = JSON.parse(redisResult)
+      console.log('redis')
 
-      return { posts: redisLikedPosts, pagination }
+      const redisPosts = JSON.parse(redisResult)
+
+      const postsWithLike = redisPosts.map((p: Post) => {
+        return {
+          ...p,
+          isLiked: true,
+        }
+      })
+      const postsWithFavorite = await postService.attachUserFavorities(
+        user,
+        postsWithLike
+      )
+
+      return { posts: postsWithFavorite, pagination }
     }
+    console.log('db')
 
     const userPostLikesResult = await postLikesRepo.findByUserId(userId)
     const dbUserPostLikes = userPostLikesResult.rows
@@ -101,9 +123,20 @@ export const userService = {
     const likedPostsResult = await postRepo.findByIds(likedPostsIds, pagination)
     const dbLikedPosts = likedPostsResult.rows
 
-    await redis.set(redisKey, JSON.stringify(dbLikedPosts))
+    await redis.set(redisKey, JSON.stringify(dbLikedPosts), 'EX', 60)
 
-    return { posts: dbLikedPosts, pagination }
+    const postsWithLike = dbLikedPosts.map((p: Post) => {
+      return {
+        ...p,
+        isLiked: true,
+      }
+    })
+    const postsWithFavorite = await postService.attachUserFavorities(
+      user,
+      postsWithLike
+    )
+
+    return { posts: postsWithFavorite, pagination }
   },
   getFavoritePosts: async (user: TokenPayload, pagination: paginationDTO) => {
     const redis = getRedis()
@@ -112,10 +145,24 @@ export const userService = {
     const redisResult = await redis.get(redisKey)
 
     if (redisResult) {
+      console.log('redis')
+
       const redisPosts = JSON.parse(redisResult)
 
-      return { posts: redisPosts, pagination }
+      const postsWithFavorities = redisPosts.map((p: Post) => {
+        return {
+          ...p,
+          isFavorite: true,
+        }
+      })
+      const postsWithLikes = await postService.attachUserLikes(
+        user,
+        postsWithFavorities
+      )
+
+      return { posts: postsWithLikes, pagination }
     }
+    console.log('db')
 
     const userPostFavoritiesResult = await postFavoritiesRepo.findByUserId(
       user.userId
@@ -123,12 +170,26 @@ export const userService = {
     const dbUserPostFavorities = userPostFavoritiesResult.rows
     const favoritePostsIds = dbUserPostFavorities.map((f) => f.post_id)
 
-    const favoritePostsResult = await postRepo.findByIds(favoritePostsIds, pagination)
+    const favoritePostsResult = await postRepo.findByIds(
+      favoritePostsIds,
+      pagination
+    )
     const dbFavoritePosts = favoritePostsResult.rows
 
-    await redis.set(redisKey, JSON.stringify(dbFavoritePosts))
+    await redis.set(redisKey, JSON.stringify(dbFavoritePosts), 'EX', 60)
 
-    return { posts: dbFavoritePosts, pagination }
+    const postsWithFavorities = dbFavoritePosts.map((p: Post) => {
+      return {
+        ...p,
+        isFavorite: true,
+      }
+    })
+    const postsWithLikes = await postService.attachUserLikes(
+      user,
+      postsWithFavorities
+    )
+
+    return { posts: postsWithLikes, pagination }
   },
   updateMyInfo: async (user: TokenPayload, data: dynamicUpdateMyInfo) => {
     const userResult = await userRepo.updateMyInfoById(user.userId, data)
