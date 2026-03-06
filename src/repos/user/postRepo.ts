@@ -51,6 +51,13 @@ export const postRepo = {
       [postIds, pagination.limit, pagination.offset]
     )
   },
+  findByUserId: (userId: number) => {
+    return pool.query(
+      `SELECT * FROM posts
+      WHERE user_id = $1`,
+      [userId]
+    )
+  },
   deleteById: (id: number) => {
     return pool.query(
       `DELETE FROM posts

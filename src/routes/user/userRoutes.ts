@@ -73,6 +73,15 @@ router.get(
 )
 
 router.get(
+  '/:userId/posts',
+  rateLimiter(60, 60, 'user_posts'),
+  authMiddlewares.verifyAccessToken,
+  paginate,
+  setParamsId(['userId']),
+  userController.getUserPosts
+)
+
+router.get(
   '/:userId/liked-posts',
   rateLimiter(60, 60, 'liked_posts'),
   authMiddlewares.verifyAccessToken,

@@ -76,6 +76,19 @@ export const userController = {
       next(err)
     }
   },
+  getUserPosts: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await userService.getUserPosts(
+        req.user,
+        req.paramsMap.userId,
+        req.pagination
+      )
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err)
+      next(err)
+    }
+  },
   getLikedPosts: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await userService.getLikedPosts(

@@ -86,6 +86,22 @@ export const userService = {
 
     return toUserResponse(dbUser)
   },
+  getUserPosts: async (
+    user: TokenPayload,
+    postsUserId: number,
+    pagination: paginationDTO
+  ) => {
+    const postsResult = await postRepo.findByUserId(postsUserId)
+    const dbPosts = postsResult.rows
+
+    const postsWithLike = await postService.attachUserLikes(user, dbPosts)
+    const postsWithFavorite = await postService.attachUserFavorities(
+      user,
+      postsWithLike
+    )
+
+    return { posts: postsWithFavorite, pagination }
+  },
   getLikedPosts: async (
     user: TokenPayload,
     userId: number,
