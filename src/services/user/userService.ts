@@ -91,8 +91,30 @@ export const userService = {
     postsUserId: number,
     pagination: paginationDTO
   ) => {
+    const redis = getRedis()
+    const redisKey = `users:${postsUserId}:posts:page:${pagination.page}:limit:${pagination.limit}`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {      
+      const redisPosts = JSON.parse(redisResult)
+      if (redisPosts.length === 0) return { posts: [], pagination }
+
+      const postsWithLike = await postService.attachUserLikes(user, redisPosts)
+      const postsWithFavorite = await postService.attachUserFavorities(
+        user,
+        postsWithLike
+      )
+
+      return { posts: postsWithFavorite, pagination }
+    }
+
     const postsResult = await postRepo.findByUserId(postsUserId)
     const dbPosts = postsResult.rows
+
+    await redis.set(redisKey, JSON.stringify(dbPosts), 'EX', 60)
+
+    if (dbPosts.length === 0) return { posts: [], pagination }
 
     const postsWithLike = await postService.attachUserLikes(user, dbPosts)
     const postsWithFavorite = await postService.attachUserFavorities(
