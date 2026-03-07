@@ -53,6 +53,7 @@ export const postService = {
     const result = await postRepo.update(id, data)
 
     await cacheService.invalidateByPrefix('posts:search:*')
+    await cacheService.invalidateByPrefix('users:*')
 
     return {
       updated: result.rows[0],
@@ -70,6 +71,7 @@ export const postService = {
     const result = await postRepo.deleteById(id)
 
     await cacheService.invalidateByPrefix('posts:search:*')
+    await cacheService.invalidateByPrefix('users:*')
 
     return { deleted: result.rows[0] }
   },
