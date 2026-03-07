@@ -86,58 +86,6 @@ export const userService = {
 
     return toUserResponse(dbUser)
   },
-  getLikedPosts: async (
-    user: TokenPayload,
-    userId: number,
-    pagination: paginationDTO
-  ) => {
-    const redis = getRedis()
-    const redisKey = `users:${userId}:liked-posts:page:${pagination.page}:limit:${pagination.limit}`
-
-    const redisResult = await redis.get(redisKey)
-
-    if (redisResult) {
-      console.log('redis')
-
-      const redisPosts = JSON.parse(redisResult)
-
-      const postsWithLike = redisPosts.map((p: Post) => {
-        return {
-          ...p,
-          isLiked: true,
-        }
-      })
-      const postsWithFavorite = await postService.attachUserFavorities(
-        user,
-        postsWithLike
-      )
-
-      return { posts: postsWithFavorite, pagination }
-    }
-    console.log('db')
-
-    const userPostLikesResult = await postLikesRepo.findByUserId(userId)
-    const dbUserPostLikes = userPostLikesResult.rows
-    const likedPostsIds = dbUserPostLikes.map((l) => l.post_id)
-
-    const likedPostsResult = await postRepo.findByIds(likedPostsIds, pagination)
-    const dbLikedPosts = likedPostsResult.rows
-
-    await redis.set(redisKey, JSON.stringify(dbLikedPosts), 'EX', 60)
-
-    const postsWithLike = dbLikedPosts.map((p: Post) => {
-      return {
-        ...p,
-        isLiked: true,
-      }
-    })
-    const postsWithFavorite = await postService.attachUserFavorities(
-      user,
-      postsWithLike
-    )
-
-    return { posts: postsWithFavorite, pagination }
-  },
   getFavoritePosts: async (user: TokenPayload, pagination: paginationDTO) => {
     const redis = getRedis()
     const redisKey = `users:${user.userId}:favorite-posts:page:${pagination.page}:limit:${pagination.limit}`
@@ -284,6 +232,96 @@ export const userService = {
     await redis.set(`user:${userId}`, JSON.stringify(dbUser))
 
     return toUserResponse(dbUser)
+  },
+  getUserPosts: async (
+    user: TokenPayload,
+    postsUserId: number,
+    pagination: paginationDTO
+  ) => {
+    const redis = getRedis()
+    const redisKey = `users:${postsUserId}:posts:page:${pagination.page}:limit:${pagination.limit}`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      const redisPosts = JSON.parse(redisResult)
+      if (redisPosts.length === 0) return { posts: [], pagination }
+
+      const postsWithLike = await postService.attachUserLikes(user, redisPosts)
+      const postsWithFavorite = await postService.attachUserFavorities(
+        user,
+        postsWithLike
+      )
+
+      return { posts: postsWithFavorite, pagination }
+    }
+
+    const postsResult = await postRepo.findByUserId(postsUserId)
+    const dbPosts = postsResult.rows
+
+    await redis.set(redisKey, JSON.stringify(dbPosts), 'EX', 60)
+
+    if (dbPosts.length === 0) return { posts: [], pagination }
+
+    const postsWithLike = await postService.attachUserLikes(user, dbPosts)
+    const postsWithFavorite = await postService.attachUserFavorities(
+      user,
+      postsWithLike
+    )
+
+    return { posts: postsWithFavorite, pagination }
+  },
+  getLikedPosts: async (
+    user: TokenPayload,
+    userId: number,
+    pagination: paginationDTO
+  ) => {
+    const redis = getRedis()
+    const redisKey = `users:${userId}:liked-posts:page:${pagination.page}:limit:${pagination.limit}`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      console.log('redis')
+
+      const redisPosts = JSON.parse(redisResult)
+
+      const postsWithLike = redisPosts.map((p: Post) => {
+        return {
+          ...p,
+          isLiked: true,
+        }
+      })
+      const postsWithFavorite = await postService.attachUserFavorities(
+        user,
+        postsWithLike
+      )
+
+      return { posts: postsWithFavorite, pagination }
+    }
+    console.log('db')
+
+    const userPostLikesResult = await postLikesRepo.findByUserId(userId)
+    const dbUserPostLikes = userPostLikesResult.rows
+    const likedPostsIds = dbUserPostLikes.map((l) => l.post_id)
+
+    const likedPostsResult = await postRepo.findByIds(likedPostsIds, pagination)
+    const dbLikedPosts = likedPostsResult.rows
+
+    await redis.set(redisKey, JSON.stringify(dbLikedPosts), 'EX', 60)
+
+    const postsWithLike = dbLikedPosts.map((p: Post) => {
+      return {
+        ...p,
+        isLiked: true,
+      }
+    })
+    const postsWithFavorite = await postService.attachUserFavorities(
+      user,
+      postsWithLike
+    )
+
+    return { posts: postsWithFavorite, pagination }
   },
   //admin
   findAsAdmin: async (search: string, pagination: paginationDTO) => {
