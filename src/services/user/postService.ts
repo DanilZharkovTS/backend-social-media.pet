@@ -20,6 +20,7 @@ export const postService = {
     const result = await postRepo.insert(user.userId, data.description)
 
     await cacheService.invalidateByPrefix('posts:search:*')
+    await cacheService.invalidateByPrefix('users:*')
 
     return { created: result.rows[0] }
   },
