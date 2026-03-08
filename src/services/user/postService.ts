@@ -187,6 +187,7 @@ export const postService = {
       await cacheService.invalidateByPrefix(
         `users:${user.userId}:favorite-posts:*`
       )
+      await cacheService.invalidateByPrefix(`users:${user.userId}:posts:*`)
 
       return { isLiked: false }
     }
@@ -199,6 +200,7 @@ export const postService = {
     await cacheService.invalidateByPrefix(
       `users:${user.userId}:favorite-posts:*`
     )
+    await cacheService.invalidateByPrefix(`users:${user.userId}:posts:*`)
 
     return { isLiked: true }
   },
@@ -224,6 +226,7 @@ export const postService = {
       await cacheService.invalidateByPrefix(
         `users:${user.userId}:liked-posts:*`
       )
+      await cacheService.invalidateByPrefix(`users:${user.userId}:posts:*`)
 
       return { isFavorite: false }
     }
@@ -233,6 +236,7 @@ export const postService = {
       `users:${user.userId}:favorite-posts:*`
     )
     await cacheService.invalidateByPrefix(`users:${user.userId}:liked-posts:*`)
+    await cacheService.invalidateByPrefix(`users:${user.userId}:posts:*`)
 
     return { isFavorite: true }
   },
