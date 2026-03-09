@@ -50,7 +50,14 @@ export const postService = {
       throw ApiError('Post not found', 404)
     }
 
-    return { post: dbPost }
+    const postWithLike = await postService.attachUserLikes(user, [dbPost])
+    const postWithFavorite = await postService.attachUserFavorities(
+      user,
+      postWithLike
+    )
+    const post = postWithFavorite[0]
+
+    return { post }
   },
   update: async (id: number, data: updatePostDTO, user: TokenPayload) => {
     const post = await postRepo.findById(id)
@@ -137,10 +144,9 @@ export const postService = {
       postsIds
     )
     const dbUserPostLikes = userPostLikesResult.rows
-    const likedPostIds = dbUserPostLikes.map((like) => like.post_id)
-
+    const likedPostIds = new Set(dbUserPostLikes.map((like) => like.post_id))
     const postsWithLike = posts.map((post) => {
-      return { ...post, isLiked: likedPostIds.includes(post.id) }
+      return { ...post, isLiked: likedPostIds.has(post.id) }
     })
 
     return postsWithLike
@@ -151,12 +157,12 @@ export const postService = {
     const userPostFavoritiesResult =
       await postFavoritiesRepo.findByUserIdAndPostIds(user.userId, postIds)
     const dbUserPostFavorities = userPostFavoritiesResult.rows
-    const favoritePostIds = dbUserPostFavorities.map((f) => f.post_id)
+    const favoritePostIds = new Set(dbUserPostFavorities.map((f) => f.post_id))
 
     const postsWithFavorite = posts.map((p) => {
       return {
         ...p,
-        isFavorite: favoritePostIds.includes(p.id),
+        isFavorite: favoritePostIds.has(p.id),
       }
     })
 

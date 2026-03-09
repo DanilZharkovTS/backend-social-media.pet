@@ -29,6 +29,15 @@ router.get(
 )
 
 router.get(
+  '/find',
+  rateLimiter(60, 60, 'findPost'),
+  authMiddlewares.verifyAccessToken,
+  paginate,
+  postMiddlewares.find,
+  postController.find
+)
+
+router.get(
   '/:postId',
   rateLimiter(60, 60, 'getPost'),
   authMiddlewares.verifyAccessToken,
@@ -51,15 +60,6 @@ router.delete(
   authMiddlewares.verifyAccessToken,
   setParamsId(['postId']),
   postController.delete
-)
-
-router.get(
-  '/find',
-  rateLimiter(60, 60, 'findPost'),
-  authMiddlewares.verifyAccessToken,
-  paginate,
-  postMiddlewares.find,
-  postController.find
 )
 
 //admin
