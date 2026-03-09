@@ -28,6 +28,23 @@ router.get(
   postController.readAll
 )
 
+router.get(
+  '/find',
+  rateLimiter(60, 60, 'findPost'),
+  authMiddlewares.verifyAccessToken,
+  paginate,
+  postMiddlewares.find,
+  postController.find
+)
+
+router.get(
+  '/:postId',
+  rateLimiter(60, 60, 'getPost'),
+  authMiddlewares.verifyAccessToken,
+  setParamsId(['postId']),
+  postController.getById
+)
+
 router.patch(
   '/update/:postId',
   rateLimiter(10, 60, 'updatePost'),
@@ -43,15 +60,6 @@ router.delete(
   authMiddlewares.verifyAccessToken,
   setParamsId(['postId']),
   postController.delete
-)
-
-router.get(
-  '/find',
-  rateLimiter(60, 60, 'findPost'),
-  authMiddlewares.verifyAccessToken,
-  paginate,
-  postMiddlewares.find,
-  postController.find
 )
 
 //admin

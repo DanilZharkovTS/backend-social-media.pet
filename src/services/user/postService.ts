@@ -19,7 +19,7 @@ export const postService = {
   add: async (data: addPostInterface, user: TokenPayload) => {
     const result = await postRepo.insert(user.userId, data.description)
 
-    await cacheService.invalidateByPrefix('posts:search:*')
+    await cacheService.invalidateByPrefix('posts:*')
     await cacheService.invalidateByPrefix('users:*')
 
     return { created: result.rows[0] }
@@ -41,6 +41,46 @@ export const postService = {
       pagination: { page: pagination.page, limit: pagination.limit },
       posts: result.rows,
     }
+  },
+  getById: async (user: TokenPayload, postId: number) => {
+    const redis = getRedis()
+    const redisKey = `posts:${postId}`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      console.log('redis')
+
+      const redisPost = JSON.parse(redisResult)
+
+      const postWithLike = await postService.attachUserLikes(user, [redisPost])
+      const postWithFavorite = await postService.attachUserFavorities(
+        user,
+        postWithLike
+      )
+      const post = postWithFavorite[0]
+
+      return { post }
+    }
+    console.log('db')
+
+    const postResult = await postRepo.findById(postId)
+    const dbPost = await postResult.rows[0]
+
+    if (!dbPost) {
+      throw ApiError('Post not found', 404)
+    }
+
+    await redis.set(redisKey, JSON.stringify(dbPost), 'EX', 60)
+
+    const postWithLike = await postService.attachUserLikes(user, [dbPost])
+    const postWithFavorite = await postService.attachUserFavorities(
+      user,
+      postWithLike
+    )
+    const post = postWithFavorite[0]
+
+    return { post }
   },
   update: async (id: number, data: updatePostDTO, user: TokenPayload) => {
     const post = await postRepo.findById(id)
@@ -127,10 +167,9 @@ export const postService = {
       postsIds
     )
     const dbUserPostLikes = userPostLikesResult.rows
-    const likedPostIds = dbUserPostLikes.map((like) => like.post_id)
-
+    const likedPostIds = new Set(dbUserPostLikes.map((like) => like.post_id))
     const postsWithLike = posts.map((post) => {
-      return { ...post, isLiked: likedPostIds.includes(post.id) }
+      return { ...post, isLiked: likedPostIds.has(post.id) }
     })
 
     return postsWithLike
@@ -141,12 +180,12 @@ export const postService = {
     const userPostFavoritiesResult =
       await postFavoritiesRepo.findByUserIdAndPostIds(user.userId, postIds)
     const dbUserPostFavorities = userPostFavoritiesResult.rows
-    const favoritePostIds = dbUserPostFavorities.map((f) => f.post_id)
+    const favoritePostIds = new Set(dbUserPostFavorities.map((f) => f.post_id))
 
     const postsWithFavorite = posts.map((p) => {
       return {
         ...p,
-        isFavorite: favoritePostIds.includes(p.id),
+        isFavorite: favoritePostIds.has(p.id),
       }
     })
 
@@ -157,7 +196,7 @@ export const postService = {
     const deletedPost = await postRepo.deleteById(postId)
     if (deletedPost.rows.length === 0) throw ApiError('Post not found', 404)
 
-    await cacheService.invalidateByPrefix('posts:search:*')
+    await cacheService.invalidateByPrefix('posts:*')
 
     return { deleted: deletedPost.rows[0] }
   },
@@ -180,7 +219,7 @@ export const postService = {
       await postLikesRepo.deleteLikeById(dbLike.id)
       await postRepo.decreaseLikesCount(dbLike.post_id)
 
-      await cacheService.invalidateByPrefix('posts:search:*')
+      await cacheService.invalidateByPrefix('posts:*')
       await cacheService.invalidateByPrefix(
         `users:${user.userId}:liked-posts:*`
       )
@@ -195,7 +234,7 @@ export const postService = {
     await postLikesRepo.addLike(user.userId, postId)
     await postRepo.increaseLikesCount(postId)
 
-    await cacheService.invalidateByPrefix('posts:search:*')
+    await cacheService.invalidateByPrefix('posts:*')
     await cacheService.invalidateByPrefix(`users:${user.userId}:liked-posts:*`)
     await cacheService.invalidateByPrefix(
       `users:${user.userId}:favorite-posts:*`
