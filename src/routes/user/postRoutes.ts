@@ -28,6 +28,14 @@ router.get(
   postController.readAll
 )
 
+router.get(
+  '/:postId',
+  rateLimiter(60, 60, 'getPost'),
+  authMiddlewares.verifyAccessToken,
+  setParamsId(['postId']),
+  postController.getById
+)
+
 router.patch(
   '/update/:postId',
   rateLimiter(10, 60, 'updatePost'),

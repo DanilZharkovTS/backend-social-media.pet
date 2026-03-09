@@ -42,6 +42,16 @@ export const postService = {
       posts: result.rows,
     }
   },
+  getById: async (user: TokenPayload, postId: number) => {
+    const postResult = await postRepo.findById(postId)
+    const dbPost = await postResult.rows[0]
+
+    if (!dbPost) {
+      throw ApiError('Post not found', 404)
+    }
+
+    return { post: dbPost }
+  },
   update: async (id: number, data: updatePostDTO, user: TokenPayload) => {
     const post = await postRepo.findById(id)
     if (post.rows.length === 0) throw ApiError('Post not found', 404)

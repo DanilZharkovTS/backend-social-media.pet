@@ -18,6 +18,15 @@ export const postController = {
       next(err)
     }
   },
+  getById: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await postService.getById(req.user, req.paramsMap.postId)
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err)
+      next(err)
+    }
+  },
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await postService.update(
@@ -78,10 +87,13 @@ export const postController = {
   },
   toggleFavorite: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.toggleFavorite(req.user, req.paramsMap.postId)
+      const result = await postService.toggleFavorite(
+        req.user,
+        req.paramsMap.postId
+      )
       res.status(200).json(result)
     } catch (err) {
-      console.log(err);
+      console.log(err)
       next(err)
     }
   },
