@@ -93,7 +93,7 @@ export const postService = {
 
     const result = await postRepo.update(id, data)
 
-    await cacheService.invalidateByPrefix('posts:search:*')
+    await cacheService.invalidateByPrefix('posts:*')
     await cacheService.invalidateByPrefix('users:*')
 
     return {
