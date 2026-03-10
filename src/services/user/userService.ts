@@ -47,21 +47,19 @@ export const userService = {
 
     return { avatarUrl: urlData.publicUrl }
   },
-  readMyInfo: async (user: TokenPayload) => {
+  getMyInfo: async (user: TokenPayload) => {
     const redis = getRedis()
-    const toUserResponse = (user: User) => {
-      return {
-        id: user.id,
-        role: user.role,
-        email: user.email,
-        name: user.name,
-        bio: user.bio,
-        birth_date: user.birth_date,
-        created_at: user.created_at,
-        avatar_url: user.avatar_url,
-        has_checkmark: user.has_checkmark,
-      }
-    }
+    const toUserResponse = (user: User) => ({
+      id: user.id,
+      role: user.role,
+      email: user.email,
+      name: user.name,
+      bio: user.bio,
+      birth_date: user.birth_date,
+      created_at: user.created_at,
+      avatar_url: user.avatar_url,
+      has_checkmark: user.has_checkmark,
+    })
 
     const redisResult = await redis.get(`users:${user.userId}`)
 
@@ -202,18 +200,17 @@ export const userService = {
     return { avatarUrl: avatarResult.rows[0].avatar_url }
   },
   //users
-  readUserInfo: async (userId: number) => {
+  getUserInfo: async (userId: number) => {
     const redis = getRedis()
-    const toUserResponse = (user: User) => {
-      return {
-        id: user.id,
-        name: user.name,
-        bio: user.bio,
-        birth_date: user.birth_date,
-        created_at: user.created_at,
-        avatar_url: user.avatar_url,
-      }
-    }
+    const toUserResponse = (user: User) => ({
+      id: user.id,
+      name: user.name,
+      bio: user.bio,
+      birth_date: user.birth_date,
+      created_at: user.created_at,
+      avatar_url: user.avatar_url,
+      has_checkmark: user.has_checkmark,
+    })
 
     const redisResult = await redis.get(`user:${userId}`)
 

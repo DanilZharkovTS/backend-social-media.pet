@@ -53,7 +53,8 @@ export const postRepo = {
   },
   findByUserId: (userId: number) => {
     return pool.query(
-      `SELECT * FROM posts
+      `SELECT posts.id, posts.user_id, posts.description, posts.created_at ,posts.likes_count, users.name, users.avatar_url FROM posts
+      JOIN users ON posts.user_id = users.id
       WHERE user_id = $1`,
       [userId]
     )
@@ -68,7 +69,7 @@ export const postRepo = {
   },
   selectBySearch: (query: findPostDTO, pagination: paginationDTO) => {
     return pool.query(
-      `SELECT posts.id, posts.user_id, posts.description, posts.created_at, users.name, posts.likes_count FROM posts
+      `SELECT posts.id, posts.user_id, posts.description, posts.created_at, users.name, users.avatar_url, posts.likes_count FROM posts
        JOIN users ON posts.user_id = users.id
        WHERE ($1::text IS NULL OR
        LOWER(description) LIKE LOWER($1))

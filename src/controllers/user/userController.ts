@@ -13,7 +13,7 @@ export const userController = {
   },
   readMyInfo: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await userService.readMyInfo(req.user)
+      const result = await userService.getMyInfo(req.user)
       res.status(200).json(result)
     } catch (err) {
       next(err)
@@ -70,7 +70,7 @@ export const userController = {
   //users
   readUserInfo: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await userService.readUserInfo(req.paramsMap.userId)
+      const result = await userService.getUserInfo(req.paramsMap.userId)
       res.status(200).json(result)
     } catch (err) {
       next(err)
