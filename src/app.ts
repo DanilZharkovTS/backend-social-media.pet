@@ -4,12 +4,12 @@ import cors from 'cors'
 import http from 'http'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
-import { errHandler } from './middlewares/app/errHandler.ts'
-import appRoutes from './routes/appRoutes.ts'
-import { billingMiddlewares } from './middlewares/billingMiddlewares.ts'
-import { billingController } from './controllers/billingController.ts'
+import { errHandler } from './http/middlewares/app/errHandler.ts'
+import appRoutes from './http/routes/appRoutes.ts'
+import { billingMiddlewares } from './http/middlewares/billingMiddlewares.ts'
+import { billingController } from './http/controllers/billingController.ts'
 import { Server } from 'socket.io'
-import { registerSockets } from './index.ts'
+import { registerSockets } from './websocket/index.ts'
 
 dotenv.config()
 

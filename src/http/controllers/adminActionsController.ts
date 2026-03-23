@@ -1,5 +1,5 @@
-import type { NextFunction, Request, Response } from "express"
-import { adminActionsService } from "../services/admin/adminActionsService.ts"
+import type { NextFunction, Request, Response } from 'express'
+import { adminActionsService } from '../../services/admin/adminActionsService.ts'
 
 export const adminActionsController = {
   requestAdminDeleteUser: async (
@@ -18,7 +18,11 @@ export const adminActionsController = {
       next(err)
     }
   },
-  adminDeleteUserConfirm: async (req: Request, res: Response, next: NextFunction) => {
+  adminDeleteUserConfirm: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const result = await adminActionsService.adminDeleteUserConfirm(
         req.queryMap.adminDeleteUserToken

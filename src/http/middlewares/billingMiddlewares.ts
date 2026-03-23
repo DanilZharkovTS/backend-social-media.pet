@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import Stripe from 'stripe'
-import { ApiError } from '../lib/ApiErrors.ts'
-import { validateCheckoutData } from '../utils/validators/orderValidator.ts'
+import { ApiError } from '../../lib/ApiErrors.ts'
+import { validateCheckoutData } from '../../utils/validators/orderValidator.ts'
 
 export const billingMiddlewares = {
   validateCheckout: (req: Request, res: Response, next: NextFunction) => {

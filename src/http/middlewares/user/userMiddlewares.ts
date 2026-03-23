@@ -1,14 +1,14 @@
 import type { NextFunction, Request, Response } from 'express'
-import type { updateMyInfoDTO } from '../../interfaces/user/userInterfaces.ts'
-import { ApiError } from '../../lib/ApiErrors.ts'
+import type { updateMyInfoDTO } from '../../../interfaces/user/userInterfaces.ts'
+import { ApiError } from '../../../lib/ApiErrors.ts'
 import {
   validateFindUser,
   validateUpdateEmail,
   validateUpdateMyAvatar,
   validateUpdateMyInfo,
   validateUpdatePassword,
-} from '../../utils/validators/userValidator.ts'
-import { buildUpdateData } from '../../utils/helpers/builders/buildUpdateData.ts'
+} from '../../../utils/validators/userValidator.ts'
+import { buildUpdateData } from '../../../utils/helpers/builders/buildUpdateData.ts'
 
 export const userMiddlewares = {
   validateBirthDate: (req: Request, res: Response, next: NextFunction) => {
