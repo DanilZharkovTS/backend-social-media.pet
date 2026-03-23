@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { billingService } from '../services/billing/billingService.ts'
+import { billingService } from '../../services/billing/billingService.ts'
 
 export const billingController = {
   startCheckout: async (req: Request, res: Response, next: NextFunction) => {

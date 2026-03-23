@@ -3,7 +3,7 @@ import { authMiddlewares } from '../../middlewares/auth/authMiddlewares.ts'
 import { userController } from '../../controllers/user/userController.ts'
 import { setParamsId } from '../../middlewares/helpers/paramsId.ts'
 import { userMiddlewares } from '../../middlewares/user/userMiddlewares.ts'
-import { upload } from '../../lib/uploadMiddleware.ts'
+import { upload } from '../../../lib/uploadMiddleware.ts'
 import { rateLimiter } from '../../middlewares/helpers/rateLimiter.ts'
 import { paginate } from '../../middlewares/helpers/pagination.ts'
 

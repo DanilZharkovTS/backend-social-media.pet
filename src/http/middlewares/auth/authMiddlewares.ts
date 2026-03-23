@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import type { NextFunction, Request, Response } from 'express'
-import type { TokenPayload } from '../../interfaces/auth/authInterfaces.ts'
-import { ApiError } from '../../lib/ApiErrors.ts'
+import type { TokenPayload } from '../../../interfaces/auth/authInterfaces.ts'
+import { ApiError } from '../../../lib/ApiErrors.ts'
 import {
   validateChangeEmail,
   validateForgotPassword,
@@ -13,7 +13,7 @@ import {
   validateResetPasswordBody,
   validateResetPasswordQuery,
   validateVerifyEmail,
-} from '../../utils/validators/authValidator.ts'
+} from '../../../utils/validators/authValidator.ts'
 
 export const authMiddlewares = {
   register: (req: Request, res: Response, next: NextFunction) => {

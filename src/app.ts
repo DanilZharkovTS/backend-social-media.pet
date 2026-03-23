@@ -1,12 +1,15 @@
 import type { Request, Response } from 'express'
 import express from 'express'
 import cors from 'cors'
+import http from 'http'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
-import { errHandler } from './middlewares/app/errHandler.ts'
-import appRoutes from './routes/appRoutes.ts'
-import { billingMiddlewares, } from './middlewares/billingMiddlewares.ts'
-import { billingController } from './controllers/billingController.ts'
+import { errHandler } from './http/middlewares/app/errHandler.ts'
+import appRoutes from './http/routes/appRoutes.ts'
+import { billingMiddlewares } from './http/middlewares/billingMiddlewares.ts'
+import { billingController } from './http/controllers/billingController.ts'
+import { Server } from 'socket.io'
+import { registerSockets } from './websocket/index.ts'
 
 dotenv.config()
 
@@ -22,7 +25,7 @@ app.post(
 
 app.use(
   cors({
-    origin: 'http://localhost:3001',
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 )
@@ -44,4 +47,9 @@ app.use('/api', appRoutes)
 
 app.use(errHandler)
 
-app.listen(PORT, () => console.log(`Example app listening on port ${PORT}`))
+const server = http.createServer(app)
+const io = new Server(server, { cors: { origin: process.env.FRONTEND_URL } })
+
+registerSockets(io)
+
+server.listen(PORT, () => console.log(`Example app listening on port ${PORT}`))

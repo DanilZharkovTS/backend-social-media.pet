@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { postService } from '../../services/user/postService.ts'
+import { postService } from '../../../services/user/postService.ts'
 
 export const postController = {
   add: async (req: Request, res: Response, next: NextFunction) => {
