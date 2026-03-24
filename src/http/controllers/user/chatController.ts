@@ -20,7 +20,7 @@ export const chatController = {
   },
   getUserChats: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await chatService.getUserChats(req.user)
+      const result = await chatService.getUserChats(req.user, req.pagination)
       res.status(200).json(result)
     } catch (err) {
       console.log(err)

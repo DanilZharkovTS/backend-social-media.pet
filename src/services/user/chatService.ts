@@ -3,6 +3,7 @@ import {
   Chat,
   createOrFindPrivateChatDTO,
 } from '../../interfaces/user/chatInterfaces'
+import { paginationDTO } from '../../interfaces/user/postInterfaces'
 import { ApiError } from '../../lib/ApiErrors'
 import { chatParticipantsRepo } from '../../repos/user/chats/chatParticipantsRepo'
 import { chatRepo } from '../../repos/user/chats/chatRepo'
@@ -34,9 +35,9 @@ export const chatService = {
 
     return { chat: dbChat }
   },
-  getUserChats: async (user: TokenPayload) => {
+  getUserChats: async (user: TokenPayload, p: paginationDTO) => {
     console.log('db')
-    const { rows: dbChats } = await chatRepo.findByUserId(user.userId)
-    return { chats: dbChats }
+    const { rows: dbChats } = await chatRepo.findByUserId(user.userId, p)
+    return { chats: dbChats, pagination: p }
   },
 }

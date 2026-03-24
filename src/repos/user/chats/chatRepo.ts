@@ -1,4 +1,5 @@
 import type { ChatType } from '../../../interfaces/user/chatInterfaces'
+import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import pool from '../../../pool'
 
 export const chatRepo = {
@@ -21,12 +22,13 @@ export const chatRepo = {
       userIds
     )
   },
-  findByUserId: (userId: number) => {
+  findByUserId: (userId: number, p: paginationDTO) => {
     return pool.query(
       `SELECT c.id, c.type, c.name, c.created_at, c.updated_at FROM chats c
       JOIN chat_participants cp ON c.id = cp.chat_id
-      WHERE cp.user_id = $1`,
-      [userId]
+      WHERE cp.user_id = $1
+      LIMIT $2 OFFSET $3`,
+      [userId, p.limit, p.offset]
     )
   },
 }
