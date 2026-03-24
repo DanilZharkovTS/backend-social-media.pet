@@ -2,6 +2,7 @@ import { Router } from 'express'
 import authRoutes from './auth/authRoutes.ts'
 import adminRoutes from './admin/adminRoutes.ts'
 import userRoutes from './user/userRoutes.ts'
+import chatRoutes from './user/chatRoutes.ts'
 import billingRoutes from './billing/billingRoutes.ts'
 import postRoutes from './user/postRoutes.ts'
 import { authMiddlewares } from '../middlewares/auth/authMiddlewares.ts'
@@ -20,9 +21,10 @@ router.use(
 
 router.use('/users', userRoutes)
 
+router.use('/chats', chatRoutes)
+
 router.use('/billing', billingRoutes)
 
 router.use('/posts', postRoutes)
-
 
 export default router
