@@ -18,4 +18,13 @@ export const chatController = {
       next(err)
     }
   },
+  getUserChats: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await chatService.getUserChats(req.user)
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err)
+      next(err)
+    }
+  },
 }

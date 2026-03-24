@@ -18,7 +18,7 @@ export const chatService = {
     if (secondUserResult.rowCount === 0) {
       throw ApiError('User not found', 404)
     }
-    
+
     const chatResult = await chatRepo.findByUserIds([user.userId, secondUserId])
     const dbChat: Chat = chatResult.rows[0]
 
@@ -33,5 +33,10 @@ export const chatService = {
     }
 
     return { chat: dbChat }
+  },
+  getUserChats: async (user: TokenPayload) => {
+    console.log('db')
+    const { rows: dbChats } = await chatRepo.findByUserId(user.userId)
+    return { chats: dbChats }
   },
 }
