@@ -5,6 +5,7 @@ import {
 } from '../../interfaces/user/chatInterfaces'
 import { paginationDTO } from '../../interfaces/user/postInterfaces'
 import { ApiError } from '../../lib/ApiErrors'
+import { getRedis } from '../../lib/redisClient'
 import { chatParticipantsRepo } from '../../repos/user/chats/chatParticipantsRepo'
 import { chatRepo } from '../../repos/user/chats/chatRepo'
 import { userRepo } from '../../repos/userRepo'
@@ -36,8 +37,20 @@ export const chatService = {
     return { chat: dbChat }
   },
   getUserChats: async (user: TokenPayload, p: paginationDTO) => {
+    const redis = getRedis()
+    const redisKey = `users:${user.userId}:chats:page:${p.page}:limit:${p.limit}`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      console.log('redis')
+      const redisChats = JSON.parse(redisResult)
+      return { chats: redisChats, pagination: p }
+    }
     console.log('db')
     const { rows: dbChats } = await chatRepo.findByUserId(user.userId, p)
+    await redis.set(redisKey, JSON.stringify(dbChats), 'EX', 60)
+
     return { chats: dbChats, pagination: p }
   },
 }
