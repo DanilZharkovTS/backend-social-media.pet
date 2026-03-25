@@ -1,0 +1,80 @@
+import { TokenPayload } from '../../interfaces/auth/authInterfaces'
+import {
+  Chat,
+  createOrFindPrivateChatDTO,
+} from '../../interfaces/user/chatInterfaces'
+import { paginationDTO } from '../../interfaces/user/postInterfaces'
+import { ApiError } from '../../lib/ApiErrors'
+import { getRedis } from '../../lib/redisClient'
+import { chatParticipantsRepo } from '../../repos/user/chats/chatParticipantsRepo'
+import { chatRepo } from '../../repos/user/chats/chatRepo'
+import { userRepo } from '../../repos/userRepo'
+import { cacheService } from '../shared/cacheService'
+
+export const chatService = {
+  createOrFindPrivateChat: async (
+    user: TokenPayload,
+    { secondUserId }: createOrFindPrivateChatDTO
+  ) => {
+    const secondUserResult = await userRepo.findUserById(secondUserId)
+
+    if (secondUserResult.rowCount === 0) {
+      throw ApiError('User not found', 404)
+    }
+
+    const chatResult = await chatRepo.findByUserIds([user.userId, secondUserId])
+    const dbChat: Chat = chatResult.rows[0]
+
+    if (!dbChat) {
+      const createdChatResult = await chatRepo.createChat('private')
+      const dbCreatedChat: Chat = createdChatResult.rows[0]
+
+      await chatParticipantsRepo.addParticipant(dbCreatedChat.id, user.userId)
+      await chatParticipantsRepo.addParticipant(dbCreatedChat.id, secondUserId)
+
+      await cacheService.invalidateByPrefix(`user:${user.userId}:chats:*`)
+
+      return { chat: dbCreatedChat, isNew: true }
+    }
+
+    return { chat: dbChat }
+  },
+  getUserChats: async (user: TokenPayload, p: paginationDTO) => {
+    const redis = getRedis()
+    const redisKey = `users:${user.userId}:chats:page:${p.page}:limit:${p.limit}`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      console.log('redis')
+      const redisChats = JSON.parse(redisResult)
+      return { chats: redisChats, pagination: p }
+    }
+    console.log('db')
+    const { rows: dbChats } = await chatRepo.findByUserId(user.userId, p)
+    await redis.set(redisKey, JSON.stringify(dbChats), 'EX', 60)
+
+    return { chats: dbChats, pagination: p }
+  },
+  deleteChat: async (user: TokenPayload, chatId: number) => {
+    const { rows: dbChats } = await chatRepo.findById(chatId)
+
+    if (dbChats.length === 0) {
+      throw ApiError('Chat not found', 404)
+    }
+
+    const chatParticipantResult =
+      await chatParticipantsRepo.findByChatIdAndUserId(chatId, user.userId)
+    const dbChatParticipant = chatParticipantResult.rows[0]
+
+    if (!dbChatParticipant) {
+      throw ApiError('You are not allowed to delete this chat', 403)
+    }
+
+    const { rows: dbDeletedChat } = await chatRepo.deleteById(chatId)
+
+    await cacheService.invalidateByPrefix(`users:${user.userId}:chats:*`)
+
+    return { deletedChat: dbDeletedChat[0] }
+  },
+}
