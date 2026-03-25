@@ -9,6 +9,7 @@ import { getRedis } from '../../lib/redisClient'
 import { chatParticipantsRepo } from '../../repos/user/chats/chatParticipantsRepo'
 import { chatRepo } from '../../repos/user/chats/chatRepo'
 import { userRepo } from '../../repos/userRepo'
+import { cacheService } from '../shared/cacheService'
 
 export const chatService = {
   createOrFindPrivateChat: async (
@@ -31,6 +32,8 @@ export const chatService = {
       await chatParticipantsRepo.addParticipant(dbCreatedChat.id, user.userId)
       await chatParticipantsRepo.addParticipant(dbCreatedChat.id, secondUserId)
 
+      await cacheService.invalidateByPrefix(`user:${user.userId}:chats:*`)
+
       return { chat: dbCreatedChat, isNew: true }
     }
 
@@ -52,5 +55,26 @@ export const chatService = {
     await redis.set(redisKey, JSON.stringify(dbChats), 'EX', 60)
 
     return { chats: dbChats, pagination: p }
+  },
+  deleteChat: async (user: TokenPayload, chatId: number) => {
+    const { rows: dbChats } = await chatRepo.findById(chatId)
+
+    if (dbChats.length === 0) {
+      throw ApiError('Chat not found', 404)
+    }
+
+    const chatParticipantResult =
+      await chatParticipantsRepo.findByChatIdAndUserId(chatId, user.userId)
+    const dbChatParticipant = chatParticipantResult.rows[0]
+
+    if (!dbChatParticipant) {
+      throw ApiError('You are not allowed to delete this chat', 403)
+    }
+
+    const { rows: dbDeletedChat } = await chatRepo.deleteById(chatId)
+
+    await cacheService.invalidateByPrefix(`users:${user.userId}:chats:*`)
+
+    return { deletedChat: dbDeletedChat[0] }
   },
 }

@@ -27,4 +27,16 @@ export const chatController = {
       next(err)
     }
   },
+  deleteChat: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await chatService.deleteChat(
+        req.user,
+        req.paramsMap.chatId
+      )
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err)
+      next(err)
+    }
+  },
 }

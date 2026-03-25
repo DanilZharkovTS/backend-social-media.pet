@@ -11,6 +11,13 @@ export const chatRepo = {
       [type, name]
     )
   },
+  findById: (chatId: number) => {
+    return pool.query(
+      `SELECT * FROM chats
+      WHERE id = $1`,
+      [chatId]
+    )
+  },
   findByUserIds: (userIds: number[]) => {
     return pool.query(
       `SELECT c.id, c.type, c.name, c.created_at, c.updated_at FROM chats c
@@ -29,6 +36,14 @@ export const chatRepo = {
       WHERE cp.user_id = $1
       LIMIT $2 OFFSET $3`,
       [userId, p.limit, p.offset]
+    )
+  },
+  deleteById: (chatId: number) => {
+    return pool.query(
+      `DELETE FROM chats
+      WHERE id = $1
+      RETURNING *`,
+      [chatId]
     )
   },
 }

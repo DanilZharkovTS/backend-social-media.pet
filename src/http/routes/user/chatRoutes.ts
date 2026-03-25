@@ -4,6 +4,7 @@ import { chatMiddlewares } from '../../middlewares/user/chatMiddlewares'
 import { chatController } from '../../controllers/user/chatController'
 import { rateLimiter } from '../../middlewares/helpers/rateLimiter'
 import { paginate } from '../../middlewares/helpers/pagination'
+import { setParamsId } from '../../middlewares/helpers/paramsId'
 
 const router = Router()
 
@@ -21,6 +22,14 @@ router.post(
   authMiddlewares.verifyAccessToken,
   chatMiddlewares.createOrFindPrivateChat,
   chatController.createOrFindPrivateChat
+)
+
+router.delete(
+  '/:chatId',
+  rateLimiter(5, 60, 'deleteChat'),
+  authMiddlewares.verifyAccessToken,
+  setParamsId(['chatId']),
+  chatController.deleteChat
 )
 
 export default router
