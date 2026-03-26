@@ -1,4 +1,4 @@
-import type { ChatType } from '../../../interfaces/user/chatInterfaces'
+import type { ChatType } from '../../../interfaces/user/chat/chatInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import pool from '../../../pool'
 
