@@ -1,8 +1,8 @@
 import { Socket } from 'socket.io'
 import { IoNextFn } from '../../../interfaces/global/socket'
 
-type Middleware = (socket: Socket, data: any, next: IoNextFn) => void
-type Handler = (socket: Socket, data: any) => void
+type Middleware = (socket: Socket, data: any, ctx: any, next: IoNextFn) => void
+type Handler = (socket: Socket, data: any, ctx: any) => void
 
 export const withMiddlewares = (
   socket: Socket,
@@ -11,6 +11,8 @@ export const withMiddlewares = (
 ) => {
   return (data: any) => {
     let i = 0
+    const ctx = {}
+
     const next = (err?: Error) => {
       if (err) {
         console.log(err.message)
@@ -21,12 +23,12 @@ export const withMiddlewares = (
 
       if (mw) {
         try {
-          mw(socket, data, next)
+          mw(socket, data, ctx, next)
         } catch (err) {
           next(err)
         }
       } else {
-        handler(socket, data)
+        handler(socket, data, ctx)
       }
     }
     next()

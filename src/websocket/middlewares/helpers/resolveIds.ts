@@ -2,7 +2,7 @@ import { Socket } from 'socket.io'
 import { IoNextFn } from '../../../interfaces/global/socket'
 
 export const resolveIds = (idNames: string[]) => {
-  return (socket: Socket, data: any, next: IoNextFn) => {
+  return (socket: Socket, data: any, ctx: any, next: IoNextFn) => {
     const validIds: Record<string, number> = {}
 
     for (const name of idNames) {
@@ -15,7 +15,7 @@ export const resolveIds = (idNames: string[]) => {
 
       validIds[name] = idNum
     }
-    data.validIds = validIds
+    ctx.validIds = validIds
     next()
   }
 }
