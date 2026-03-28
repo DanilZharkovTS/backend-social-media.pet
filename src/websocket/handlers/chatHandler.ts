@@ -1,8 +1,9 @@
 import { Socket } from 'socket.io'
 import { chatService } from '../../services/user/chat/chatService'
+import { joinChatRoomDTO } from '../../interfaces/user/chat/chatInterfaces'
 
 export const chatHandler = {
-  joinChatRoom: async (socket: Socket, data: any, ctx: any) => {
+  joinChatRoom: async (socket: Socket, data: any, ctx: joinChatRoomDTO) => {
     try {
       const chatId = ctx.validIds.chatId
 
@@ -13,7 +14,7 @@ export const chatHandler = {
       socket.emit('chat:error', { message: err.message })
     }
   },
-  leaveChatRoom: async (socket: Socket, data: any, ctx: any) => {
+  leaveChatRoom: async (socket: Socket, data: any, ctx: joinChatRoomDTO) => {
     const chatId = ctx.validIds.chatId
 
     socket.leave(`chats:${chatId}`)

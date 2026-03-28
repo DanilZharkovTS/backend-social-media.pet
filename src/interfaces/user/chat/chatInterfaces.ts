@@ -11,3 +11,15 @@ export interface Chat {
 export interface createOrFindPrivateChatDTO {
   secondUserId: number
 }
+
+export interface joinChatRoomDTO {
+  validIds: {
+    chatId: number
+  }
+}
+
+export interface leaveChatRoomDTO {
+  validIds: {
+    chatId: number
+  }
+}
