@@ -1,10 +1,13 @@
 import type { Server, Socket } from 'socket.io'
 import { chatService } from '../../services/user/chat/chatService'
 import { chatHandler } from '../handlers/chatHandler'
+import { withMiddlewares } from '../middlewares/helpers/withMiddlewares'
+import { resolveIds } from '../middlewares/helpers/resolveIds'
+import { ioAuthMiddlewares } from '../middlewares/authMiddlewares'
 
 export const registerChatEvents = (io: Server, socket: Socket) => {
-  console.log('chat socket connected')
-  socket.on('joinChat', (data) => {
-    chatHandler.joinChatRoom(socket, data)
-  })
+  socket.on(
+    'joinChat', 
+    withMiddlewares(socket, [resolveIds(['chatId'])], chatHandler.joinChatRoom)
+  )
 }
