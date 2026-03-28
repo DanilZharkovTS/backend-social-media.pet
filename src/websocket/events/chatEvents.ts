@@ -4,10 +4,19 @@ import { chatHandler } from '../handlers/chatHandler'
 import { withMiddlewares } from '../middlewares/helpers/withMiddlewares'
 import { resolveIds } from '../middlewares/helpers/resolveIds'
 import { ioAuthMiddlewares } from '../middlewares/authMiddlewares'
+import { ioChatMiddlewares } from '../middlewares/chat/chatMiddlewares'
 
 export const registerChatEvents = (io: Server, socket: Socket) => {
   socket.on(
-    'joinChat', 
+    'joinChat',
     withMiddlewares(socket, [resolveIds(['chatId'])], chatHandler.joinChatRoom)
+  )
+  socket.on(
+    'leaveChat',
+    withMiddlewares(
+      socket,
+      [resolveIds(['chatId']), ioChatMiddlewares.requireRoomMember],
+      chatHandler.leaveChatRoom
+    )
   )
 }

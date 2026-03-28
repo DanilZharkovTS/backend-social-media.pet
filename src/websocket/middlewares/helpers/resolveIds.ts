@@ -10,14 +10,12 @@ export const resolveIds = (idNames: string[]) => {
       let idNum = parseInt(String(id), 10)
 
       if (isNaN(idNum) || idNum < 1) {
-        return next(
-          new Error(`Param ${name}: ${idNum} needs to be a natural number`)
-        )
+        throw new Error(`Param ${name}: ${idNum} needs to be a natural number`)
       }
 
       validIds[name] = idNum
     }
-    socket.data.validIds = validIds
+    data.validIds = validIds
     next()
   }
 }

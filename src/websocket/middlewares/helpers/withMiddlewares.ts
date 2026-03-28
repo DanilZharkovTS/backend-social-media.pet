@@ -21,7 +21,7 @@ export const withMiddlewares = (
 
       if (mw) {
         try {
-          mw(socket, data,  next)
+          mw(socket, data, next)
         } catch (err) {
           next(err)
         }

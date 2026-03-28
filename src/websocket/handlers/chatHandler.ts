@@ -2,14 +2,21 @@ import { Socket } from 'socket.io'
 import { chatService } from '../../services/user/chat/chatService'
 
 export const chatHandler = {
-  joinChatRoom: async (socket: Socket, data) => {
+  joinChatRoom: async (socket: Socket, data: any) => {
     try {
-      await chatService.joinChatRoom(socket.user, data.chatId)
-      socket.join(`chats:${data.chatId}`)
-      socket.emit('joinedChat', { chatId: data.validIds.chatId })
+      const chatId = data.validIds.chatId
+      
+      await chatService.joinChatRoom(socket.user, chatId)
+      socket.join(`chats:${chatId}`)
+      socket.emit('joinedChat', { chatId })
     } catch (err) {
       socket.emit('chat:error', { message: err.message })
     }
     console.log('Joined chat')
+  },
+  leaveChatRoom: async (socket: Socket, data: any) => {
+          const chatId = data.validIds.chatId
+
+    socket.leave(`chats:${chatId}`)
   },
 }
