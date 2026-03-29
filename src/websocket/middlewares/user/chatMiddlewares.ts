@@ -13,16 +13,15 @@ export const ioChatMiddlewares = {
 
     next()
   },
-  addPeep: (socket: Socket, data: any, ctx: any, next: IoNextFn) => {    
-    if (
-      typeof data.content !== 'string' ||
-      data.content.length < 1 ||
-      data.content.length > 400
-    ) {
-      throw ApiError('Content validation error', 400)
-    }    
+  addPeep: (socket: Socket, data: any, ctx: any, next: IoNextFn) => {
+    try {
+      const { content } = data
+      const validData = chatValidator.addPeepBody.parse({ content })
 
-    ctx.validData = { content: data.content }
-    next()
+      ctx.validData = { content: data.content }
+      next()
+    } catch (err) {
+      next(err)
+    }
   },
 }

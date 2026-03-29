@@ -9,7 +9,7 @@ export const ioErrHandler = (err: any) => {
       field: e.path.join('.'),
       message: e.message,
     }))
-    return { zodErr, status: 400 }
+    return { errors: zodErr, status: 400 }
   }
 
   if (err?.code) {
