@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken'
 import { IoNextFn } from '../../interfaces/global/socket'
 import { Socket } from 'socket.io'
 import { TokenPayload } from '../../interfaces/auth/authInterfaces'
+import { ApiError } from '../../lib/ApiErrors'
 
 export const ioAuthMiddlewares = {
   verifyAccessToken: (socket: Socket, next: IoNextFn) => {
@@ -17,9 +18,8 @@ export const ioAuthMiddlewares = {
       socket.user = payload
       next()
     } catch (err) {
-      console.log('Err 2')
-
-      next(new Error('Unauthorized'))
+      const error = ApiError('Unauthorized', 401)
+      console.log(error)
     }
   },
 }

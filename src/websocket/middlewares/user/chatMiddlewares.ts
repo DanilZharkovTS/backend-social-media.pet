@@ -19,7 +19,7 @@ export const ioChatMiddlewares = {
       data.content.length < 1 ||
       data.content.length > 400
     ) {
-      throw new Error('Content validation error')
+      throw ApiError('Content validation error', 400)
     }    
 
     ctx.validData = { content: data.content }

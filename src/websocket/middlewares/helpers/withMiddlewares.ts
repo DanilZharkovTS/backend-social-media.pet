@@ -1,5 +1,7 @@
 import { Socket } from 'socket.io'
 import { IoNextFn } from '../../../interfaces/global/socket'
+import { ZodError } from 'zod'
+import { ioErrHandler } from '../../handlers/app/ioErrorHandler'
 
 type Middleware = (socket: Socket, data: any, ctx: any, next: IoNextFn) => void
 type Handler = (socket: Socket, data: any, ctx: any, next: IoNextFn) => void
@@ -15,7 +17,8 @@ export const withMiddlewares = (
 
     const next = (err?: Error) => {
       if (err) {
-        console.log(err.message)
+        const error = ioErrHandler(err)
+        console.log(error)
         return
       }
 

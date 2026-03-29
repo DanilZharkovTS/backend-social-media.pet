@@ -40,14 +40,12 @@ export const chatService = {
     return { chat: dbChat }
   },
   joinChatRoom: async (user: TokenPayload, chatId: number) => {
-    const chatParticipantResult = await chatParticipantsRepo.findByChatIdAndUserId(
-      chatId,
-      user.userId
-    )
+    const chatParticipantResult =
+      await chatParticipantsRepo.findByChatIdAndUserId(chatId, user.userId)
     const dbChatParticipant = chatParticipantResult.rows[0]
 
     if (!dbChatParticipant) {
-      throw new Error('No access to this chat')
+      throw ApiError('No access to this chat', 403)
     }
     return
   },
