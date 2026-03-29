@@ -23,3 +23,12 @@ export interface leaveChatRoomDTO {
     chatId: number
   }
 }
+
+export interface addPeepDTO {
+  validIds: {
+    chatId: number
+  }
+  validData: {
+    content: string
+  }
+}

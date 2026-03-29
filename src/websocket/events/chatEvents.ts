@@ -4,7 +4,8 @@ import { chatHandler } from '../handlers/chatHandler'
 import { withMiddlewares } from '../middlewares/helpers/withMiddlewares'
 import { resolveIds } from '../middlewares/helpers/resolveIds'
 import { ioAuthMiddlewares } from '../middlewares/authMiddlewares'
-import { ioChatMiddlewares } from '../middlewares/chat/chatMiddlewares'
+import { ioChatMiddlewares } from '../middlewares/user/chatMiddlewares'
+import { chatPeepHandler } from '../handlers/chatPeepHandler'
 
 export const registerChatEvents = (io: Server, socket: Socket) => {
   socket.on(
@@ -17,6 +18,17 @@ export const registerChatEvents = (io: Server, socket: Socket) => {
       socket,
       [resolveIds(['chatId']), ioChatMiddlewares.requireRoomMember],
       chatHandler.leaveChatRoom
+    )
+  )
+
+  //peeps
+
+  socket.on(
+    'addPeep',
+    withMiddlewares(
+      socket,
+      [resolveIds(['chatId']), ioChatMiddlewares.addPeep],
+      chatPeepHandler.addPeep
     )
   )
 }

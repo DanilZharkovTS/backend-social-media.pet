@@ -1,9 +1,15 @@
 import { Socket } from 'socket.io'
 import { chatService } from '../../services/user/chat/chatService'
 import { joinChatRoomDTO } from '../../interfaces/user/chat/chatInterfaces'
+import { IoNextFn } from '../../interfaces/global/socket'
 
 export const chatHandler = {
-  joinChatRoom: async (socket: Socket, data: any, ctx: joinChatRoomDTO) => {
+  joinChatRoom: async (
+    socket: Socket,
+    data: any,
+    ctx: joinChatRoomDTO,
+    next: IoNextFn
+  ) => {
     try {
       const chatId = ctx.validIds.chatId
 
@@ -11,7 +17,7 @@ export const chatHandler = {
       socket.join(`chats:${chatId}`)
       socket.emit('joinedChat', { chatId })
     } catch (err) {
-      socket.emit('chat:error', { message: err.message })
+      next(err)
     }
   },
   leaveChatRoom: async (socket: Socket, data: any, ctx: joinChatRoomDTO) => {
