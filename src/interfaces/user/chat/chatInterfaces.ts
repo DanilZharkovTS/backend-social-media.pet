@@ -42,6 +42,10 @@ export interface addPeepDTO {
   }
 }
 
+export interface findPeepsDTO {
+  search: string
+}
+
 export interface editPeepDTO {
   validIds: {
     peepId: number

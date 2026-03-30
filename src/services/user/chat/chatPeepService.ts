@@ -3,6 +3,7 @@ import {
   addPeepDTO,
   deletePeepDTO,
   editPeepDTO,
+  findPeepsDTO,
   Peep,
 } from '../../../interfaces/user/chat/chatInterfaces'
 import { ApiError } from '../../../lib/ApiErrors'
@@ -25,6 +26,10 @@ export const chatPeepService = {
     await redis.lpush(redisKey, JSON.stringify(dbPeep))
 
     return { newPeep: dbPeep }
+  },
+  findPeeps: async (search: string, chatId: number ) => {
+    const { rows: dbPeeps } = await chatPeepsRepo.findByContent(search, chatId)
+    return {peeps: dbPeeps}
   },
   editPeep: async (
     user: TokenPayload,

@@ -16,6 +16,16 @@ export const chatPeepsRepo = {
       [peepId]
     )
   },
+  findByContent: (content: string, chatId: number) => {
+    return pool.query(
+      `SELECT cp.id, cp.chat_id, cp.sender_id, cp.content, cp.created_at, cp.is_edited,  u.name, u.avatar_url, u.has_checkmark FROM chat_peeps cp
+      JOIN users u ON cp.sender_id = u.id
+      WHERE ($1::text IS NULL OR
+      LOWER(content) LIKE LOWER($1))
+      AND cp.chat_id = $2 `,
+      [content, chatId]
+    )
+  },
   updatePeep: (content: string, peepId: number) => {
     return pool.query(
       `UPDATE chat_peeps 

@@ -32,4 +32,14 @@ router.delete(
   chatController.deleteChat
 )
 
+//peeps
+
+router.get(
+  '/:chatId/peeps',
+  authMiddlewares.verifyAccessToken,
+  setParamsId(['chatId']),
+  chatMiddlewares.findPeeps,
+  chatController.findPeeps
+)
+
 export default router
