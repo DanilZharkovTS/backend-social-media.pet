@@ -1,3 +1,4 @@
+import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import pool from '../../../pool'
 
 export const chatPeepsRepo = {
@@ -16,14 +17,16 @@ export const chatPeepsRepo = {
       [peepId]
     )
   },
-  findByContent: (content: string, chatId: number) => {
+  findByContent: (content: string, chatId: number, p: paginationDTO) => {
     return pool.query(
       `SELECT cp.id, cp.chat_id, cp.sender_id, cp.content, cp.created_at, cp.is_edited,  u.name, u.avatar_url, u.has_checkmark FROM chat_peeps cp
       JOIN users u ON cp.sender_id = u.id
       WHERE ($1::text IS NULL OR
       LOWER(content) LIKE LOWER($1))
-      AND cp.chat_id = $2 `,
-      [content, chatId]
+      AND cp.chat_id = $2
+      ORDER BY cp.created_at
+      LIMIT $3 OFFSET $4 `,
+      [content, chatId, p.limit, p.offset]
     )
   },
   updatePeep: (content: string, peepId: number) => {

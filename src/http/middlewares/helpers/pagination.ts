@@ -14,6 +14,16 @@ export const paginate = (req: Request, res: Response, next: NextFunction) => {
   if (isNaN(limitInt) || limitInt < 1 || limitInt > 50) limitInt = 50
 
   const offsetInt = (pageInt - 1) * limitInt
-  req.pagination = { page: pageInt, offset: offsetInt, limit: limitInt }
+
+  const start = -(pageInt * limitInt)
+  const end = -((pageInt - 1) * limitInt + 1)
+
+  req.pagination = {
+    page: pageInt,
+    offset: offsetInt,
+    limit: limitInt,
+    start,
+    end,
+  }
   next()
 }

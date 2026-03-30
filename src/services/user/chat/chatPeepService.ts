@@ -6,6 +6,7 @@ import {
   findPeepsDTO,
   Peep,
 } from '../../../interfaces/user/chat/chatInterfaces'
+import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import { ApiError } from '../../../lib/ApiErrors'
 import { getRedis } from '../../../lib/redisClient'
 import { chatPeepsRepo } from '../../../repos/user/chats/chatPeepsRepo'
@@ -27,9 +28,13 @@ export const chatPeepService = {
 
     return { newPeep: dbPeep }
   },
-  findPeeps: async (search: string, chatId: number ) => {
-    const { rows: dbPeeps } = await chatPeepsRepo.findByContent(search, chatId)
-    return {peeps: dbPeeps}
+  findPeeps: async (search: string, chatId: number, p: paginationDTO) => {
+    const { rows: dbPeeps } = await chatPeepsRepo.findByContent(
+      search,
+      chatId,
+      p
+    )
+    return { peeps: dbPeeps, pagination: p }
   },
   editPeep: async (
     user: TokenPayload,

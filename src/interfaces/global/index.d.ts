@@ -7,6 +7,8 @@ declare module 'express-serve-static-core' {
       page: number
       offset: number
       limit: number
+      start: number
+      end: number
     }
     paramsMap?: Record<string, number>
     queryMap?: {

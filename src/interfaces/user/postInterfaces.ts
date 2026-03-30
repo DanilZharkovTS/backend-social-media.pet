@@ -28,6 +28,8 @@ export interface paginationDTO {
   page: number
   limit: number
   offset: number
+  start: number
+  end: number
 }
 
 export interface updatePostDTO {

@@ -38,6 +38,7 @@ router.get(
   '/:chatId/peeps',
   authMiddlewares.verifyAccessToken,
   setParamsId(['chatId']),
+  paginate,
   chatMiddlewares.findPeeps,
   chatController.findPeeps
 )
