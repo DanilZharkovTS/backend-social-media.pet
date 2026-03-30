@@ -12,4 +12,10 @@ export const chatValidator = {
       .min(1, 'Min. content length is 1')
       .max(400, 'Max. content length is 400 symbols'),
   }),
+  editPeepBody: z.object({
+    content: z
+      .string('Content need to be a string')
+      .min(1, 'Min. content length is 1')
+      .max(400, 'Max. content length is 400 symbols'),
+  }),
 }

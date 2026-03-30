@@ -8,6 +8,15 @@ export interface Chat {
   updated_at: Date
 }
 
+export interface Peep {
+  id: number
+  chat_id: number
+  sender_id: number
+  content: string 
+  created_at: Date
+  is_edited: boolean
+}
+
 export interface createOrFindPrivateChatDTO {
   secondUserId: number
 }
@@ -27,6 +36,15 @@ export interface leaveChatRoomDTO {
 export interface addPeepDTO {
   validIds: {
     chatId: number
+  }
+  validData: {
+    content: string
+  }
+}
+
+export interface editPeepDTO {
+  validIds: {
+    peepId: number
   }
   validData: {
     content: string

@@ -31,4 +31,13 @@ export const registerChatEvents = (io: Server, socket: Socket) => {
       chatPeepHandler.addPeep
     )
   )
+
+  socket.on(
+    'editPeep',
+    withMiddlewares(
+      socket,
+      [resolveIds(['peepId']), ioChatMiddlewares.editPeep],
+      chatPeepHandler.editPeep
+    )
+  )
 }
