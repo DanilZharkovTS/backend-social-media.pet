@@ -31,23 +31,10 @@ export const chatPeepService = {
   ) => {
     const { peepId } = validIds
 
-    console.log(peepId)
-
     const peepResult = await chatPeepsRepo.findById(peepId)
     const dbPeep: Peep = peepResult.rows[0]
-    console.log(dbPeep)
 
-    if (!dbPeep) {
-      throw ApiError('Peep not found', 404)
-    }
-
-    if (dbPeep.sender_id !== user.userId) {
-      throw ApiError('You are not allowed to edit this peep', 403)
-    }
-
-    if (dbPeep.content === validData.content) {
-      throw ApiError('Content must be different from the current one', 400)
-    }
+    chatPeepService.validateEditPeep(dbPeep, user.userId, validData.content)
 
     const editedPeepResult = await chatPeepsRepo.updatePeep(
       validData.content,
@@ -55,8 +42,21 @@ export const chatPeepService = {
     )
     const dbEditedPeep: Peep = editedPeepResult.rows[0]
 
-    await cacheService.invalidateByPrefix(`chats:${dbPeep.chat_id}:peeps`)
+    await cacheService.invalidateByPrefix(`chats:${dbEditedPeep.chat_id}:peeps`)
 
     return { editedPeep: dbEditedPeep }
+  },
+  validateEditPeep: (peep: Peep | undefined, userId: number, newContent: string) => {
+    if (!peep) {
+      throw ApiError('Peep not found', 404)
+    }
+
+    if (peep.sender_id !== userId) {
+      throw ApiError('You are not allowed to edit this peep', 403)
+    }
+
+    if (peep.content === newContent) {
+      throw ApiError('Content must be different from the current one', 400)
+    }
   },
 }
