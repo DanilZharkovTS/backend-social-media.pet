@@ -3,6 +3,7 @@ import { chatPeepService } from '../../services/user/chat/chatPeepService'
 import { IoNextFn } from '../../interfaces/global/socket'
 import {
   addPeepDTO,
+  deletePeepDTO,
   editPeepDTO,
 } from '../../interfaces/user/chat/chatInterfaces'
 
@@ -37,10 +38,24 @@ export const chatPeepHandler = {
       socket
         .to(`chats:${result.editedPeep.chat_id}}`)
         .emit(`editedPeep`, result)
-      console.log('Edited peep')
     } catch (err) {
-      console.log(err)
+      next(err)
+    }
+  },
+  deletePeep: async (
+    socket: Socket,
+    data: any,
+    ctx: deletePeepDTO,
+    next: IoNextFn
+  ) => {
+    try {
+      const result = await chatPeepService.deletePeep(socket.user, ctx)
 
+      socket.emit(`deletedPeep`, result)
+      socket
+        .to(`chats:${result.deletedPeep.chat_id}}`)
+        .emit(`deletedPeep`, result)
+    } catch (err) {
       next(err)
     }
   },

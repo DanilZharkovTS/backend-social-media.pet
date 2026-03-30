@@ -1,6 +1,7 @@
 import { TokenPayload } from '../../../interfaces/auth/authInterfaces'
 import {
   addPeepDTO,
+  deletePeepDTO,
   editPeepDTO,
   Peep,
 } from '../../../interfaces/user/chat/chatInterfaces'
@@ -34,7 +35,7 @@ export const chatPeepService = {
     const peepResult = await chatPeepsRepo.findById(peepId)
     const dbPeep: Peep = peepResult.rows[0]
 
-    chatPeepService.validateEditPeep(dbPeep, user.userId, validData.content)
+    chatPeepService.validateManagingPeep(dbPeep, user.userId, validData.content)
 
     const editedPeepResult = await chatPeepsRepo.updatePeep(
       validData.content,
@@ -46,16 +47,37 @@ export const chatPeepService = {
 
     return { editedPeep: dbEditedPeep }
   },
-  validateEditPeep: (peep: Peep | undefined, userId: number, newContent: string) => {
+  deletePeep: async (user: TokenPayload, { validIds }: deletePeepDTO) => {
+    const { peepId } = validIds
+
+    const peepResult = await chatPeepsRepo.findById(peepId)
+    const dbPeep: Peep = peepResult.rows[0]
+
+    chatPeepService.validateManagingPeep(dbPeep, user.userId)
+
+    const deletedPeepResult = await chatPeepsRepo.deleteById(peepId)
+    const dbDeletedPeep: Peep = deletedPeepResult.rows[0]
+
+    await cacheService.invalidateByPrefix(
+      `chats:${dbDeletedPeep.chat_id}:peeps`
+    )
+
+    return { deletedPeep: dbDeletedPeep }
+  },
+  validateManagingPeep: (
+    peep: Peep | undefined,
+    userId: number,
+    newContent?: string
+  ) => {
     if (!peep) {
       throw ApiError('Peep not found', 404)
     }
 
     if (peep.sender_id !== userId) {
-      throw ApiError('You are not allowed to edit this peep', 403)
+      throw ApiError('You are not allowed to manage this peep', 403)
     }
 
-    if (peep.content === newContent) {
+    if (newContent !== undefined && peep.content === newContent) {
       throw ApiError('Content must be different from the current one', 400)
     }
   },

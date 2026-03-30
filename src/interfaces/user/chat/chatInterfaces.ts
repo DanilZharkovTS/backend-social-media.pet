@@ -12,7 +12,7 @@ export interface Peep {
   id: number
   chat_id: number
   sender_id: number
-  content: string 
+  content: string
   created_at: Date
   is_edited: boolean
 }
@@ -48,5 +48,10 @@ export interface editPeepDTO {
   }
   validData: {
     content: string
+  }
+}
+export interface deletePeepDTO {
+  validIds: {
+    peepId: number
   }
 }

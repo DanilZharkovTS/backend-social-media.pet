@@ -25,4 +25,12 @@ export const chatPeepsRepo = {
       [content, peepId]
     )
   },
+  deleteById: (peepId: number) => {
+    return pool.query(
+      `DELETE FROM chat_peeps
+      WHERE id = $1
+      RETURNING *`,
+      [peepId]
+    )
+  },
 }

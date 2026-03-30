@@ -40,4 +40,13 @@ export const registerChatEvents = (io: Server, socket: Socket) => {
       chatPeepHandler.editPeep
     )
   )
+
+  socket.on(
+    'deletePeep',
+    withMiddlewares(
+      socket,
+      [resolveIds(['peepId'])],
+      chatPeepHandler.deletePeep
+    )
+  )
 }
