@@ -29,11 +29,30 @@ export const chatPeepService = {
     return { newPeep: dbPeep }
   },
   findPeeps: async (search: string, chatId: number, p: paginationDTO) => {
+    const redis = getRedis()
+    const redisKey = `chats:${chatId}:peeps`
+
+    if (p.page === 1) {
+      const redisResult = await redis.lrange(redisKey, p.start, p.end)
+
+      if (redisResult.length) {        
+        const redisPeeps = redisResult.map((p) => JSON.parse(p))
+        return { peeps: redisPeeps, pagination: p }
+      }
+    }
+
     const { rows: dbPeeps } = await chatPeepsRepo.findByContent(
       search,
       chatId,
       p
     )
+
+    if (p.page === 1 && dbPeeps.length) {
+      const items = dbPeeps.map((peep) => JSON.stringify(peep))
+      await redis.rpush(redisKey, ...items)
+      await redis.ltrim(redisKey, -1000, -1)
+    }
+
     return { peeps: dbPeeps, pagination: p }
   },
   editPeep: async (
