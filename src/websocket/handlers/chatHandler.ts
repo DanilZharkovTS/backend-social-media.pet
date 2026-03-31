@@ -36,4 +36,11 @@ export const chatHandler = {
     console.log('typing');
     
   },
+  stopTyping: (socket: Socket, data: any, ctx: typingDTO) => {
+    const { userId } = socket.user
+    const { chatId } = ctx.validIds
+
+    socket.to(`chats:${chatId}`).emit('stopTyping', { userId })
+    console.log('stop typing');
+  }
 }

@@ -12,5 +12,8 @@ socket.on('connect', () => {
   socket.emit('joinChat', { chatId: 13 })
   setTimeout(() => {
     socket.emit('typing', { chatId: 13 })
+    setTimeout(() => {
+      socket.emit('stopTyping', { chatId: 13 })
+    }, 500)
   }, 500)
 })
