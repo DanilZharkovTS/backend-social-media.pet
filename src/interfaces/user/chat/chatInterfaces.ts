@@ -59,3 +59,9 @@ export interface deletePeepDTO {
     peepId: number
   }
 }
+
+export interface typingDTO {
+  validIds: {
+    chatId: number  
+  }
+}

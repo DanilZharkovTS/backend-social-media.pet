@@ -12,6 +12,7 @@ export const registerChatEvents = (io: Server, socket: Socket) => {
     'joinChat',
     withMiddlewares(socket, [resolveIds(['chatId'])], chatHandler.joinChatRoom)
   )
+
   socket.on(
     'leaveChat',
     withMiddlewares(
@@ -19,6 +20,11 @@ export const registerChatEvents = (io: Server, socket: Socket) => {
       [resolveIds(['chatId']), ioChatMiddlewares.requireRoomMember],
       chatHandler.leaveChatRoom
     )
+  )
+
+  socket.on(
+    'typing',
+    withMiddlewares(socket, [resolveIds(['chatId'])], chatHandler.typing)
   )
 
   //peeps

@@ -1,6 +1,9 @@
 import { Socket } from 'socket.io'
 import { chatService } from '../../services/user/chat/chatService'
-import { joinChatRoomDTO } from '../../interfaces/user/chat/chatInterfaces'
+import {
+  joinChatRoomDTO,
+  typingDTO,
+} from '../../interfaces/user/chat/chatInterfaces'
 import { IoNextFn } from '../../interfaces/global/socket'
 
 export const chatHandler = {
@@ -24,5 +27,13 @@ export const chatHandler = {
     const chatId = ctx.validIds.chatId
 
     socket.leave(`chats:${chatId}`)
+  },
+  typing: (socket: Socket, data: any, ctx: typingDTO) => {
+    const { userId } = socket.user
+    const { chatId } = ctx.validIds
+
+    socket.to(`chats:${chatId}`).emit('typing', { userId })
+    console.log('typing');
+    
   },
 }
