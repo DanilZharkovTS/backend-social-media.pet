@@ -23,4 +23,16 @@ export const chatMiddlewares = {
       next(err)
     }
   },
+  findPeeps: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validData = chatValidator.findPeepsBody.parse(req.query)
+      const search = validData.search ? `%${validData.search}%` : null
+
+      req.queryMap = { search }
+      next()
+    } catch (err) {
+      console.log(err)
+      next(err)
+    }
+  },
 }

@@ -1,15 +1,15 @@
-import { TokenPayload } from '../../interfaces/auth/authInterfaces'
+import { TokenPayload } from '../../../interfaces/auth/authInterfaces'
 import {
   Chat,
   createOrFindPrivateChatDTO,
-} from '../../interfaces/user/chatInterfaces'
-import { paginationDTO } from '../../interfaces/user/postInterfaces'
-import { ApiError } from '../../lib/ApiErrors'
-import { getRedis } from '../../lib/redisClient'
-import { chatParticipantsRepo } from '../../repos/user/chats/chatParticipantsRepo'
-import { chatRepo } from '../../repos/user/chats/chatRepo'
-import { userRepo } from '../../repos/userRepo'
-import { cacheService } from '../shared/cacheService'
+} from '../../../interfaces/user/chat/chatInterfaces'
+import { paginationDTO } from '../../../interfaces/user/postInterfaces'
+import { ApiError } from '../../../lib/ApiErrors'
+import { getRedis } from '../../../lib/redisClient'
+import { chatParticipantsRepo } from '../../../repos/user/chats/chatParticipantsRepo'
+import { chatRepo } from '../../../repos/user/chats/chatRepo'
+import { userRepo } from '../../../repos/userRepo'
+import { cacheService } from '../../shared/cacheService'
 
 export const chatService = {
   createOrFindPrivateChat: async (
@@ -38,6 +38,16 @@ export const chatService = {
     }
 
     return { chat: dbChat }
+  },
+  joinChatRoom: async (user: TokenPayload, chatId: number) => {
+    const chatParticipantResult =
+      await chatParticipantsRepo.findByChatIdAndUserId(chatId, user.userId)
+    const dbChatParticipant = chatParticipantResult.rows[0]
+
+    if (!dbChatParticipant) {
+      throw ApiError('No access to this chat', 403)
+    }
+    return
   },
   getUserChats: async (user: TokenPayload, p: paginationDTO) => {
     const redis = getRedis()

@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
-import { chatService } from '../../../services/user/chatService'
+import { chatService } from '../../../services/user/chat/chatService'
+import { chatPeepService } from '../../../services/user/chat/chatPeepService'
 
 export const chatController = {
   createOrFindPrivateChat: async (
@@ -32,6 +33,22 @@ export const chatController = {
       const result = await chatService.deleteChat(
         req.user,
         req.paramsMap.chatId
+      )
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err)
+      next(err)
+    }
+  },
+
+  //peeps
+
+  findPeeps: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await chatPeepService.findPeeps(
+        req.queryMap.search,
+        req.paramsMap.chatId,
+        req.pagination
       )
       res.status(200).json(result)
     } catch (err) {
