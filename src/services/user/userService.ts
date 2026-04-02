@@ -61,7 +61,7 @@ export const userService = {
       has_checkmark: user.has_checkmark,
     })
 
-    const redisResult = await redis.get(`users:${user.userId}`)
+    const redisResult = await redis.get(`users:${user.userId}:info`)
 
     if (redisResult) {
       const redisUser = JSON.parse(redisResult)
@@ -79,7 +79,7 @@ export const userService = {
       `users:${user.userId}`,
       JSON.stringify(dbUser),
       'EX',
-      60 * 3
+      60
     )
 
     return toUserResponse(dbUser)
@@ -140,7 +140,7 @@ export const userService = {
   updateMyInfo: async (user: TokenPayload, data: dynamicUpdateMyInfo) => {
     const userResult = await userRepo.updateMyInfoById(user.userId, data)
 
-    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
+    await cacheService.invalidateByPrefix(`users:${user.userId}:*`)
 
     return { updated: userResult.rows[0] }
   },
@@ -160,7 +160,7 @@ export const userService = {
 
     await userRepo.updateMyEmailById(user.userId, data.newEmail)
 
-    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
+    await cacheService.invalidateByPrefix(`users:${user.userId}:*`)
 
     return { newEmail: data.newEmail }
   },
@@ -185,7 +185,7 @@ export const userService = {
     const hashedPassword = await bcrypt.hash(data.newPassword, saltRounds)
     await userRepo.updateMyPasswordById(user.userId, hashedPassword)
 
-    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
+    await cacheService.invalidateByPrefix(`users:${user.userId}:*`)
 
     return { isChangedPassword: true }
   },
@@ -195,7 +195,7 @@ export const userService = {
       user.userId
     )
 
-    await cacheService.invalidateByPrefix(`user:${user.userId}:*`)
+    await cacheService.invalidateByPrefix(`users:${user.userId}:*`)
 
     return { avatarUrl: avatarResult.rows[0].avatar_url }
   },
@@ -212,7 +212,7 @@ export const userService = {
       has_checkmark: user.has_checkmark,
     })
 
-    const redisResult = await redis.get(`user:${userId}`)
+    const redisResult = await redis.get(`users:${userId}:info`)
 
     if (redisResult) {
       const redisUser = JSON.parse(redisResult)
@@ -226,7 +226,7 @@ export const userService = {
       throw ApiError('Uset not found', 404)
     }
 
-    await redis.set(`user:${userId}`, JSON.stringify(dbUser))
+    await redis.set(`users:${userId}:info`, JSON.stringify(dbUser))
 
     return toUserResponse(dbUser)
   },
