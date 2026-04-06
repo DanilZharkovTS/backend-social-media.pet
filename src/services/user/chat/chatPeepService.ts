@@ -30,12 +30,14 @@ export const chatPeepService = {
   },
   findPeeps: async (search: string, chatId: number, p: paginationDTO) => {
     const redis = getRedis()
-    const redisKey = `chats:${chatId}:peeps`
+    const redisKey = `chats:${chatId}:peeps${
+      search ? `:search:${search}` : null
+    }`
 
     if (p.page === 1) {
       const redisResult = await redis.lrange(redisKey, p.start, p.end)
 
-      if (redisResult.length) {        
+      if (redisResult.length) {
         const redisPeeps = redisResult.map((p) => JSON.parse(p))
         return { peeps: redisPeeps, pagination: p }
       }
