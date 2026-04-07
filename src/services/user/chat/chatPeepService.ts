@@ -15,7 +15,7 @@ import { cacheService } from '../../shared/cacheService'
 export const chatPeepService = {
   addPeep: async (user: TokenPayload, { validIds, validData }: addPeepDTO) => {
     const redis = getRedis()
-    const redisKey = `chat:${validIds.chatId}:peeps`
+    const redisKey = `chats:${validIds.chatId}:peeps`
 
     const peepResult = await chatPeepsRepo.addPeep(
       user.userId,
@@ -34,11 +34,9 @@ export const chatPeepService = {
 
   findPeeps: async (search: string, chatId: number, p: paginationDTO) => {
     const redis = getRedis()
-    const redisKey = `chat:${chatId}:peeps`
+    const redisKey = `chats:${chatId}:peeps`
 
-    if (!search && p.page === 1) {
-      console.log(p);
-      
+    if (!search && p.page === 1) {      
       const redisResult = await redis.lrange(redisKey, p.start, p.end)
 
       if (redisResult.length) {
@@ -63,6 +61,7 @@ export const chatPeepService = {
       await redis.del(redisKey) 
       await redis.rpush(redisKey, ...items)
       await redis.ltrim(redisKey, -1000, -1)
+      await redis.expire(redisKey, 60 * 10)
     }
 
     return {
