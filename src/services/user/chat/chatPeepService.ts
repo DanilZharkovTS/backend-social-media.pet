@@ -36,13 +36,16 @@ export const chatPeepService = {
     const redis = getRedis()
     const redisKey = `chats:${chatId}:peeps`
 
-    if (!search && p.page === 1) {      
+    if (!search && p.page === 1) {
       const redisResult = await redis.lrange(redisKey, p.start, p.end)
 
       if (redisResult.length) {
         const redisPeeps = redisResult.map((p) => JSON.parse(p))
+        
+        const hasMore = redisPeeps.length === p.limit
 
         return {
+          hasMore,
           peeps: redisPeeps,
           pagination: p,
         }
@@ -57,14 +60,17 @@ export const chatPeepService = {
 
     if (!search && p.page === 1 && dbPeeps.length) {
       const items = dbPeeps.map((peep) => JSON.stringify(peep))
-      
-      await redis.del(redisKey) 
+
+      await redis.del(redisKey)
       await redis.rpush(redisKey, ...items)
       await redis.ltrim(redisKey, -1000, -1)
       await redis.expire(redisKey, 60 * 10)
     }
 
+    const hasMore = dbPeeps.length === p.limit
+
     return {
+      hasMore,
       peeps: dbPeeps,
       pagination: p,
     }
