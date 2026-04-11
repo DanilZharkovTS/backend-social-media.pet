@@ -15,29 +15,40 @@ import { cacheService } from '../../shared/cacheService'
 export const chatPeepService = {
   addPeep: async (user: TokenPayload, { validIds, validData }: addPeepDTO) => {
     const redis = getRedis()
-    const redisKey = `chat:${validIds.chatId}:peeps`
+    const redisKey = `chats:${validIds.chatId}:peeps`
 
     const peepResult = await chatPeepsRepo.addPeep(
       user.userId,
       validIds.chatId,
       validData.content
     )
+
     const dbPeep = peepResult.rows[0]
 
-    await redis.lpush(redisKey, JSON.stringify(dbPeep))
+    await redis.rpush(redisKey, JSON.stringify(dbPeep))
+
+    await redis.ltrim(redisKey, -1000, -1)
 
     return { newPeep: dbPeep }
   },
+
   findPeeps: async (search: string, chatId: number, p: paginationDTO) => {
     const redis = getRedis()
     const redisKey = `chats:${chatId}:peeps`
 
-    if (p.page === 1) {
+    if (!search && p.page === 1) {
       const redisResult = await redis.lrange(redisKey, p.start, p.end)
 
-      if (redisResult.length) {        
+      if (redisResult.length) {
         const redisPeeps = redisResult.map((p) => JSON.parse(p))
-        return { peeps: redisPeeps, pagination: p }
+
+        const hasMore = redisPeeps.length === p.limit
+
+        return {
+          hasMore,
+          peeps: redisPeeps,
+          pagination: p,
+        }
       }
     }
 
@@ -46,14 +57,24 @@ export const chatPeepService = {
       chatId,
       p
     )
+    const reversedPeeps = dbPeeps.reverse()
 
-    if (p.page === 1 && dbPeeps.length) {
-      const items = dbPeeps.map((peep) => JSON.stringify(peep))
+    if (!search && p.page === 1 && reversedPeeps.length) {
+      const items = reversedPeeps.map((peep) => JSON.stringify(peep))
+
+      await redis.del(redisKey)
       await redis.rpush(redisKey, ...items)
       await redis.ltrim(redisKey, -1000, -1)
+      await redis.expire(redisKey, 60 * 10)
     }
 
-    return { peeps: dbPeeps, pagination: p }
+    const hasMore = dbPeeps.length === p.limit
+
+    return {
+      hasMore,
+      peeps: reversedPeeps,
+      pagination: p,
+    }
   },
   editPeep: async (
     user: TokenPayload,

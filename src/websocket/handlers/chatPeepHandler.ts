@@ -18,8 +18,8 @@ export const chatPeepHandler = {
       const chatId = ctx.validIds.chatId
       const result = await chatPeepService.addPeep(socket.user, ctx)
 
-      socket.emit('newPeep', result.newPeep)
-      socket.to(`chats:${chatId}`).emit('newPeep', result.newPeep)
+      socket.emit('newPeep', result)
+      socket.to(`chats:${chatId}`).emit('newPeep', result)
       console.log('Peep added')
     } catch (err) {
       next(err)
@@ -36,7 +36,7 @@ export const chatPeepHandler = {
 
       socket.emit(`editedPeep`, result)
       socket
-        .to(`chats:${result.editedPeep.chat_id}}`)
+        .to(`chats:${result.editedPeep.chat_id}`)
         .emit(`editedPeep`, result)
     } catch (err) {
       next(err)
@@ -52,8 +52,9 @@ export const chatPeepHandler = {
       const result = await chatPeepService.deletePeep(socket.user, ctx)
 
       socket.emit(`deletedPeep`, result)
+      
       socket
-        .to(`chats:${result.deletedPeep.chat_id}}`)
+        .to(`chats:${result.deletedPeep.chat_id}`)
         .emit(`deletedPeep`, result)
     } catch (err) {
       next(err)
