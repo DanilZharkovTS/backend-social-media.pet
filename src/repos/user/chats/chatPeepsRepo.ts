@@ -24,7 +24,7 @@ export const chatPeepsRepo = {
       WHERE ($1::text IS NULL OR
       LOWER(content) LIKE LOWER($1))
       AND cp.chat_id = $2
-      ORDER BY cp.created_at
+      ORDER BY cp.created_at DESC
       LIMIT $3 OFFSET $4 `,
       [content, chatId, p.limit, p.offset]
     )
