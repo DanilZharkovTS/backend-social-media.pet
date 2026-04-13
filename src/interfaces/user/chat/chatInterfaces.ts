@@ -8,6 +8,14 @@ export interface Chat {
   updated_at: Date
 }
 
+export interface ChatParticipant {
+  id: number
+  chat_id: number
+  user_id: number
+  joined_at: Date
+  last_read_peep_id: number | null
+}
+
 export interface Peep {
   id: number
   chat_id: number

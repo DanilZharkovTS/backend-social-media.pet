@@ -46,6 +46,7 @@ export const chatController = {
   findPeeps: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await chatPeepService.findPeeps(
+        req.user,
         req.queryMap.search,
         req.paramsMap.chatId,
         req.pagination

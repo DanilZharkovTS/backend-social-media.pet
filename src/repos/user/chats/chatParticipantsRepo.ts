@@ -17,4 +17,12 @@ export const chatParticipantsRepo = {
       [chatId, userId]
     )
   },
+  findOpponentByChatId: (chatId: number, userId: number) => {
+    return pool.query(
+      `SELECT * FROM chat_participants 
+      WHERE chat_id = $1
+      AND user_id != $2`,
+      [chatId, userId]
+    )
+  },
 }
