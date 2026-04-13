@@ -4,6 +4,7 @@ import {
   ChatParticipant,
   deletePeepDTO,
   editPeepDTO,
+  markPeepsAsReadUpToDTO,
   Peep,
 } from '../../../interfaces/user/chat/chatInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
@@ -124,6 +125,39 @@ export const chatPeepService = {
     await cacheService.invalidateByPrefix(`chats:${dbEditedPeep.chat_id}:peeps`)
 
     return { editedPeep: dbEditedPeep }
+  },
+  markPeepsAsReadUpTo: async (
+    user: TokenPayload,
+    { validIds }: markPeepsAsReadUpToDTO
+  ) => {
+    const { chatId, peepId } = validIds
+
+    const participantResult = await chatParticipantsRepo.findByChatIdAndUserId(
+      chatId,
+      user.userId
+    )
+    const dbParticipant = participantResult.rows[0]
+
+    if (!dbParticipant) {
+      throw ApiError('You are not in this chat', 403)
+    }
+
+    const { last_read_peep_id: lastReadId }: ChatParticipant = dbParticipant
+    if (lastReadId && peepId < lastReadId) {
+      return
+    }
+
+    const updated = await chatParticipantsRepo.updateLastReadPeep(
+      peepId,
+      user.userId,
+      chatId
+    )
+
+    if (!updated.rowCount) {
+      throw ApiError('Invalid peep', 400)
+    }
+
+    return { lastReadPeepId: peepId }
   },
   deletePeep: async (user: TokenPayload, { validIds }: deletePeepDTO) => {
     const { peepId } = validIds

@@ -73,3 +73,10 @@ export interface typingDTO {
     chatId: number  
   }
 }
+
+export interface markPeepsAsReadUpToDTO {
+  validIds: {
+    chatId: number
+    peepId: number
+  }
+}
