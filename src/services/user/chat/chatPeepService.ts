@@ -135,14 +135,14 @@ export const chatPeepService = {
     const participantResult = await chatParticipantsRepo.findByChatIdAndUserId(
       chatId,
       user.userId
-    )
+    )    
     const dbParticipant = participantResult.rows[0]
 
     if (!dbParticipant) {
       throw ApiError('You are not in this chat', 403)
     }
 
-    const { last_read_peep_id: lastReadId }: ChatParticipant = dbParticipant
+    const { last_read_peep_id: lastReadId }: ChatParticipant = dbParticipant    
     if (lastReadId && peepId < lastReadId) {
       return
     }

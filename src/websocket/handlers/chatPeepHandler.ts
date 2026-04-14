@@ -66,13 +66,15 @@ export const chatPeepHandler = {
   ) => {
     try {
       const { chatId } = ctx.validIds
-      
-      const result = await chatPeepService.markPeepsAsReadUpTo(socket.user, ctx)
 
-      socket.to(`chats:${chatId}`).emit('readPeeps', result)
+      const result = await chatPeepService.markPeepsAsReadUpTo(socket.user, ctx)
+      if (result) {
+        socket.emit('readPeeps', result)
+        socket.to(`chats:${chatId}`).emit('readPeeps', result)
+      }
     } catch (err) {
-      console.log(err);
-      
+      console.log(err)
+
       next(err)
     }
   },
