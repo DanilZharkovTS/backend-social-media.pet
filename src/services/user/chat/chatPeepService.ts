@@ -53,6 +53,8 @@ export const chatPeepService = {
       throw new Error('Opponent not found')
     }
 
+    const lastRead = dbOpponent.last_read_peep_id ?? 0
+
     if (!search && p.page === 1) {
       const redisResult = await redis.lrange(redisKey, p.start, p.end)
 
@@ -60,7 +62,12 @@ export const chatPeepService = {
         const redisPeeps: Peep[] = redisResult.map((p) => JSON.parse(p))
         const peepsWithStatus = redisPeeps.map((p) => ({
           ...p,
-          status: p.id <= dbOpponent.last_read_peep_id ? 'read' : 'sent',
+          status:
+            p.sender_id === user.userId
+              ? p.id <= lastRead
+                ? 'read'
+                : 'sent'
+              : undefined,
         }))
 
         const hasMore = redisPeeps.length === p.limit
@@ -82,7 +89,12 @@ export const chatPeepService = {
 
     const peepsWithStatus = reversedPeeps.map((p) => ({
       ...p,
-      status: p.id <= dbOpponent.last_read_peep_id ? 'read' : 'sent',
+      status:
+        p.sender_id === user.userId
+          ? p.id <= lastRead
+            ? 'read'
+            : 'sent'
+          : null,
     }))
 
     if (!search && p.page === 1 && reversedPeeps.length) {
@@ -135,14 +147,14 @@ export const chatPeepService = {
     const participantResult = await chatParticipantsRepo.findByChatIdAndUserId(
       chatId,
       user.userId
-    )    
+    )
     const dbParticipant = participantResult.rows[0]
 
     if (!dbParticipant) {
       throw ApiError('You are not in this chat', 403)
     }
 
-    const { last_read_peep_id: lastReadId }: ChatParticipant = dbParticipant    
+    const { last_read_peep_id: lastReadId }: ChatParticipant = dbParticipant
     if (lastReadId && peepId < lastReadId) {
       return
     }
