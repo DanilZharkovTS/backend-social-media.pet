@@ -60,4 +60,13 @@ export const registerChatEvents = (io: Server, socket: Socket) => {
       chatPeepHandler.deletePeep
     )
   )
+
+  socket.on(
+    'readPeeps',
+    withMiddlewares(
+      socket,
+      [resolveIds(['chatId', 'peepId'])],
+      chatPeepHandler.markPeepsAsReadUpTo
+    )
+  )
 }

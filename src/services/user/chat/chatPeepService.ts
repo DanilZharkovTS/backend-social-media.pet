@@ -1,14 +1,16 @@
 import { TokenPayload } from '../../../interfaces/auth/authInterfaces'
 import {
   addPeepDTO,
+  ChatParticipant,
   deletePeepDTO,
   editPeepDTO,
-  findPeepsDTO,
+  markPeepsAsReadUpToDTO,
   Peep,
 } from '../../../interfaces/user/chat/chatInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import { ApiError } from '../../../lib/ApiErrors'
 import { getRedis } from '../../../lib/redisClient'
+import { chatParticipantsRepo } from '../../../repos/user/chats/chatParticipantsRepo'
 import { chatPeepsRepo } from '../../../repos/user/chats/chatPeepsRepo'
 import { cacheService } from '../../shared/cacheService'
 
@@ -32,21 +34,40 @@ export const chatPeepService = {
     return { newPeep: dbPeep }
   },
 
-  findPeeps: async (search: string, chatId: number, p: paginationDTO) => {
+  findPeeps: async (
+    user: TokenPayload,
+    search: string,
+    chatId: number,
+    p: paginationDTO
+  ) => {
     const redis = getRedis()
     const redisKey = `chats:${chatId}:peeps`
+
+    const opponentResult = await chatParticipantsRepo.findOpponentByChatId(
+      chatId,
+      user.userId
+    )
+    const dbOpponent: ChatParticipant = opponentResult.rows[0]
+
+    if (!dbOpponent) {
+      throw new Error('Opponent not found')
+    }
 
     if (!search && p.page === 1) {
       const redisResult = await redis.lrange(redisKey, p.start, p.end)
 
       if (redisResult.length) {
-        const redisPeeps = redisResult.map((p) => JSON.parse(p))
+        const redisPeeps: Peep[] = redisResult.map((p) => JSON.parse(p))
+        const peepsWithStatus = redisPeeps.map((p) => ({
+          ...p,
+          status: p.id <= dbOpponent.last_read_peep_id ? 'read' : 'sent',
+        }))
 
         const hasMore = redisPeeps.length === p.limit
 
         return {
           hasMore,
-          peeps: redisPeeps,
+          peeps: peepsWithStatus,
           pagination: p,
         }
       }
@@ -57,22 +78,30 @@ export const chatPeepService = {
       chatId,
       p
     )
-    const reversedPeeps = dbPeeps.reverse()
+    const reversedPeeps: Peep[] = [...dbPeeps].reverse()
+
+    const peepsWithStatus = reversedPeeps.map((p) => ({
+      ...p,
+      status: p.id <= dbOpponent.last_read_peep_id ? 'read' : 'sent',
+    }))
 
     if (!search && p.page === 1 && reversedPeeps.length) {
       const items = reversedPeeps.map((peep) => JSON.stringify(peep))
 
-      await redis.del(redisKey)
-      await redis.rpush(redisKey, ...items)
-      await redis.ltrim(redisKey, -1000, -1)
-      await redis.expire(redisKey, 60 * 10)
+      await redis
+        .multi()
+        .del(redisKey)
+        .rpush(redisKey, ...items)
+        .ltrim(redisKey, -1000, -1)
+        .expire(redisKey, 60 * 10)
+        .exec()
     }
 
     const hasMore = dbPeeps.length === p.limit
 
     return {
       hasMore,
-      peeps: reversedPeeps,
+      peeps: peepsWithStatus,
       pagination: p,
     }
   },
@@ -96,6 +125,39 @@ export const chatPeepService = {
     await cacheService.invalidateByPrefix(`chats:${dbEditedPeep.chat_id}:peeps`)
 
     return { editedPeep: dbEditedPeep }
+  },
+  markPeepsAsReadUpTo: async (
+    user: TokenPayload,
+    { validIds }: markPeepsAsReadUpToDTO
+  ) => {
+    const { chatId, peepId } = validIds
+
+    const participantResult = await chatParticipantsRepo.findByChatIdAndUserId(
+      chatId,
+      user.userId
+    )    
+    const dbParticipant = participantResult.rows[0]
+
+    if (!dbParticipant) {
+      throw ApiError('You are not in this chat', 403)
+    }
+
+    const { last_read_peep_id: lastReadId }: ChatParticipant = dbParticipant    
+    if (lastReadId && peepId < lastReadId) {
+      return
+    }
+
+    const updated = await chatParticipantsRepo.updateLastReadPeep(
+      peepId,
+      user.userId,
+      chatId
+    )
+
+    if (!updated.rowCount) {
+      throw ApiError('Invalid peep', 400)
+    }
+
+    return { lastReadPeepId: peepId }
   },
   deletePeep: async (user: TokenPayload, { validIds }: deletePeepDTO) => {
     const { peepId } = validIds
