@@ -27,11 +27,15 @@ export const chatPeepService = {
 
     const dbPeep = peepResult.rows[0]
 
-    await redis.rpush(redisKey, JSON.stringify(dbPeep))
+    const redisResult = await redis.lrange(redisKey, -50, -1)
+    const redisPeeps = redisResult.map((p) => JSON.parse(p))
 
-    await redis.ltrim(redisKey, -1000, -1)
+    if (redisPeeps.length) {
+      await redis.rpush(redisKey, JSON.stringify(dbPeep))
+      await redis.ltrim(redisKey, -1000, -1)
+    }
 
-    return { newPeep: dbPeep }
+    return { newPeep: { ...dbPeep, status: 'sent' } }
   },
 
   findPeeps: async (

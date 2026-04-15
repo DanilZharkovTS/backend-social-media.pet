@@ -147,7 +147,14 @@ export const authService = {
 
     return {
       refreshToken: rawRefreshToken,
-      logined: { accessToken, user: user.rows[0] },
+      logined: {
+        accessToken,
+        user: {
+          email: dbUser.email,
+          role: dbUser.role,
+          userId: dbUser.id,
+        },
+      },
     }
   },
   loginEmailConfirm: async (data: loginEmailConfirmDTO) => {
@@ -203,7 +210,14 @@ export const authService = {
     return {
       trustedDeviceToken: rawTrustedDeviceToken,
       refreshToken: rawRefreshToken,
-      logined: { accessToken, user: dbUser },
+      logined: {
+        accessToken,
+        user: {
+          email: dbUser.email,
+          role: dbUser.role,
+          userId: dbUser.id,
+        },
+      },
     }
   },
   refresh: async (clientRefreshToken: string) => {
@@ -230,7 +244,10 @@ export const authService = {
     return authService.handleRefreshCondition(dbToken, 'db')
   },
 
-  handleRefreshCondition: async (token: RefreshTokenWithUser, source: 'redis' | 'db') => {
+  handleRefreshCondition: async (
+    token: RefreshTokenWithUser,
+    source: 'redis' | 'db'
+  ) => {
     const redis = getRedis()
 
     if (source === 'db') {

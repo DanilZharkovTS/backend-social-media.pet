@@ -78,7 +78,7 @@ router.post(
 
 router.get(
   '/logout',
-  rateLimiter(1, 60, 'logout'),
+  rateLimiter(5, 60, 'logout'),
   authMiddlewares.refresh,
   authController.logout
 )
