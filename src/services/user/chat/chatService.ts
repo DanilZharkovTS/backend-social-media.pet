@@ -68,6 +68,16 @@ export const chatService = {
     return { chats: dbChats, pagination: p }
   },
   getChat: async (user: TokenPayload, chatId: number) => {
+    const redis = getRedis()
+    const redisKey = `user:${user.userId}:chats:${chatId}`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      const redisChat = JSON.parse(redisResult)
+
+      return { chat: redisChat }
+    }
     const participantResult = await chatParticipantsRepo.findByChatIdAndUserId(
       chatId,
       user.userId
@@ -80,6 +90,8 @@ export const chatService = {
 
     const chatResult = await chatRepo.findByIdAndUserId(chatId, user.userId)
     const dbChat: Chat = chatResult.rows[0]
+
+    await redis.set(redisKey, JSON.stringify(dbChat), 'EX', 60)
 
     return { chat: dbChat }
   },
