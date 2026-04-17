@@ -15,6 +15,13 @@ router.get(
   paginate,
   chatController.getUserChats
 )
+router.get(
+  '/:chatId',
+  authMiddlewares.verifyAccessToken,
+  setParamsId(['chatId']),
+  chatController.getChat
+)
+
 
 router.post(
   '/private',

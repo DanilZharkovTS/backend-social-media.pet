@@ -1,6 +1,7 @@
 import { TokenPayload } from '../../../interfaces/auth/authInterfaces'
 import {
   Chat,
+  ChatParticipant,
   createOrFindPrivateChatDTO,
 } from '../../../interfaces/user/chat/chatInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
@@ -65,6 +66,22 @@ export const chatService = {
     await redis.set(redisKey, JSON.stringify(dbChats), 'EX', 60)
 
     return { chats: dbChats, pagination: p }
+  },
+  getChat: async (user: TokenPayload, chatId: number) => {
+    const participantResult = await chatParticipantsRepo.findByChatIdAndUserId(
+      chatId,
+      user.userId
+    )
+    const dbParticipant: ChatParticipant = participantResult.rows[0]
+
+    if (!dbParticipant) {
+      throw ApiError('No access to this chat', 403)
+    }
+
+    const chatResult = await chatRepo.findByIdAndUserId(chatId, user.userId)
+    const dbChat: Chat = chatResult.rows[0]
+
+    return { chat: dbChat }
   },
   deleteChat: async (user: TokenPayload, chatId: number) => {
     const { rows: dbChats } = await chatRepo.findById(chatId)
