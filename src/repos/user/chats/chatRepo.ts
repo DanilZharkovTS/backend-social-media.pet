@@ -31,10 +31,12 @@ export const chatRepo = {
   },
   findByUserId: (userId: number, p: paginationDTO) => {
     return pool.query(
-      `SELECT c.id, c.type, c.name, c.created_at, c.updated_at FROM chats c
-      JOIN chat_participants cp ON c.id = cp.chat_id
-      WHERE cp.user_id = $1
-      LIMIT $2 OFFSET $3`,
+      `SELECT c.id, c.type, c.name, c.created_at, c.updated_at, u.name
+        FROM chats c
+        JOIN chat_participants cp1 ON c.id = cp1.chat_id AND cp1.user_id = $1
+        JOIN chat_participants cp2 ON c.id = cp2.chat_id AND cp2.user_id != $1
+        JOIN users u ON cp2.user_id = u.id
+        LIMIT $2 OFFSET $3`,
       [userId, p.limit, p.offset]
     )
   },
