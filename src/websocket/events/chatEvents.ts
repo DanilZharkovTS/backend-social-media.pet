@@ -32,6 +32,13 @@ export const registerChatEvents = (io: Server, socket: Socket) => {
     withMiddlewares(socket, [resolveIds(['chatId'])], chatHandler.stopTyping)
   )
 
+  //users
+
+  socket.on(
+    'userOnline',
+    withMiddlewares(socket, [resolveIds(['chatId'])], chatHandler.onlineUser)
+  )
+
   //peeps
 
   socket.on(

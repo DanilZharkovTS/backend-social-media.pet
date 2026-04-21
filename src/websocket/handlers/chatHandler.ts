@@ -33,14 +33,21 @@ export const chatHandler = {
     const { chatId } = ctx.validIds
 
     socket.to(`chats:${chatId}`).emit('typing', { userId })
-    console.log('typing');
-    
+    console.log('typing')
   },
   stopTyping: (socket: Socket, data: any, ctx: typingDTO) => {
     const { userId } = socket.user
     const { chatId } = ctx.validIds
 
     socket.to(`chats:${chatId}`).emit('stopTyping', { userId })
-    console.log('stop typing');
-  }
+    console.log('stop typing')
+  },
+  //users
+  onlineUser: (socket: Socket, data: any, ctx: typingDTO) => {
+    const { userId } = socket.user
+    const { chatId } = ctx.validIds
+
+    socket.to(`chats:${chatId}`).emit('onlineUser', { userId })
+    console.log('online user')
+  },
 }
