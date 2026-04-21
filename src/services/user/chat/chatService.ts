@@ -62,6 +62,18 @@ export const chatService = {
 
     return { ops: result, userId }
   },
+  notifyOfflineUsers: async (user: TokenPayload) => {
+    const redis = getRedis()
+    const { userId } = user
+    const redisKey = `users:${userId}:online`
+
+    await redis.del(redisKey)
+    const { rows: result } = await chatParticipantsRepo.findOpponentsByUserId(
+      userId
+    )
+
+    return { ops: result, userId }
+  },
   getUserChats: async (user: TokenPayload, p: paginationDTO) => {
     const redis = getRedis()
     const redisKey = `users:${user.userId}:chats:page:${p.page}:limit:${p.limit}`
