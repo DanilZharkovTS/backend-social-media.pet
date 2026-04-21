@@ -25,6 +25,12 @@ export const chatParticipantsRepo = {
       [chatId, userId]
     )
   },
+  findOpponentsByUserId: (userId: number) => {
+    return pool.query(`SELECT cp2.user_id FROM chats c
+      JOIN chat_participants cp1 ON c.id = cp1.chat_id AND cp1.user_id = $1
+      JOIN chat_participants cp2 ON c.id = cp2.chat_id AND cp2.user_id != $1
+      `, [userId])
+  },
   updateLastReadPeep: (peepId: number, userId: number, chatId: number) => {
     return pool.query(
       `UPDATE chat_participants 

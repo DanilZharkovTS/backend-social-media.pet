@@ -50,6 +50,18 @@ export const chatService = {
     }
     return
   },
+  notifyOnlineUsers: async (user: TokenPayload) => {
+    const redis = getRedis()
+    const { userId } = user
+    const redisKey = `users:${userId}:online`
+
+    await redis.set(redisKey, 1)
+    const { rows: result } = await chatParticipantsRepo.findOpponentsByUserId(
+      userId
+    )
+
+    return { ops: result, userId }
+  },
   getUserChats: async (user: TokenPayload, p: paginationDTO) => {
     const redis = getRedis()
     const redisKey = `users:${user.userId}:chats:page:${p.page}:limit:${p.limit}`

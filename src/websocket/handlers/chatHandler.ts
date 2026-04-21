@@ -5,6 +5,7 @@ import {
   typingDTO,
 } from '../../interfaces/user/chat/chatInterfaces'
 import { IoNextFn } from '../../interfaces/global/socket'
+import { chatParticipantsRepo } from '../../repos/user/chats/chatParticipantsRepo'
 
 export const chatHandler = {
   joinChatRoom: async (
@@ -43,11 +44,11 @@ export const chatHandler = {
     console.log('stop typing')
   },
   //users
-  onlineUser: (socket: Socket, data: any, ctx: typingDTO) => {
-    const { userId } = socket.user
-    const { chatId } = ctx.validIds
+  notifyOnlineOpponents: async (socket: Socket) => {
+    const { ops, userId } = await chatService.notifyOnlineUsers(socket.user)    
 
-    socket.to(`chats:${chatId}`).emit('onlineUser', { userId })
-    console.log('online user')
+    ops.forEach(({ user_id }) => {
+      socket.to(`userRooms:${user_id}`).emit('onlineUser', { userId })        
+    })
   },
 }
