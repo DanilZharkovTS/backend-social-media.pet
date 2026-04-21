@@ -53,7 +53,7 @@ export const chatHandler = {
     })
   },
   notifyOfflineOpponents: async (socket: Socket) => {
-    const { ops, userId } = await chatService.notifyOnlineUsers(socket.user)
+    const { ops, userId } = await chatService.notifyOfflineUsers(socket.user)
 
     ops.forEach(({ user_id }) => {
       socket.to(`userRooms:${user_id}`).emit('offlineUser', { userId })

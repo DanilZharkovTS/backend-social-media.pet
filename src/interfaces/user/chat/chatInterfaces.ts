@@ -6,6 +6,8 @@ export interface Chat {
   name: string | null
   created_at: Date
   updated_at: Date
+  user_id?: number
+  url_avatar?: string | null
 }
 
 export interface ChatParticipant {
