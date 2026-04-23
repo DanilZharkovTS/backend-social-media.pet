@@ -72,7 +72,7 @@ export const chatService = {
     const { userId } = user
     const redisKey = `users:${userId}:online`
 
-    await redis.del(redisKey)
+    await redis.expire(redisKey, 2)
     const { rows: ops } = await chatParticipantsRepo.findOpponentsByUserId(
       userId
     )

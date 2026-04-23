@@ -34,14 +34,12 @@ export const chatHandler = {
     const { chatId } = ctx.validIds
 
     socket.to(`chats:${chatId}`).emit('typing', { userId })
-    console.log('typing')
   },
   stopTyping: (socket: Socket, data: any, ctx: typingDTO) => {
     const { userId } = socket.user
     const { chatId } = ctx.validIds
 
     socket.to(`chats:${chatId}`).emit('stopTyping', { userId })
-    console.log('stop typing')
   },
   //users
   notifyOnlineOpponents: async (socket: Socket) => {
@@ -49,11 +47,10 @@ export const chatHandler = {
       socket.user
     )
 
-    socket.emit('onlineOps', onlineOps)
+    socket.emit('onlineOps', { onlineOps })
 
     ops.forEach(({ user_id }) => {
       socket.to(`userRooms:${user_id}`).emit('onlineUser', { userId })
-      console.log(`Online to ${user_id}`)
     })
   },
   notifyOfflineOpponents: async (socket: Socket) => {
@@ -61,7 +58,6 @@ export const chatHandler = {
 
     ops.forEach(({ user_id }) => {
       socket.to(`userRooms:${user_id}`).emit('offlineUser', { userId })
-      console.log(`Offline to ${user_id}`)
     })
   },
 }
