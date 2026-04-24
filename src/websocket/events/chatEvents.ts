@@ -32,6 +32,19 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
     withMiddlewares(socket, [resolveIds(['chatId'])], chatHandler.stopTyping)
   )
 
+  socket.on(
+    'chat:setChatAutoDelete',
+    withMiddlewares(
+      socket,
+      [
+        resolveIds(['chatId']),
+        ioChatMiddlewares.requireRoomMember,
+        ioChatMiddlewares.setChatAutoDeletePeeps,
+      ],
+      chatHandler.setAutoDeletePeeps
+    )
+  )
+
   //peeps
 
   socket.on(

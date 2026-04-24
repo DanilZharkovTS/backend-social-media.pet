@@ -3,6 +3,7 @@ import {
   Chat,
   ChatParticipant,
   createOrFindPrivateChatDTO,
+  setAutoDeletePeepsDTO,
 } from '../../../interfaces/user/chat/chatInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import { ApiError } from '../../../lib/ApiErrors'
@@ -123,6 +124,22 @@ export const chatService = {
     await redis.set(redisKey, JSON.stringify(dbChat), 'EX', 60)
 
     return { chat: dbChat }
+  },
+  setAutoDeletePeeps: async (
+    { userId }: TokenPayload,
+    { validData, validIds }: setAutoDeletePeepsDTO
+  ) => {
+    const { interval } = validData
+    const { chatId } = validIds
+
+    const chatResult = await chatRepo.findById(chatId)
+    const dbChat: Chat = chatResult.rows[0]    
+
+    if (dbChat.auto_delete_after === interval) return
+
+    await chatRepo.updateChatAutoDelete(chatId, interval)
+
+    return { chatId, userId, interval }
   },
   deleteChat: async (user: TokenPayload, chatId: number) => {
     const { rows: dbChats } = await chatRepo.findById(chatId)

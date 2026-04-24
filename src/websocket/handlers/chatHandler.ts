@@ -2,6 +2,7 @@ import { Socket } from 'socket.io'
 import { chatService } from '../../services/user/chat/chatService'
 import {
   joinChatRoomDTO,
+  setAutoDeletePeepsDTO,
   typingDTO,
 } from '../../interfaces/user/chat/chatInterfaces'
 import { IoNextFn } from '../../interfaces/global/socket'
@@ -40,6 +41,27 @@ export const chatHandler = {
     const { chatId } = ctx.validIds
 
     socket.to(`chats:${chatId}`).emit('stopTyping', { userId })
+  },
+  setAutoDeletePeeps: async (
+    socket: Socket,
+    data: any,
+    ctx: setAutoDeletePeepsDTO,
+    next: IoNextFn
+  ) => {
+    try {
+      const result = await chatService.setAutoDeletePeeps(socket.user, ctx)
+
+      if (result) {
+        const { chatId, userId, interval } = result
+        socket.emit('chat:autoDeleteUpdated ', { userId, interval })
+        socket
+          .to(`chats:${chatId}`)
+          .emit('chat:autoDeleteUpdated ', { userId, interval })
+        console.log('good')
+      }
+    } catch (err) {
+      next(err)
+    }
   },
   //users
   notifyOnlineOpponents: async (socket: Socket) => {

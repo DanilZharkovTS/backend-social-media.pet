@@ -16,7 +16,7 @@ export const withMiddlewares = (
     const ctx = {}
 
     const next = (err?: Error) => {
-      if (err) {
+      if (err) {        
         const error = ioErrHandler(err)
         console.log(error)
         return

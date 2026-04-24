@@ -1,5 +1,12 @@
 export type ChatType = 'private' | 'group'
 
+export type ChatAutoDeleteAfter =
+  | null
+  | '1 hour'
+  | '1 day'
+  | '1 week'
+  | '1 month'
+
 export interface Chat {
   id: number
   type: ChatType
@@ -8,6 +15,8 @@ export interface Chat {
   updated_at: Date
   user_id?: number
   url_avatar?: string | null
+  auto_delete_after: ChatAutoDeleteAfter
+  auto_delete_enabled_at: Date | null
 }
 
 export interface ChatParticipant {
@@ -29,6 +38,13 @@ export interface Peep {
 
 export interface createOrFindPrivateChatDTO {
   secondUserId: number
+}
+
+export interface setAutoDeletePeepsDTO {
+  validData: { interval: ChatAutoDeleteAfter }
+  validIds: {
+    chatId: number
+  }
 }
 
 export interface joinChatRoomDTO {
@@ -72,7 +88,7 @@ export interface deletePeepDTO {
 
 export interface typingDTO {
   validIds: {
-    chatId: number  
+    chatId: number
   }
 }
 

@@ -8,7 +8,7 @@ export const ioChatMiddlewares = {
     const chatId = ctx.validIds.chatId
 
     if (!socket.rooms.has(`chats:${chatId}`)) {
-      throw new Error('You are not in this chat')
+      throw ApiError('You are not in this chat', 403)
     }
 
     next()
@@ -31,6 +31,20 @@ export const ioChatMiddlewares = {
       const { content } = data
       const validData = chatValidator.editPeepBody.parse({ content })
 
+      ctx.validData = validData
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  setChatAutoDeletePeeps: (
+    socket: Socket,
+    data: any,
+    ctx: any,
+    next: IoNextFn
+  ) => {
+    try {
+      const validData = chatValidator.updateChatAutoDeleteSchema.parse(data)
       ctx.validData = validData
       next()
     } catch (err) {
