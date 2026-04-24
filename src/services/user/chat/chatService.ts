@@ -56,23 +56,28 @@ export const chatService = {
     const redisKey = `users:${userId}:online`
 
     await redis.set(redisKey, 1)
-    const { rows: result } = await chatParticipantsRepo.findOpponentsByUserId(
+    const { rows: ops } = await chatParticipantsRepo.findOpponentsByUserId(
       userId
     )
 
-    return { ops: result, userId }
+    const userIds = ops.map((o) => `users:${o.user_id}:online`)
+    const statuses = await redis.mget(...userIds)
+
+    const onlineOps = ops.filter((o, i) => statuses[i])
+
+    return { ops, onlineOps, userId }
   },
   notifyOfflineUsers: async (user: TokenPayload) => {
     const redis = getRedis()
     const { userId } = user
     const redisKey = `users:${userId}:online`
 
-    await redis.del(redisKey)
-    const { rows: result } = await chatParticipantsRepo.findOpponentsByUserId(
+    await redis.expire(redisKey, 2)
+    const { rows: ops } = await chatParticipantsRepo.findOpponentsByUserId(
       userId
     )
 
-    return { ops: result, userId }
+    return { ops, userId }
   },
   getUserChats: async (user: TokenPayload, p: paginationDTO) => {
     const redis = getRedis()
@@ -83,33 +88,13 @@ export const chatService = {
     if (redisResult) {
       const redisChats = JSON.parse(redisResult)
 
-      const userIds = redisChats.map((c) => `users:${c.user_id}:online`)
-      const statuses = await redis.mget(...userIds)
-
-      const chatsWithUserStatus = redisChats.map((c, i) => {
-        return {
-          ...c,
-          status: statuses[i] ? 'online' : 'offline',
-        }
-      })
-
-      return { chats: chatsWithUserStatus, pagination: p }
+      return { chats: redisChats, pagination: p }
     }
 
     const { rows: dbChats } = await chatRepo.findByUserId(user.userId, p)
     await redis.set(redisKey, JSON.stringify(dbChats), 'EX', 60)
 
-    const userIds = dbChats.map((c) => `users:${c.user_id}:online`)
-    const statuses = await redis.mget(...userIds)
-
-    const chatsWithUserStatus = dbChats.map((c, i) => {
-      return {
-        ...c,
-        status: statuses[i] ? 'online' : 'offline',
-      }
-    })
-
-    return { chats: chatsWithUserStatus, pagination: p }
+    return { chats: dbChats, pagination: p }
   },
   getChat: async (user: TokenPayload, chatId: number) => {
     const redis = getRedis()
@@ -119,9 +104,8 @@ export const chatService = {
 
     if (redisResult) {
       const redisChat = JSON.parse(redisResult)
-      const isOnline = await redis.get(`users:${redisChat.user_id}:online`)
 
-      return { chat: { ...redisChat, status: isOnline ? 'online' : 'offline' } }
+      return { chat: redisChat }
     }
     const participantResult = await chatParticipantsRepo.findByChatIdAndUserId(
       chatId,
@@ -137,9 +121,8 @@ export const chatService = {
     const dbChat: Chat = chatResult.rows[0]
 
     await redis.set(redisKey, JSON.stringify(dbChat), 'EX', 60)
-    const isOnline = await redis.get(`users:${dbChat.user_id}:online`)
 
-    return { chat: { ...dbChat, status: isOnline ? 'online' : 'offline' } }
+    return { chat: dbChat }
   },
   deleteChat: async (user: TokenPayload, chatId: number) => {
     const { rows: dbChats } = await chatRepo.findById(chatId)
