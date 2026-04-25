@@ -21,4 +21,12 @@ export const chatValidator = {
       .min(1, 'Min. content length is 1')
       .max(400, 'Max. content length is 400 symbols'),
   }),
+  updateChatAutoDeleteSchema: z.object({
+    interval: z
+      .enum(
+        ['1 hour', '1 day', '1 week', '1 month'],
+        'Interval needs to be null, 1 hour, 1 day, 1 week or 1 month'
+      )
+      .nullable(),
+  }),
 }

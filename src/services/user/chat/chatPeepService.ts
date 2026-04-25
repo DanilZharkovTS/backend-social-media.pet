@@ -192,6 +192,19 @@ export const chatPeepService = {
 
     return { deletedPeep: dbDeletedPeep }
   },
+  autoDeletePeeps: async () => {
+    const { rows: dbDeletedPeeps } = await chatPeepsRepo.deleteExpiredPeeps()
+
+    if (!dbDeletedPeeps.length) return
+
+    const byChatId: Record<number, number[]> = {}
+    for (const row of dbDeletedPeeps) {
+      const { chat_id, id } = row
+      ;(byChatId[chat_id] ??= []).push(id)
+    }
+
+    return { byChatId }
+  },
   validateManagingPeep: (
     peep: Peep | undefined,
     userId: number,

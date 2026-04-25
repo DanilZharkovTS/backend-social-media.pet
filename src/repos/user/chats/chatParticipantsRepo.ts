@@ -11,7 +11,8 @@ export const chatParticipantsRepo = {
   },
   findByChatIdAndUserId: (chatId: number, userId: number) => {
     return pool.query(
-      `SELECT * FROM chat_participants
+      `SELECT * FROM chat_participants cp
+      JOIN chats c ON cp.chat_id = c.id
       WHERE chat_id = $1
       AND user_id = $2`,
       [chatId, userId]
@@ -26,10 +27,13 @@ export const chatParticipantsRepo = {
     )
   },
   findOpponentsByUserId: (userId: number) => {
-    return pool.query(`SELECT cp2.user_id FROM chats c
+    return pool.query(
+      `SELECT cp2.user_id FROM chats c
       JOIN chat_participants cp1 ON c.id = cp1.chat_id AND cp1.user_id = $1
       JOIN chat_participants cp2 ON c.id = cp2.chat_id AND cp2.user_id != $1
-      `, [userId])
+      `,
+      [userId]
+    )
   },
   updateLastReadPeep: (peepId: number, userId: number, chatId: number) => {
     return pool.query(

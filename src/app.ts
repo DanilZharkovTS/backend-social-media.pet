@@ -6,6 +6,7 @@ import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import { errHandler } from './http/middlewares/app/errHandler.ts'
 import appRoutes from './http/routes/appRoutes.ts'
+import './crons/index.ts'
 import { billingMiddlewares } from './http/middlewares/billingMiddlewares.ts'
 import { billingController } from './http/controllers/billingController.ts'
 import { Server } from 'socket.io'
@@ -48,7 +49,9 @@ app.use('/api', appRoutes)
 app.use(errHandler)
 
 const server = http.createServer(app)
-const io = new Server(server, { cors: { origin: process.env.FRONTEND_URL } })
+export const io = new Server(server, {
+  cors: { origin: process.env.FRONTEND_URL },
+})
 
 registerSockets(io)
 

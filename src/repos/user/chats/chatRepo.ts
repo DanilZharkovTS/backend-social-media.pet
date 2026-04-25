@@ -1,4 +1,7 @@
-import type { ChatType } from '../../../interfaces/user/chat/chatInterfaces'
+import type {
+  ChatAutoDeleteAfter,
+  ChatType,
+} from '../../../interfaces/user/chat/chatInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import pool from '../../../pool'
 
@@ -48,6 +51,20 @@ export const chatRepo = {
       JOIN users u ON cp.user_id = u.id
       WHERE c.id = $1`,
       [chatId, userId]
+    )
+  },
+  updateChatAutoDelete: (chatId: number, interval: ChatAutoDeleteAfter) => {
+    return pool.query(
+      `UPDATE chats
+      SET auto_delete_after = $2
+      ${
+        interval === null
+          ? ', auto_delete_enabled_at = NULL'
+          : ', auto_delete_enabled_at = NOW()'
+      }
+      WHERE id = $1
+      RETURNING *`,
+      [chatId, interval]
     )
   },
   deleteById: (chatId: number) => {
