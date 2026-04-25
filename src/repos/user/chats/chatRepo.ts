@@ -45,7 +45,7 @@ export const chatRepo = {
   },
   findByIdAndUserId: (chatId: number, userId: number) => {
     return pool.query(
-      `SELECT c.id, c.type, c.created_at, c.updated_at, u.name, u.id AS user_id, u.avatar_url
+      `SELECT c.id, c.type, c.created_at, c.updated_at, c.auto_delete_after,  u.name, u.id AS user_id, u.avatar_url
       FROM chats c
       JOIN chat_participants cp ON c.id = cp.chat_id AND cp.user_id != $2
       JOIN users u ON cp.user_id = u.id
