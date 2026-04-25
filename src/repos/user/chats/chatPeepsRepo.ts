@@ -46,4 +46,15 @@ export const chatPeepsRepo = {
       [peepId]
     )
   },
+  deleteExpiredPeeps: () => {
+    return pool.query(`
+      DELETE FROM chat_peeps cp
+      USING chats c
+      WHERE cp.chat_id = c.id
+        AND c.auto_delete_after IS NOT NULL
+        AND cp.created_at < NOW() - c.auto_delete_after::INTERVAL
+        AND cp.created_at > c.auto_delete_enabled_at
+      RETURNING cp.id, cp.chat_id
+      `)
+  },
 }
