@@ -129,15 +129,20 @@ export const chatService = {
     { userId }: TokenPayload,
     { validData, validIds }: setAutoDeletePeepsDTO
   ) => {
-    const { interval } = validData
+    const redis = getRedis()
+
     const { chatId } = validIds
+    const { interval } = validData
+
+    const redisKey = `user:${userId}:chats:${chatId}`
 
     const chatResult = await chatRepo.findById(chatId)
-    const dbChat: Chat = chatResult.rows[0]    
+    const dbChat: Chat = chatResult.rows[0]
 
     if (dbChat.auto_delete_after === interval) return
 
     await chatRepo.updateChatAutoDelete(chatId, interval)
+    await cacheService.invalidateByPrefix(redisKey)
 
     return { chatId, userId, interval }
   },

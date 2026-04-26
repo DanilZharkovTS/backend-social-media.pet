@@ -53,10 +53,10 @@ export const chatHandler = {
 
       if (result) {
         const { chatId, userId, interval } = result
-        socket.emit('chat:autoDeleteUpdated ', { userId, interval })
+        socket.emit('chat:autoDeleteUpdated', { userId, interval })
         socket
           .to(`chats:${chatId}`)
-          .emit('chat:autoDeleteUpdated ', { userId, interval })
+          .emit('chat:autoDeleteUpdated', { userId, interval })
         console.log('good')
       }
     } catch (err) {
