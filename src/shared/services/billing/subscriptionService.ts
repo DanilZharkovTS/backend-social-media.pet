@@ -82,6 +82,8 @@ export const subscriptionService = {
     )
     await userRepo.updateCheckmarkById(false, dbSubscription.user_id)
 
-    console.log('PAST DUE STATUS WAS SET AND CHECKMARK WAS REMOVED-------------------')
+    console.log(
+      'PAST DUE STATUS WAS SET AND CHECKMARK WAS REMOVED-------------------'
+    )
   },
 }

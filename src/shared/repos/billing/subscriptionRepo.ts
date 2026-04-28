@@ -4,7 +4,7 @@ import type {
   SubscriptionStatus,
   SubscriptionType,
 } from '../../interfaces/billing/subscriptionInterfaces'
-import pool from '../../pool'
+import pool from '../../../pool'
 
 export const subscriptionRepo = {
   findSubscriptionByStripeSubscriptionId: (

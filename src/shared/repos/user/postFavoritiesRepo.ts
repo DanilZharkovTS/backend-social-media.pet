@@ -1,4 +1,4 @@
-import pool from '../../pool'
+import pool from '../../../pool'
 
 export const postFavoritiesRepo = {
   addFavorite: (userId: number, postId: number) => {

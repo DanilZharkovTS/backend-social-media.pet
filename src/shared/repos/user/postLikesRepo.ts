@@ -1,4 +1,4 @@
-import pool from '../../pool'
+import pool from '../../../pool'
 
 export const postLikesRepo = {
   addLike: (userId: number, postId: number) => {

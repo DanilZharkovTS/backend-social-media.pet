@@ -1,12 +1,12 @@
 import { Socket } from 'socket.io'
-import { chatPeepService } from '../../services/user/chat/chatPeepService'
-import { IoNextFn } from '../../interfaces/global/socket'
+import { chatPeepService } from '../../shared/services/user/chat/chatPeepService'
+import { IoNextFn } from '../../shared/interfaces/global/socket'
 import {
   addPeepDTO,
   deletePeepDTO,
   editPeepDTO,
   markPeepsAsReadUpToDTO,
-} from '../../interfaces/user/chat/chatInterfaces'
+} from '../../shared/interfaces/user/chat/chatInterfaces'
 
 export const chatPeepHandler = {
   addPeep: async (

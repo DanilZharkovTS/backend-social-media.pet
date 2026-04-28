@@ -1,5 +1,5 @@
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
-import pool from '../../../pool'
+import pool from '../../../../pool'
 
 export const chatPeepsRepo = {
   addPeep: (senderId: number, chatId: number, content: string) => {

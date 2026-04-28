@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import multer from 'multer'
 import { ZodError } from 'zod'
-import { ApiError } from '../../../lib/ApiErrors'
+import { ApiError } from '../../../shared/lib/ApiErrors'
 
 export const ioErrHandler = (err: any) => {
   if (err instanceof ZodError) {

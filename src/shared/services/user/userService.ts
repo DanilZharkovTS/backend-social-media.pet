@@ -75,12 +75,7 @@ export const userService = {
       throw ApiError('User not found', 404)
     }
 
-    await redis.set(
-      `users:${user.userId}`,
-      JSON.stringify(dbUser),
-      'EX',
-      60
-    )
+    await redis.set(`users:${user.userId}`, JSON.stringify(dbUser), 'EX', 60)
 
     return toUserResponse(dbUser)
   },

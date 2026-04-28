@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
-import { chatValidator } from '../../../utils/validators/chatValidator'
-import { ApiError } from '../../../lib/ApiErrors'
+import { chatValidator } from '../../../shared/utils/validators/chatValidator'
+import { ApiError } from '../../../shared/lib/ApiErrors'
 
 export const chatMiddlewares = {
   createOrFindPrivateChat: async (

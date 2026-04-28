@@ -1,4 +1,4 @@
-import pool from '../../../pool'
+import pool from '../../../../pool'
 
 export const chatParticipantsRepo = {
   addParticipant: (chatId: number, userId: number) => {

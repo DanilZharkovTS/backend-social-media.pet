@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { authService } from '../../services/auth/authService.ts'
+import { authService } from '../../shared/services/auth/authService.ts'
 
 export const authController = {
   register: async (req: Request, res: Response, next: NextFunction) => {

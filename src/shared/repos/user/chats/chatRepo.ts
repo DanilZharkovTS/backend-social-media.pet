@@ -3,7 +3,7 @@ import type {
   ChatType,
 } from '../../../interfaces/user/chat/chatInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
-import pool from '../../../pool'
+import pool from '../../../../pool'
 
 export const chatRepo = {
   createChat: (type: ChatType, name?: string | null) => {
