@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { commentServices } from '../../../services/user/commentServices.ts'
+import { commentServices } from '../../../shared/services/user/commentServices.ts'
 
 export const commentController = {
   add: async (req: Request, res: Response, next: NextFunction) => {

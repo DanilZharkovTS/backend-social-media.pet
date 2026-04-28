@@ -5,7 +5,7 @@ import type {
 } from '../../interfaces/billing/orderInterfaces.ts'
 import Stripe from 'stripe'
 import { ApiError } from '../../lib/ApiErrors.ts'
-import { subscriptionPrices } from '../../cfg/stripePrices.ts'
+import { subscriptionPrices } from '../../../cfg/stripePrices.ts'
 import { stripeService } from './stripeService.ts'
 import { subscriptionService } from './subscriptionService.ts'
 import { orderRepo } from '../../repos/billing/orderRepo.ts'

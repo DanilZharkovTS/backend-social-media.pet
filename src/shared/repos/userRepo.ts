@@ -1,4 +1,4 @@
-import pool from '../pool.ts'
+import pool from '../../pool.ts'
 import type { registerUserDTO } from '../interfaces/auth/authInterfaces.ts'
 import type { dynamicUpdateMyInfo } from '../interfaces/user/userInterfaces.ts'
 import type { paginationDTO } from '../interfaces/user/postInterfaces.ts'

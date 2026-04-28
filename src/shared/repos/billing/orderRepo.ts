@@ -8,7 +8,7 @@ import type {
   orderType,
 } from '../../interfaces/billing/orderInterfaces.ts'
 import Stripe from 'stripe'
-import pool from '../../pool.ts'
+import pool from '../../../pool.ts'
 
 export const orderRepo = {
   insertOrder: (

@@ -7,7 +7,6 @@ import type {
 } from '../../interfaces/email/emailInterfaces.ts'
 import { getMailer } from '../../lib/mailer.ts'
 
-
 export const emailService = {
   sendVerificationEmail: async (
     email: string,

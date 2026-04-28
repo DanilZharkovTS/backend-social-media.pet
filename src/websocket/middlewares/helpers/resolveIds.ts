@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io'
-import { IoNextFn } from '../../../interfaces/global/socket'
-import { ApiError } from '../../../lib/ApiErrors'
+import { IoNextFn } from '../../../shared/interfaces/global/socket'
+import { ApiError } from '../../../shared/lib/ApiErrors'
 
 export const resolveIds = (idNames: string[]) => {
   return (socket: Socket, data: any, ctx: any, next: IoNextFn) => {

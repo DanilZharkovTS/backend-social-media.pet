@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken'
-import { IoNextFn } from '../../interfaces/global/socket'
+import { IoNextFn } from '../../shared/interfaces/global/socket'
 import { Socket } from 'socket.io'
-import { TokenPayload } from '../../interfaces/auth/authInterfaces'
-import { ApiError } from '../../lib/ApiErrors'
+import { TokenPayload } from '../../shared/interfaces/auth/authInterfaces'
+import { ApiError } from '../../shared/lib/ApiErrors'
 
 export const ioAuthMiddlewares = {
   verifyAccessToken: (socket: Socket, next: IoNextFn) => {

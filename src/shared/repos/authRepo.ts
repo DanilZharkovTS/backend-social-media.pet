@@ -1,4 +1,4 @@
-import pool from '../pool.ts'
+import pool from '../../pool.ts'
 import type { actionTokenType } from '../interfaces/auth/authInterfaces.ts'
 
 export const authRepo = {

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
-import { chatService } from '../../../services/user/chat/chatService'
-import { chatPeepService } from '../../../services/user/chat/chatPeepService'
+import { chatService } from '../../../shared/services/user/chat/chatService'
+import { chatPeepService } from '../../../shared/services/user/chat/chatPeepService'
 
 export const chatController = {
   createOrFindPrivateChat: async (

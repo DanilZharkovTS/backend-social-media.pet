@@ -1,12 +1,12 @@
 import { Socket } from 'socket.io'
-import { chatService } from '../../services/user/chat/chatService'
+import { chatService } from '../../shared/services/user/chat/chatService'
 import {
   joinChatRoomDTO,
   setAutoDeletePeepsDTO,
   typingDTO,
-} from '../../interfaces/user/chat/chatInterfaces'
-import { IoNextFn } from '../../interfaces/global/socket'
-import { chatParticipantsRepo } from '../../repos/user/chats/chatParticipantsRepo'
+} from '../../shared/interfaces/user/chat/chatInterfaces'
+import { IoNextFn } from '../../shared/interfaces/global/socket'
+import { chatParticipantsRepo } from '../../shared/repos/user/chats/chatParticipantsRepo'
 
 export const chatHandler = {
   joinChatRoom: async (

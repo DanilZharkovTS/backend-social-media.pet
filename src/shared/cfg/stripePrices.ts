@@ -1,4 +1,4 @@
-import { subscriptions } from '../interfaces/billing/orderInterfaces'
+import { subscriptions } from '../shared/interfaces/billing/orderInterfaces'
 
 export const subscriptionPrices: subscriptions = {
   BASIC: {

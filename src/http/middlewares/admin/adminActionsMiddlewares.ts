@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import {
   validateAdminDeleteUserConfirm,
   validateRequestAdminDeleteUser,
-} from '../../../utils/validators/adminActionsValidator.ts'
+} from '../../../shared/utils/validators/adminActionsValidator.ts'
 
 export const adminActionsMiddlewares = {
   requestAdminDeleteUser: (req: Request, res: Response, next: NextFunction) => {

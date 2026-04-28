@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
-import { getRedis } from '../../../lib/redisClient'
-import { ApiError } from '../../../lib/ApiErrors'
+import { getRedis } from '../../../shared/lib/redisClient'
+import { ApiError } from '../../../shared/lib/ApiErrors'
 
 export const rateLimiter = (
   limit: number,
