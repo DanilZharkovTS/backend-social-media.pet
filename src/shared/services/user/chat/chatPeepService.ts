@@ -6,6 +6,7 @@ import {
   editPeepDTO,
   markPeepsAsReadUpToDTO,
   Peep,
+  Reaction,
   updateReactionDTO,
 } from '../../../interfaces/user/chat/chatInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
@@ -180,8 +181,9 @@ export const chatPeepService = {
     { userId }: TokenPayload,
     { validIds, validData }: updateReactionDTO
   ) => {
-    const { peepId } = validIds
+    const { peepId, chatId } = validIds
     const { emoji } = validData
+    const redisKey = `chats:${chatId}:peeps`
 
     const dbPeep = await chatPeepsRepo.findByIdAndUserIdWithReactions(
       peepId,
@@ -193,16 +195,23 @@ export const chatPeepService = {
     }
     if (emoji === dbPeep.emoji) return { updatedReaction: dbPeep }
 
+    let updatedReaction: Reaction
+
     if (!dbPeep.reaction_id) {
-      return chatPeepsRepo.addReaction(peepId, userId, emoji)
-    }
-
-    if (!emoji) {
+      updatedReaction = await chatPeepsRepo.addReaction(peepId, userId, emoji)
+    } else if (!emoji) {
       await chatPeepsRepo.deleteReactionById(dbPeep.reaction_id)
-      return { updatedReaction: { ...dbPeep, emoji: null } }
+      updatedReaction = { ...dbPeep, emoji: null }
+    } else {
+      updatedReaction = await chatPeepsRepo.updateReactionById(
+        dbPeep.reaction_id,
+        emoji
+      )
     }
 
-    return chatPeepsRepo.updateReactionById(dbPeep.reaction_id, emoji)
+    await cacheService.invalidateByPrefix(redisKey)
+
+    return updatedReaction
   },
   deletePeep: async (user: TokenPayload, { validIds }: deletePeepDTO) => {
     const { peepId } = validIds

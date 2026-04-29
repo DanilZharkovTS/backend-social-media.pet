@@ -85,13 +85,12 @@ export const chatPeepHandler = {
     next: IoNextFn
   ) => {
     try {
+      const { chatId } = ctx.validIds
       const r = await chatPeepService.updateReaction(socket.user, ctx)
 
       socket.emit('peeps:updateReaction', r)
-      socket.to(`chats:${r.chat_id}`).emit('peeps:updateReaction', r)
+      socket.to(`chats:${chatId}`).emit('peeps:updateReaction', r)
     } catch (err) {
-      console.log(err)
-
       next(err)
     }
   },

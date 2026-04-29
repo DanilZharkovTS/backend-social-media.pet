@@ -10,14 +10,15 @@ export const chatPeepsRepo = {
       [senderId, chatId, content]
     )
   },
-  addReaction: (peepId: number, userId: number, emoji: string) => {
-    return pool.query(
+  addReaction: async (peepId: number, userId: number, emoji: string) => {
+    const result = await pool.query(
       `INSERT INTO peep_reactions (peep_id, user_id, emoji)
       VALUES ($1, $2, $3)
       RETURNING *
       `,
       [peepId, userId, emoji]
     )
+    return result.rows[0]
   },
   findById: (peepId: number) => {
     return pool.query(
@@ -28,13 +29,39 @@ export const chatPeepsRepo = {
   },
   findByContent: (content: string, chatId: number, p: paginationDTO) => {
     return pool.query(
-      `SELECT cp.id, cp.sender_id, cp.content, cp.created_at, cp.is_edited, u.name, u.avatar_url, u.has_checkmark FROM chat_peeps cp
+      `SELECT 
+        cp.id,
+        cp.sender_id,
+        cp.content,
+        cp.created_at,
+        cp.is_edited,
+        u.name,
+        u.avatar_url,
+        u.has_checkmark,
+      
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', pr.id,
+              'user_id', pr.user_id,
+              'emoji', pr.emoji,
+              'created_at', pr.created_at
+            )
+          ) FILTER (WHERE pr.id IS NOT NULL),
+          '[]'
+        ) AS reactions
+      
+      FROM chat_peeps cp
       JOIN users u ON cp.sender_id = u.id
-      WHERE ($1::text IS NULL OR
-      LOWER(content) LIKE LOWER($1))
-      AND cp.chat_id = $2
+      LEFT JOIN peep_reactions pr ON cp.id = pr.peep_id
+      
+      WHERE ($1::text IS NULL OR LOWER(content) LIKE LOWER($1))
+        AND cp.chat_id = $2
+      
+      GROUP BY cp.id, u.id
+      
       ORDER BY cp.created_at DESC
-      LIMIT $3 OFFSET $4 `,
+      LIMIT $3 OFFSET $4`,
       [content, chatId, p.limit, p.offset]
     )
   },
