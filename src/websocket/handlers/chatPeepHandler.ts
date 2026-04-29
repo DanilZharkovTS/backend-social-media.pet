@@ -6,6 +6,7 @@ import {
   deletePeepDTO,
   editPeepDTO,
   markPeepsAsReadUpToDTO,
+  updateReactionDTO,
 } from '../../shared/interfaces/user/chat/chatInterfaces'
 
 export const chatPeepHandler = {
@@ -74,6 +75,22 @@ export const chatPeepHandler = {
     } catch (err) {
       console.log(err)
 
+      next(err)
+    }
+  },
+  updateReaction: async (
+    socket: Socket,
+    data: any,
+    ctx: updateReactionDTO,
+    next: IoNextFn
+  ) => {
+    try {
+      const { chatId } = ctx.validIds
+      const r = await chatPeepService.updateReaction(socket.user, ctx)
+
+      socket.emit('peeps:updateReaction', r)
+      socket.to(`chats:${chatId}`).emit('peeps:updateReaction', r)
+    } catch (err) {
       next(err)
     }
   },

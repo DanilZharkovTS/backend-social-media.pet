@@ -36,6 +36,14 @@ export interface Peep {
   is_edited: boolean
 }
 
+export interface Reaction {
+  id: number
+  peepId: number
+  user_id: number
+  emoji: string
+  created_at: Date
+}
+
 export interface createOrFindPrivateChatDTO {
   secondUserId: number
 }
@@ -96,5 +104,15 @@ export interface markPeepsAsReadUpToDTO {
   validIds: {
     chatId: number
     peepId: number
+  }
+}
+
+export interface updateReactionDTO {
+  validIds: {
+    chatId: number
+    peepId: number
+  }
+  validData: {
+    emoji: string | null
   }
 }

@@ -24,7 +24,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/app.ts",
-    "io": "tsx watch src/scripts/clientSocket.ts",
+    "io": "tsx watch src/shared/scripts/clientSocket.ts",
     "test": "jest"
   },
   "devDependencies": {

@@ -6,6 +6,8 @@ import {
   editPeepDTO,
   markPeepsAsReadUpToDTO,
   Peep,
+  Reaction,
+  updateReactionDTO,
 } from '../../../interfaces/user/chat/chatInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import { ApiError } from '../../../lib/ApiErrors'
@@ -174,6 +176,42 @@ export const chatPeepService = {
     }
 
     return { lastReadPeepId: peepId }
+  },
+  updateReaction: async (
+    { userId }: TokenPayload,
+    { validIds, validData }: updateReactionDTO
+  ) => {
+    const { peepId, chatId } = validIds
+    const { emoji } = validData
+    const redisKey = `chats:${chatId}:peeps`
+
+    const dbPeep = await chatPeepsRepo.findByIdAndUserIdWithReactions(
+      peepId,
+      userId
+    )
+
+    if (!dbPeep) {
+      throw ApiError('Peep not found', 404)
+    }
+    if (emoji === dbPeep.emoji) return { updatedReaction: dbPeep }
+
+    let updatedReaction: Reaction
+
+    if (!dbPeep.reaction_id) {
+      updatedReaction = await chatPeepsRepo.addReaction(peepId, userId, emoji)
+    } else if (!emoji) {
+      await chatPeepsRepo.deleteReactionById(dbPeep.reaction_id)
+      updatedReaction = { ...dbPeep, emoji: null }
+    } else {
+      updatedReaction = await chatPeepsRepo.updateReactionById(
+        dbPeep.reaction_id,
+        emoji
+      )
+    }
+
+    await cacheService.invalidateByPrefix(redisKey)
+
+    return updatedReaction
   },
   deletePeep: async (user: TokenPayload, { validIds }: deletePeepDTO) => {
     const { peepId } = validIds

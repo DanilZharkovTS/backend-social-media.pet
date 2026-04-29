@@ -1,4 +1,5 @@
 import z from 'zod'
+import { ALLOWED_REACTIONS } from '../../cfg/chat'
 
 export const chatValidator = {
   createOrFindPrivateChatBody: z.object({
@@ -20,6 +21,9 @@ export const chatValidator = {
       .string('Content need to be a string')
       .min(1, 'Min. content length is 1')
       .max(400, 'Max. content length is 400 symbols'),
+  }),
+  updateReactionSchema: z.object({
+    emoji: z.enum(ALLOWED_REACTIONS, 'Not allowed reaction has been provided'),
   }),
   updateChatAutoDeleteSchema: z.object({
     interval: z

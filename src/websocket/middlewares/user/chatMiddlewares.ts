@@ -26,10 +26,19 @@ export const ioChatMiddlewares = {
   },
   editPeep: (socket: Socket, data: any, ctx: any, next: IoNextFn) => {
     try {
-      console.log('hit')
-
       const { content } = data
       const validData = chatValidator.editPeepBody.parse({ content })
+
+      ctx.validData = validData
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  updateReaction: (socket: Socket, data: any, ctx: any, next: IoNextFn) => {
+    try {
+      const emoji = data.emoji
+      const validData = chatValidator.updateReactionSchema.parse({ emoji })
 
       ctx.validData = validData
       next()
