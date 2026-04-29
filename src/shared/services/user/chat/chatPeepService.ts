@@ -6,6 +6,7 @@ import {
   editPeepDTO,
   markPeepsAsReadUpToDTO,
   Peep,
+  updateReactionDTO,
 } from '../../../interfaces/user/chat/chatInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import { ApiError } from '../../../lib/ApiErrors'
@@ -174,6 +175,68 @@ export const chatPeepService = {
     }
 
     return { lastReadPeepId: peepId }
+  },
+  updateReaction: async (
+    { userId }: TokenPayload,
+    { validIds, validData }: updateReactionDTO
+  ) => {
+    console.log('---------------HIT SERVICE')
+
+    const { peepId } = validIds
+    const { emoji } = validData
+
+    const peepResult = await chatPeepsRepo.findByIdAndUserIdWithReactions(
+      peepId,
+      userId
+    )
+    const dbPeep = peepResult.rows[0]
+
+    if (!dbPeep) {
+      throw ApiError('Peep not found', 404)
+    }
+    console.log('FOUND PEEP')
+
+    if (emoji === dbPeep.emoji) return
+
+    if (!dbPeep.reaction_id) {
+      console.log('IS FIRST REACTION')
+
+      const reactionResult = await chatPeepsRepo.addReaction(
+        peepId,
+        userId,
+        emoji
+      )
+      const updatedReaction = reactionResult.rows[0]
+      console.log('FIRST REACTON SET')
+
+      return { updatedReaction }
+    }
+
+    console.log('IS NOT FIRST REACTION')
+
+    const deletedReactionResult = await chatPeepsRepo.deleteReactionById(
+      dbPeep.reaction_id
+    )
+    const dbDeletedReaction = deletedReactionResult.rows[0]
+
+    console.log('DELETED EXISTING REACTION')
+
+    if (!emoji) {
+      console.log('RETURNED DELETED REACTION WITHOUT EMOJI')
+
+      return { updatedReaction: { ...dbDeletedReaction, emoji: null } }
+    }
+
+    const reactionResult = await chatPeepsRepo.addReaction(
+      peepId,
+      userId,
+      emoji
+    )
+    const updatedReaction = reactionResult.rows[0]
+
+    console.log('UPDATED EMOJI')
+
+    return { updatedReaction }
   },
   deletePeep: async (user: TokenPayload, { validIds }: deletePeepDTO) => {
     const { peepId } = validIds

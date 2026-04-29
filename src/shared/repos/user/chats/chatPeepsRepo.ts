@@ -10,6 +10,15 @@ export const chatPeepsRepo = {
       [senderId, chatId, content]
     )
   },
+  addReaction: (peepId: number, userId: number, emoji: string) => {
+    return pool.query(
+      `INSERT INTO peep_reactions (peep_id, user_id, emoji)
+      VALUES ($1, $2, $3)
+      RETURNING id, peep_id, emoji
+      `,
+      [peepId, userId, emoji]
+    )
+  },
   findById: (peepId: number) => {
     return pool.query(
       `SELECT * FROM chat_peeps
@@ -27,6 +36,15 @@ export const chatPeepsRepo = {
       ORDER BY cp.created_at DESC
       LIMIT $3 OFFSET $4 `,
       [content, chatId, p.limit, p.offset]
+    )
+  },
+  findByIdAndUserIdWithReactions: (peepId: number, userId: number) => {
+    return pool.query(
+      `SELECT cp.id AS chat_id, pr.id AS reaction_id, pr.user_id, pr.emoji FROM chat_peeps cp
+      LEFT JOIN peep_reactions pr ON cp.id = pr.peep_id
+      AND pr.user_id = $2
+      WHERE cp.id = $1`,
+      [peepId, userId]
     )
   },
   updatePeep: (content: string, peepId: number) => {
@@ -56,5 +74,13 @@ export const chatPeepsRepo = {
         AND cp.created_at > c.auto_delete_enabled_at
       RETURNING cp.id, cp.chat_id
       `)
+  },
+  deleteReactionById: (reactionId: number) => {
+    return pool.query(
+      `DELETE FROM peep_reactions pr
+      WHERE id = $1
+      RETURNING pr.id, pr.peep_id`,
+      [reactionId]
+    )
   },
 }

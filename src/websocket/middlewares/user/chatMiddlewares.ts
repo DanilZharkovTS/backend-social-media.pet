@@ -37,6 +37,10 @@ export const ioChatMiddlewares = {
       next(err)
     }
   },
+  updateReaction: (socket: Socket, data: any, ctx: any, next: IoNextFn) => {
+    ctx.validData = { emoji: data.emoji }    
+    next()
+  },
   setChatAutoDeletePeeps: (
     socket: Socket,
     data: any,

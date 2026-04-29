@@ -66,6 +66,19 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
   )
 
   socket.on(
+    'peep:updateReaction',
+    withMiddlewares(
+      socket,
+      [
+        resolveIds(['chatId', 'peepId']),
+        ioChatMiddlewares.requireRoomMember,
+        ioChatMiddlewares.updateReaction,
+      ],
+      chatPeepHandler.updateReaction
+    )
+  )
+
+  socket.on(
     'deletePeep',
     withMiddlewares(
       socket,

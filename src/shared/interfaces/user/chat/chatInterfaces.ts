@@ -98,3 +98,13 @@ export interface markPeepsAsReadUpToDTO {
     peepId: number
   }
 }
+
+export interface updateReactionDTO {
+  validIds: {
+    chatId: number
+    peepId: number
+  }
+  validData: {
+    emoji: string | null
+  }
+}
