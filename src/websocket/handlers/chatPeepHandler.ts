@@ -85,18 +85,13 @@ export const chatPeepHandler = {
     next: IoNextFn
   ) => {
     try {
-      const result = await chatPeepService.updateReaction(socket.user, ctx)
+      const r = await chatPeepService.updateReaction(socket.user, ctx)
 
-      if (!result) return
-
-      const { updatedReaction: reaction } = result
-      socket.emit('peeps:updateReaction', reaction)
-      socket
-        .to(`chats:${reaction.chat_id}`)
-        .emit('peeps:updateReaction', reaction)
+      socket.emit('peeps:updateReaction', r)
+      socket.to(`chats:${r.chat_id}`).emit('peeps:updateReaction', r)
     } catch (err) {
-      console.log(err);
-      
+      console.log(err)
+
       next(err)
     }
   },

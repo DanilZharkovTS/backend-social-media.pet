@@ -14,7 +14,7 @@ export const chatPeepsRepo = {
     return pool.query(
       `INSERT INTO peep_reactions (peep_id, user_id, emoji)
       VALUES ($1, $2, $3)
-      RETURNING id, peep_id, emoji
+      RETURNING *
       `,
       [peepId, userId, emoji]
     )
@@ -38,14 +38,15 @@ export const chatPeepsRepo = {
       [content, chatId, p.limit, p.offset]
     )
   },
-  findByIdAndUserIdWithReactions: (peepId: number, userId: number) => {
-    return pool.query(
+  findByIdAndUserIdWithReactions: async (peepId: number, userId: number) => {
+    const result = await pool.query(
       `SELECT cp.id AS chat_id, pr.id AS reaction_id, pr.user_id, pr.emoji FROM chat_peeps cp
       LEFT JOIN peep_reactions pr ON cp.id = pr.peep_id
       AND pr.user_id = $2
       WHERE cp.id = $1`,
       [peepId, userId]
     )
+    return result.rows[0]
   },
   updatePeep: (content: string, peepId: number) => {
     return pool.query(
@@ -55,6 +56,16 @@ export const chatPeepsRepo = {
       RETURNING *`,
       [content, peepId]
     )
+  },
+  updateReactionById: async (reactionId: number, emoji: string) => {
+    const result = await pool.query(
+      `UPDATE peep_reactions pr
+      SET emoji = $2
+      WHERE id = $1
+      RETURNING *`,
+      [reactionId, emoji]
+    )
+    return result.rows[0]
   },
   deleteById: (peepId: number) => {
     return pool.query(
