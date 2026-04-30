@@ -42,7 +42,15 @@ export interface Reaction {
   user_id: number
   emoji: string
   created_at: Date
+  name?: string
+  avatar_url?: string | null
 }
+
+export interface PeepWithReaction extends Peep {
+  reactions: Reaction[]
+}
+
+export type ReactionActionType = 'added' | 'updated' | 'deleted' | 'unchanged'
 
 export interface createOrFindPrivateChatDTO {
   secondUserId: number

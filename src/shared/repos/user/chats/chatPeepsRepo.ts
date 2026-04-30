@@ -13,8 +13,19 @@ export const chatPeepsRepo = {
   addReaction: async (peepId: number, userId: number, emoji: string) => {
     const result = await pool.query(
       `INSERT INTO peep_reactions (peep_id, user_id, emoji)
-      VALUES ($1, $2, $3)
-      RETURNING *
+        VALUES ($1, $2, $3)
+        RETURNING
+          id::int,
+          peep_id::int,
+          user_id::int,
+          emoji,
+          created_at,
+         (
+            SELECT u.name FROM users u WHERE u.id = user_id
+          ) as name,
+          (
+            SELECT u.avatar_url FROM users u WHERE u.id = user_id
+          ) as avatar_url
       `,
       [peepId, userId, emoji]
     )
@@ -42,10 +53,13 @@ export const chatPeepsRepo = {
         COALESCE(
           json_agg(
             json_build_object(
-              'id', pr.id,
-              'user_id', pr.user_id,
+              'id', pr.id::int,
+              'peep_id', pr.peep_id::int,
+              'user_id', pr.user_id::int,
               'emoji', pr.emoji,
-              'created_at', pr.created_at
+              'created_at', pr.created_at,
+              'name', pru.name,
+              'avatar_url', pru.avatar_url
             )
           ) FILTER (WHERE pr.id IS NOT NULL),
           '[]'
@@ -54,6 +68,7 @@ export const chatPeepsRepo = {
       FROM chat_peeps cp
       JOIN users u ON cp.sender_id = u.id
       LEFT JOIN peep_reactions pr ON cp.id = pr.peep_id
+      LEFT JOIN users pru ON pr.user_id = pru.id
       
       WHERE ($1::text IS NULL OR LOWER(content) LIKE LOWER($1))
         AND cp.chat_id = $2
@@ -67,11 +82,28 @@ export const chatPeepsRepo = {
   },
   findByIdAndUserIdWithReactions: async (peepId: number, userId: number) => {
     const result = await pool.query(
-      `SELECT cp.id AS chat_id, pr.id AS reaction_id, pr.user_id, pr.emoji FROM chat_peeps cp
+      `SELECT 
+        cp.id,
+        COALESCE(
+            json_agg(
+              json_build_object(
+                'id', pr.id::int,
+                'user_id', pr.user_id::int,
+                'peep_id', pr.peep_id::int,
+                'emoji', pr.emoji,
+                'created_at', pr.created_at,
+                'name', u.name,
+                'avatar_url', u.avatar_url
+              )
+            ) FILTER (WHERE pr.id IS NOT NULL),
+            '[]'
+          ) AS reactions FROM chat_peeps cp
       LEFT JOIN peep_reactions pr ON cp.id = pr.peep_id
-      AND pr.user_id = $2
-      WHERE cp.id = $1`,
-      [peepId, userId]
+      LEFT JOIN users u ON pr.user_id = u.id
+      WHERE cp.id = $1
+       GROUP BY cp.id, u.id
+`,
+      [peepId]
     )
     return result.rows[0]
   },
@@ -87,9 +119,20 @@ export const chatPeepsRepo = {
   updateReactionById: async (reactionId: number, emoji: string) => {
     const result = await pool.query(
       `UPDATE peep_reactions pr
-      SET emoji = $2
-      WHERE id = $1
-      RETURNING *`,
+        SET emoji = $2
+        WHERE pr.id = $1
+        RETURNING 
+          pr.id::int,
+          peep_id::int,
+          pr.user_id::int,
+          pr.emoji,
+          pr.created_at,
+          (
+            SELECT u.name FROM users u WHERE u.id = pr.user_id
+          ) as name,
+          (
+            SELECT u.avatar_url FROM users u WHERE u.id = pr.user_id
+          ) as avatar_url`,
       [reactionId, emoji]
     )
     return result.rows[0]
@@ -115,9 +158,8 @@ export const chatPeepsRepo = {
   },
   deleteReactionById: (reactionId: number) => {
     return pool.query(
-      `DELETE FROM peep_reactions pr
-      WHERE id = $1
-      RETURNING pr.id, pr.peep_id`,
+      `DELETE FROM peep_reactions
+      WHERE id = $1`,
       [reactionId]
     )
   },

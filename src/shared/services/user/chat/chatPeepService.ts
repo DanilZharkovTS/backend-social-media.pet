@@ -6,7 +6,9 @@ import {
   editPeepDTO,
   markPeepsAsReadUpToDTO,
   Peep,
+  PeepWithReaction,
   Reaction,
+  ReactionActionType,
   updateReactionDTO,
 } from '../../../interfaces/user/chat/chatInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
@@ -177,41 +179,42 @@ export const chatPeepService = {
 
     return { lastReadPeepId: peepId }
   },
-  updateReaction: async (
-    { userId }: TokenPayload,
-    { validIds, validData }: updateReactionDTO
-  ) => {
+  updateReaction: async ({ userId }, { validIds, validData }) => {
     const { peepId, chatId } = validIds
     const { emoji } = validData
-    const redisKey = `chats:${chatId}:peeps`
 
-    const dbPeep = await chatPeepsRepo.findByIdAndUserIdWithReactions(
-      peepId,
-      userId
-    )
+    const dbPeep: PeepWithReaction =
+      await chatPeepsRepo.findByIdAndUserIdWithReactions(peepId, userId)
+    if (!dbPeep) throw ApiError('Peep not found', 404)
 
-    if (!dbPeep) {
-      throw ApiError('Peep not found', 404)
+    const myReaction = dbPeep.reactions.find((r) => r.user_id === userId)
+
+    if ((myReaction?.emoji ?? null) === emoji) {
+      return { peepId, reactions: dbPeep.reactions, type: 'unchanged' }
     }
-    if (emoji === dbPeep.emoji) return { updatedReaction: dbPeep }
 
-    let updatedReaction: Reaction
+    let type: ReactionActionType = 'unchanged'
+    let reactions = dbPeep.reactions.filter((r) => r.user_id !== userId)
 
-    if (!dbPeep.reaction_id) {
-      updatedReaction = await chatPeepsRepo.addReaction(peepId, userId, emoji)
-    } else if (!emoji) {
-      await chatPeepsRepo.deleteReactionById(dbPeep.reaction_id)
-      updatedReaction = { ...dbPeep, emoji: null }
-    } else {
-      updatedReaction = await chatPeepsRepo.updateReactionById(
-        dbPeep.reaction_id,
+    if (!myReaction && emoji) {
+      const reaction = await chatPeepsRepo.addReaction(peepId, userId, emoji)
+      reactions = [...reactions, reaction]
+      type = 'added'
+    } else if (myReaction && !emoji) {
+      await chatPeepsRepo.deleteReactionById(myReaction.id)
+      type = 'deleted'
+    } else if (myReaction && emoji) {
+      const reaction = await chatPeepsRepo.updateReactionById(
+        myReaction.id,
         emoji
       )
+      reactions = [...reactions, reaction]
+      type = 'updated'
     }
 
-    await cacheService.invalidateByPrefix(redisKey)
+    await cacheService.invalidateByPrefix(`chats:${chatId}:peeps`)
 
-    return updatedReaction
+    return { peepId, reactions, type }
   },
   deletePeep: async (user: TokenPayload, { validIds }: deletePeepDTO) => {
     const { peepId } = validIds

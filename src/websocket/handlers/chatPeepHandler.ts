@@ -91,6 +91,8 @@ export const chatPeepHandler = {
       socket.emit('peeps:updateReaction', r)
       socket.to(`chats:${chatId}`).emit('peeps:updateReaction', r)
     } catch (err) {
+      console.log(err);
+      
       next(err)
     }
   },
