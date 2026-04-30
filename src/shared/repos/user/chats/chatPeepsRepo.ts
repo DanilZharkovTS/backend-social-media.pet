@@ -15,8 +15,9 @@ export const chatPeepsRepo = {
       `INSERT INTO peep_reactions (peep_id, user_id, emoji)
         VALUES ($1, $2, $3)
         RETURNING
-          id,
-          user_id,
+          id::int,
+          peep_id::int,
+          user_id::int,
           emoji,
           created_at,
          (
@@ -52,8 +53,9 @@ export const chatPeepsRepo = {
         COALESCE(
           json_agg(
             json_build_object(
-              'id', pr.id,
-              'user_id', pr.user_id,
+              'id', pr.id::int,
+              'peep_id', pr.peep_id::int,
+              'user_id', pr.user_id::int,
               'emoji', pr.emoji,
               'created_at', pr.created_at,
               'name', pru.name,
@@ -85,8 +87,9 @@ export const chatPeepsRepo = {
         COALESCE(
             json_agg(
               json_build_object(
-                'id', pr.id,
-                'user_id', pr.user_id,
+                'id', pr.id::int,
+                'user_id', pr.user_id::int,
+                'peep_id', pr.peep_id::int,
                 'emoji', pr.emoji,
                 'created_at', pr.created_at,
                 'name', u.name,
@@ -119,8 +122,9 @@ export const chatPeepsRepo = {
         SET emoji = $2
         WHERE pr.id = $1
         RETURNING 
-          pr.id,
-          pr.user_id,
+          pr.id::int,
+          peep_id::int,
+          pr.user_id::int,
           pr.emoji,
           pr.created_at,
           (
@@ -154,11 +158,8 @@ export const chatPeepsRepo = {
   },
   deleteReactionById: (reactionId: number) => {
     return pool.query(
-      `DELETE FROM peep_reactions pr
-      USING users u
-      WHERE pr.user_id = u.id
-      AND pr.id = $1
-      RETURNING pr.id, pr.peep_id`,
+      `DELETE FROM peep_reactions
+      WHERE id = $1`,
       [reactionId]
     )
   },
