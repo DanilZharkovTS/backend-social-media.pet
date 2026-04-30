@@ -45,7 +45,9 @@ export const chatPeepsRepo = {
               'id', pr.id,
               'user_id', pr.user_id,
               'emoji', pr.emoji,
-              'created_at', pr.created_at
+              'created_at', pr.created_at,
+              'name', pru.name,
+              'avatar_url', pru.avatar_url
             )
           ) FILTER (WHERE pr.id IS NOT NULL),
           '[]'
@@ -54,6 +56,7 @@ export const chatPeepsRepo = {
       FROM chat_peeps cp
       JOIN users u ON cp.sender_id = u.id
       LEFT JOIN peep_reactions pr ON cp.id = pr.peep_id
+      LEFT JOIN users pru ON pr.user_id = pru.id
       
       WHERE ($1::text IS NULL OR LOWER(content) LIKE LOWER($1))
         AND cp.chat_id = $2
