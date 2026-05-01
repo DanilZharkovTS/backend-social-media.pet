@@ -3,7 +3,7 @@ import { chatPeepService } from '../shared/services/user/chat/chatPeepService'
 import { io } from '../app'
 import { getRedis } from '../shared/lib/redisClient'
 
-cron.schedule('*/5 * * * * *', async () => {
+cron.schedule('* * * * *', async () => {
   console.log('hit')
 
   const redis = getRedis()
