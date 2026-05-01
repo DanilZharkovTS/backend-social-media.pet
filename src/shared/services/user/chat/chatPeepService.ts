@@ -186,8 +186,6 @@ export const chatPeepService = {
     const dbPeep: PeepWithReaction =
       await chatPeepsRepo.findByIdAndUserIdWithReactions(peepId, userId)
 
-    console.log(dbPeep)
-
     if (!dbPeep) throw ApiError('Peep not found', 404)
 
     const myReaction = dbPeep.reactions.find((r) => r.user_id === userId)
