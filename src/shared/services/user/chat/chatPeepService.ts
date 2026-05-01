@@ -39,7 +39,7 @@ export const chatPeepService = {
       await redis.ltrim(redisKey, -1000, -1)
     }
 
-    return { newPeep: { ...dbPeep, status: 'sent' } }
+    return { newPeep: { ...dbPeep, reactions: [], status: 'sent' } }
   },
 
   findPeeps: async (
@@ -185,31 +185,22 @@ export const chatPeepService = {
 
     const dbPeep: PeepWithReaction =
       await chatPeepsRepo.findByIdAndUserIdWithReactions(peepId, userId)
+
+    console.log(dbPeep)
+
     if (!dbPeep) throw ApiError('Peep not found', 404)
 
     const myReaction = dbPeep.reactions.find((r) => r.user_id === userId)
-
-    if ((myReaction?.emoji ?? null) === emoji) {
-      return { peepId, reactions: dbPeep.reactions, type: 'unchanged' }
-    }
-
-    let type: ReactionActionType = 'unchanged'
     let reactions = dbPeep.reactions.filter((r) => r.user_id !== userId)
+    let type: ReactionActionType
 
-    if (!myReaction && emoji) {
-      const reaction = await chatPeepsRepo.addReaction(peepId, userId, emoji)
-      reactions = [...reactions, reaction]
-      type = 'added'
-    } else if (myReaction && !emoji) {
-      await chatPeepsRepo.deleteReactionById(myReaction.id)
+    if (myReaction && myReaction.emoji === emoji) {
+      await chatPeepsRepo.deleteReactionByPeepAndUserIds(peepId, userId)
       type = 'deleted'
-    } else if (myReaction && emoji) {
-      const reaction = await chatPeepsRepo.updateReactionById(
-        myReaction.id,
-        emoji
-      )
+    } else if (!myReaction || myReaction.emoji !== emoji) {
+      const reaction = await chatPeepsRepo.upsertReaction(peepId, userId, emoji)
       reactions = [...reactions, reaction]
-      type = 'updated'
+      type = myReaction ? 'updated' : 'added'
     }
 
     await cacheService.invalidateByPrefix(`chats:${chatId}:peeps`)

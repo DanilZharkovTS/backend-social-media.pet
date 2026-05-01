@@ -10,10 +10,12 @@ export const chatPeepsRepo = {
       [senderId, chatId, content]
     )
   },
-  addReaction: async (peepId: number, userId: number, emoji: string) => {
+  upsertReaction: async (peepId: number, userId: number, emoji: string) => {
     const result = await pool.query(
       `INSERT INTO peep_reactions (peep_id, user_id, emoji)
         VALUES ($1, $2, $3)
+        ON CONFLICT (peep_id, user_id)
+        DO UPDATE SET emoji = EXCLUDED.emoji
         RETURNING
           id::int,
           peep_id::int,
@@ -101,7 +103,7 @@ export const chatPeepsRepo = {
       LEFT JOIN peep_reactions pr ON cp.id = pr.peep_id
       LEFT JOIN users u ON pr.user_id = u.id
       WHERE cp.id = $1
-       GROUP BY cp.id, u.id
+       GROUP BY cp.id
 `,
       [peepId]
     )
@@ -156,11 +158,11 @@ export const chatPeepsRepo = {
       RETURNING cp.id, cp.chat_id
       `)
   },
-  deleteReactionById: (reactionId: number) => {
+  deleteReactionByPeepAndUserIds: (peepId: number, userId: number) => {
     return pool.query(
       `DELETE FROM peep_reactions
-      WHERE id = $1`,
-      [reactionId]
+      WHERE peep_id = $1 AND user_id = $2`,
+      [peepId, userId]
     )
   },
 }
