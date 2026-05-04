@@ -78,6 +78,7 @@ export interface leaveChatRoomDTO {
 export interface addPeepDTO {
   validIds: {
     chatId: number
+    replyTo?: number
   }
   validData: {
     content: string

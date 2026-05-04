@@ -12,6 +12,10 @@ export const chatValidator = {
       .string('Content need to be a string')
       .min(1, 'Min. content length is 1')
       .max(400, 'Max. content length is 400 symbols'),
+    replyTo: z
+      .number('Reply to id must be number or null')
+      .nonnegative('Reply to id must be positive')
+      .nullable(),
   }),
   findPeepsBody: z.object({
     search: z.string('Search needs to be a string').optional(),

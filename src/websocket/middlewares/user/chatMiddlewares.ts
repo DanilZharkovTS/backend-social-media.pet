@@ -15,10 +15,16 @@ export const ioChatMiddlewares = {
   },
   addPeep: (socket: Socket, data: any, ctx: any, next: IoNextFn) => {
     try {
-      const { content } = data
-      const validData = chatValidator.addPeepBody.parse({ content })
+      const { content, replyTo } = data
+      const replyToNum = parseInt(String(replyTo), 10) || null      
+
+      const validData = chatValidator.addPeepBody.parse({
+        content,
+        replyTo: replyToNum,
+      })
 
       ctx.validData = validData
+      ctx.validIds = { ...ctx.validIds, replyTo: validData.replyTo }
       next()
     } catch (err) {
       next(err)

@@ -2,12 +2,28 @@ import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import pool from '../../../../pool'
 
 export const chatPeepsRepo = {
-  addPeep: (senderId: number, chatId: number, content: string) => {
+  addPeep: (
+    senderId: number,
+    chatId: number,
+    content: string,
+    replyTo: number | null
+  ) => {
     return pool.query(
-      `INSERT INTO chat_peeps (sender_id, chat_id, content)
-      VALUES ($1, $2, $3)
-      RETURNING *`,
-      [senderId, chatId, content]
+      `WITH inserted AS (
+      INSERT INTO chat_peeps (sender_id, chat_id, content, reply_to)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    )
+      SELECT
+      i.*,
+      r.content AS reply_content,
+      ru.id AS reply_sender_id,
+      ru.name AS reply_name
+      FROM inserted i
+      LEFT JOIN chat_peeps r ON i.reply_to = r.id
+      LEFT JOIN users ru ON r.sender_id = ru.id
+`,
+      [senderId, chatId, content, replyTo]
     )
   },
   upsertReaction: async (peepId: number, userId: number, emoji: string) => {

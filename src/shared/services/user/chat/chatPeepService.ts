@@ -19,14 +19,19 @@ import { chatPeepsRepo } from '../../../repos/user/chats/chatPeepsRepo'
 import { cacheService } from '../../shared/cacheService'
 
 export const chatPeepService = {
-  addPeep: async (user: TokenPayload, { validIds, validData }: addPeepDTO) => {
+  addPeep: async (
+    user: TokenPayload,
+    { validIds: { chatId, replyTo }, validData: { content } }: addPeepDTO
+  ) => {
+    
     const redis = getRedis()
-    const redisKey = `chats:${validIds.chatId}:peeps`
+    const redisKey = `chats:${chatId}:peeps`
 
     const peepResult = await chatPeepsRepo.addPeep(
       user.userId,
-      validIds.chatId,
-      validData.content
+      chatId,
+      content,
+      replyTo
     )
 
     const dbPeep = peepResult.rows[0]

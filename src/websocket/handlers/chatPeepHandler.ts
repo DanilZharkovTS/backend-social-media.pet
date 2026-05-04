@@ -24,6 +24,8 @@ export const chatPeepHandler = {
       socket.to(`chats:${chatId}`).emit('newPeep', result)
       console.log('Peep added')
     } catch (err) {
+      console.log(err);
+      
       next(err)
     }
   },
