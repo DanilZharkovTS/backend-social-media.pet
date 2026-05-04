@@ -16,6 +16,7 @@ export const chatPeepsRepo = {
     )
       SELECT
       i.*,
+      r.id AS reply_id
       r.content AS reply_content,
       ru.id AS reply_sender_id,
       ru.name AS reply_name
@@ -67,7 +68,12 @@ export const chatPeepsRepo = {
         u.name,
         u.avatar_url,
         u.has_checkmark,
-      
+
+        r.id AS reply_id,
+        r.content AS reply_content,
+        ru.id AS reply_sender_id,
+        ru.name AS reply_name,
+
         COALESCE(
           json_agg(
             json_build_object(
@@ -82,17 +88,23 @@ export const chatPeepsRepo = {
           ) FILTER (WHERE pr.id IS NOT NULL),
           '[]'
         ) AS reactions
-      
+
       FROM chat_peeps cp
       JOIN users u ON cp.sender_id = u.id
+
+      LEFT JOIN chat_peeps r ON cp.reply_to = r.id
+      LEFT JOIN users ru ON r.sender_id = ru.id
+
       LEFT JOIN peep_reactions pr ON cp.id = pr.peep_id
       LEFT JOIN users pru ON pr.user_id = pru.id
-      
-      WHERE ($1::text IS NULL OR LOWER(content) LIKE LOWER($1))
+
+      WHERE ($1::text IS NULL OR LOWER(cp.content) LIKE LOWER($1))
         AND cp.chat_id = $2
-      
-      GROUP BY cp.id, u.id
-      
+
+      GROUP BY 
+        cp.id, u.id,
+        r.id, ru.id
+
       ORDER BY cp.created_at DESC
       LIMIT $3 OFFSET $4`,
       [content, chatId, p.limit, p.offset]
