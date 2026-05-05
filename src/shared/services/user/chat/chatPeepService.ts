@@ -67,7 +67,7 @@ export const chatPeepService = {
 
     const lastRead = dbOpponent.last_read_peep_id ?? 0
 
-    if (!search && p.page === 1) {
+    if (!search && p.page === 1) {      
       const redisResult = await redis.lrange(redisKey, p.start, p.end)
 
       if (redisResult.length) {
@@ -106,8 +106,8 @@ export const chatPeepService = {
 
     const reactionsMap = new Map<number, Reaction[]>()
     for (const r of reactions) {
-      if (!reactionsMap.has(r.id)) reactionsMap.set(r.peepId, [])
-      reactionsMap.get(r.peepId).push(r)
+      if (!reactionsMap.has(r.peep_id)) reactionsMap.set(r.peep_id, [])
+      reactionsMap.get(r.peep_id).push(r)
     }
 
     const peepsWithReactions = reversedPeeps.map((p) => {

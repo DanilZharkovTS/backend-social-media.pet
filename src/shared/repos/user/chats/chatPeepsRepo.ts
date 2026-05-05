@@ -16,7 +16,7 @@ export const chatPeepsRepo = {
     )
       SELECT
       i.*,
-      r.id AS reply_id
+      r.id AS reply_id,
       r.content AS reply_content,
       ru.id AS reply_sender_id,
       ru.name AS reply_name
@@ -89,16 +89,16 @@ export const chatPeepsRepo = {
   findReactionsByIds: (ids: number[]) => {
     return pool.query(
       `SELECT
-        r.id,
-        r.peep_id,
-        r.user_id,
+        r.id::int,
+        r.peep_id::int,
+        r.user_id::int,
         r.emoji,
         r.created_at,
         u.name,
         u.avatar_url
       FROM peep_reactions r
       JOIN users u ON r.user_id = u.id
-      WHERE r.peep_id = ANY($1)`,
+      WHERE r.peep_id = ANY($1::int[])`,
       [ids]
     )
   },
