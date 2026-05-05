@@ -38,7 +38,7 @@ export interface Peep {
 
 export interface Reaction {
   id: number
-  peepId: number
+  peep_id: number
   user_id: number
   emoji: string
   created_at: Date
@@ -78,6 +78,7 @@ export interface leaveChatRoomDTO {
 export interface addPeepDTO {
   validIds: {
     chatId: number
+    replyTo?: number
   }
   validData: {
     content: string

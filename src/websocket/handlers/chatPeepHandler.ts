@@ -19,11 +19,13 @@ export const chatPeepHandler = {
     try {
       const chatId = ctx.validIds.chatId
       const result = await chatPeepService.addPeep(socket.user, ctx)
-
+ 
       socket.emit('newPeep', result)
       socket.to(`chats:${chatId}`).emit('newPeep', result)
       console.log('Peep added')
     } catch (err) {
+      console.log(err);
+      
       next(err)
     }
   },

@@ -2,12 +2,29 @@ import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import pool from '../../../../pool'
 
 export const chatPeepsRepo = {
-  addPeep: (senderId: number, chatId: number, content: string) => {
+  addPeep: (
+    senderId: number,
+    chatId: number,
+    content: string,
+    replyTo: number | null
+  ) => {
     return pool.query(
-      `INSERT INTO chat_peeps (sender_id, chat_id, content)
-      VALUES ($1, $2, $3)
-      RETURNING *`,
-      [senderId, chatId, content]
+      `WITH inserted AS (
+      INSERT INTO chat_peeps (sender_id, chat_id, content, reply_to)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    )
+      SELECT
+      i.*,
+      r.id AS reply_id,
+      r.content AS reply_content,
+      ru.id AS reply_sender_id,
+      ru.name AS reply_name
+      FROM inserted i
+      LEFT JOIN chat_peeps r ON i.reply_to = r.id
+      LEFT JOIN users ru ON r.sender_id = ru.id
+`,
+      [senderId, chatId, content, replyTo]
     )
   },
   upsertReaction: async (peepId: number, userId: number, emoji: string) => {
@@ -51,35 +68,38 @@ export const chatPeepsRepo = {
         u.name,
         u.avatar_url,
         u.has_checkmark,
-      
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id', pr.id::int,
-              'peep_id', pr.peep_id::int,
-              'user_id', pr.user_id::int,
-              'emoji', pr.emoji,
-              'created_at', pr.created_at,
-              'name', pru.name,
-              'avatar_url', pru.avatar_url
-            )
-          ) FILTER (WHERE pr.id IS NOT NULL),
-          '[]'
-        ) AS reactions
-      
+        r.id AS reply_id,
+        r.content AS reply_content,
+        ru.id AS reply_sender_id,
+        ru.name AS reply_name
       FROM chat_peeps cp
       JOIN users u ON cp.sender_id = u.id
-      LEFT JOIN peep_reactions pr ON cp.id = pr.peep_id
-      LEFT JOIN users pru ON pr.user_id = pru.id
-      
-      WHERE ($1::text IS NULL OR LOWER(content) LIKE LOWER($1))
+
+      LEFT JOIN chat_peeps r ON cp.reply_to = r.id
+      LEFT JOIN users ru ON r.sender_id = ru.id
+
+      WHERE ($1::text IS NULL OR cp.content ILIKE $1)
         AND cp.chat_id = $2
-      
-      GROUP BY cp.id, u.id
-      
+
       ORDER BY cp.created_at DESC
       LIMIT $3 OFFSET $4`,
       [content, chatId, p.limit, p.offset]
+    )
+  },
+  findReactionsByIds: (ids: number[]) => {
+    return pool.query(
+      `SELECT
+        r.id::int,
+        r.peep_id::int,
+        r.user_id::int,
+        r.emoji,
+        r.created_at,
+        u.name,
+        u.avatar_url
+      FROM peep_reactions r
+      JOIN users u ON r.user_id = u.id
+      WHERE r.peep_id = ANY($1::int[])`,
+      [ids]
     )
   },
   findByIdAndUserIdWithReactions: async (peepId: number, userId: number) => {
