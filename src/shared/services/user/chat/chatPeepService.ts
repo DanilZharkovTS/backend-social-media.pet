@@ -39,7 +39,7 @@ export const chatPeepService = {
     const redisPeeps = redisResult.map((p) => JSON.parse(p))
 
     if (redisPeeps.length) {
-      await redis.rpush(redisKey, JSON.stringify(dbPeep))
+      await redis.rpush(redisKey, JSON.stringify({...dbPeep, reactions: []}))
       await redis.ltrim(redisKey, -1000, -1)
     }
 
