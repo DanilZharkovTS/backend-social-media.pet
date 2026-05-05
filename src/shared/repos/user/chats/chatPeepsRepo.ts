@@ -68,46 +68,38 @@ export const chatPeepsRepo = {
         u.name,
         u.avatar_url,
         u.has_checkmark,
-
         r.id AS reply_id,
         r.content AS reply_content,
         ru.id AS reply_sender_id,
-        ru.name AS reply_name,
-
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id', pr.id::int,
-              'peep_id', pr.peep_id::int,
-              'user_id', pr.user_id::int,
-              'emoji', pr.emoji,
-              'created_at', pr.created_at,
-              'name', pru.name,
-              'avatar_url', pru.avatar_url
-            )
-          ) FILTER (WHERE pr.id IS NOT NULL),
-          '[]'
-        ) AS reactions
-
+        ru.name AS reply_name
       FROM chat_peeps cp
       JOIN users u ON cp.sender_id = u.id
 
       LEFT JOIN chat_peeps r ON cp.reply_to = r.id
       LEFT JOIN users ru ON r.sender_id = ru.id
 
-      LEFT JOIN peep_reactions pr ON cp.id = pr.peep_id
-      LEFT JOIN users pru ON pr.user_id = pru.id
-
-      WHERE ($1::text IS NULL OR LOWER(cp.content) LIKE LOWER($1))
+      WHERE ($1::text IS NULL OR cp.content ILIKE $1)
         AND cp.chat_id = $2
-
-      GROUP BY 
-        cp.id, u.id,
-        r.id, ru.id
 
       ORDER BY cp.created_at DESC
       LIMIT $3 OFFSET $4`,
       [content, chatId, p.limit, p.offset]
+    )
+  },
+  findReactionsByIds: (ids: number[]) => {
+    return pool.query(
+      `SELECT
+        r.id,
+        r.peep_id,
+        r.user_id,
+        r.emoji,
+        r.created_at,
+        u.name,
+        u.avatar_url
+      FROM peep_reactions r
+      JOIN users u ON r.user_id = u.id
+      WHERE r.peep_id = ANY($1)`,
+      [ids]
     )
   },
   findByIdAndUserIdWithReactions: async (peepId: number, userId: number) => {

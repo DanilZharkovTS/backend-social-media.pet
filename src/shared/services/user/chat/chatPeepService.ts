@@ -23,7 +23,6 @@ export const chatPeepService = {
     user: TokenPayload,
     { validIds: { chatId, replyTo }, validData: { content } }: addPeepDTO
   ) => {
-    
     const redis = getRedis()
     const redisKey = `chats:${chatId}:peeps`
 
@@ -73,6 +72,7 @@ export const chatPeepService = {
 
       if (redisResult.length) {
         const redisPeeps: Peep[] = redisResult.map((p) => JSON.parse(p))
+
         const peepsWithStatus = redisPeeps.map((p) => ({
           ...p,
           status:
@@ -100,7 +100,21 @@ export const chatPeepService = {
     )
     const reversedPeeps: Peep[] = [...dbPeeps].reverse()
 
-    const peepsWithStatus = reversedPeeps.map((p) => ({
+    const peepIds = reversedPeeps.map((p) => p.id)
+    const { rows: reactions }: { rows: Reaction[] } =
+      await chatPeepsRepo.findReactionsByIds(peepIds)
+
+    const reactionsMap = new Map<number, Reaction[]>()
+    for (const r of reactions) {
+      if (!reactionsMap.has(r.id)) reactionsMap.set(r.peepId, [])
+      reactionsMap.get(r.peepId).push(r)
+    }
+
+    const peepsWithReactions = reversedPeeps.map((p) => {
+      return { ...p, reactions: reactionsMap.get(p.id) ?? [] }
+    })
+
+    const peepsWithStatus = peepsWithReactions.map((p) => ({
       ...p,
       status:
         p.sender_id === user.userId
@@ -111,7 +125,7 @@ export const chatPeepService = {
     }))
 
     if (!search && p.page === 1 && reversedPeeps.length) {
-      const items = reversedPeeps.map((peep) => JSON.stringify(peep))
+      const items = peepsWithReactions.map((peep) => JSON.stringify(peep))
 
       await redis
         .multi()
