@@ -20,7 +20,7 @@ import { cacheService } from '../../shared/cacheService'
 
 export const chatPeepService = {
   addPeep: async (
-    user: TokenPayload,
+    user: TokenPayload, 
     { validIds: { chatId, replyTo }, validData: { content } }: addPeepDTO
   ) => {
     const redis = getRedis()
