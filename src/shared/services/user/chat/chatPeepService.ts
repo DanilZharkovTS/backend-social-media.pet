@@ -11,39 +11,57 @@ import {
   ReactionActionType,
   updateReactionDTO,
 } from '../../../interfaces/user/chat/chatInterfaces'
+import { Notification } from '../../../interfaces/user/notificationInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import { ApiError } from '../../../lib/ApiErrors'
 import { getRedis } from '../../../lib/redisClient'
 import { chatParticipantsRepo } from '../../../repos/user/chats/chatParticipantsRepo'
 import { chatPeepsRepo } from '../../../repos/user/chats/chatPeepsRepo'
+import { notificationsRepo } from '../../../repos/user/notificationsRepo'
 import { cacheService } from '../../shared/cacheService'
 
 export const chatPeepService = {
   addPeep: async (
-    user: TokenPayload, 
+    { userId }: TokenPayload,
     { validIds: { chatId, replyTo }, validData: { content } }: addPeepDTO
   ) => {
     const redis = getRedis()
     const redisKey = `chats:${chatId}:peeps`
 
     const peepResult = await chatPeepsRepo.addPeep(
-      user.userId,
+      userId,
       chatId,
       content,
       replyTo
     )
+    const dbPeep: PeepWithReaction = peepResult.rows[0]
 
-    const dbPeep = peepResult.rows[0]
+    const opponentResult = await chatParticipantsRepo.findOpponentByChatId(
+      chatId,
+      userId
+    )
+    const dbOpponent = opponentResult.rows[0]
+
+    const notification: Notification = await notificationsRepo.addNotification(
+      userId,
+      dbOpponent.user_id,
+      'peep',
+      'peep',
+      dbPeep.id
+    )
 
     const redisResult = await redis.lrange(redisKey, -50, -1)
     const redisPeeps = redisResult.map((p) => JSON.parse(p))
 
     if (redisPeeps.length) {
-      await redis.rpush(redisKey, JSON.stringify({...dbPeep, reactions: []}))
+      await redis.rpush(redisKey, JSON.stringify({ ...dbPeep, reactions: [] }))
       await redis.ltrim(redisKey, -1000, -1)
     }
 
-    return { newPeep: { ...dbPeep, reactions: [], status: 'sent' } }
+    return {
+      newPeep: { ...dbPeep, reactions: [], status: 'sent' },
+      notification,
+    }
   },
 
   findPeeps: async (
@@ -67,7 +85,7 @@ export const chatPeepService = {
 
     const lastRead = dbOpponent.last_read_peep_id ?? 0
 
-    if (!search && p.page === 1) {      
+    if (!search && p.page === 1) {
       const redisResult = await redis.lrange(redisKey, p.start, p.end)
 
       if (redisResult.length) {

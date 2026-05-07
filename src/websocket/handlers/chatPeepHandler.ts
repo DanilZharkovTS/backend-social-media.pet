@@ -18,10 +18,12 @@ export const chatPeepHandler = {
   ) => {
     try {
       const chatId = ctx.validIds.chatId
-      const result = await chatPeepService.addPeep(socket.user, ctx)
+      const {newPeep, notification: n} = await chatPeepService.addPeep(socket.user, ctx)
+      
  
-      socket.emit('newPeep', result)
-      socket.to(`chats:${chatId}`).emit('newPeep', result)
+      socket.emit('newPeep', {newPeep})
+      socket.to(`chats:${chatId}`).emit('newPeep', {newPeep})
+      socket.to(`users:${n.receiver_id}`).emit('nofications:new', n)
       console.log('Peep added')
     } catch (err) {
       console.log(err);
