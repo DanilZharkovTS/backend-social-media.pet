@@ -6,6 +6,8 @@ export interface Notification {
   entity_type: NotificationEntityType
   entity_id: number
   created_at: Date
+  opened_at: Date | null
+  sender_name?: string
 }
 
 export type NotificationType = 'reply' | 'reaction' | 'peep'

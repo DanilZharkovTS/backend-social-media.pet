@@ -23,11 +23,40 @@ export const notificationsRepo = {
           entity_type,
           entity_id,
           created_at,
+          opened_at,
           (
             SELECT u.name FROM users u WHERE id = $1
           ) as sender_name`,
       [from, to, type, entityType, entityId]
     )
     return result.rows[0]
+  },
+  getAllByUserId: async (userId: number, cursor: number) => {
+    const cursorCondition = cursor ? 'AND n.id < $2' : ''
+    const queryValues = [userId]
+    if (cursor) queryValues.push(cursor)
+
+    const result = await pool.query(
+      `SELECT
+        n.id::int,
+        n.sender_id::int,
+        n.receiver_id::int,
+        n.type,
+        n.entity_type,
+        n.entity_id,
+        n.created_at,
+        n.opened_at,
+        u.name
+      FROM notifications n
+        JOIN users u ON n.receiver_id = u.id
+      WHERE n.receiver_id = $1
+      AND n.opened_at IS NULL
+      ${cursorCondition}
+      ORDER BY n.created_at DESC
+      LIMIT 50`,
+      queryValues
+    )
+
+    return result.rows
   },
 }

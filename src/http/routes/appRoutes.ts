@@ -5,6 +5,7 @@ import userRoutes from './user/userRoutes.ts'
 import chatRoutes from './user/chatRoutes.ts'
 import billingRoutes from './billing/billingRoutes.ts'
 import postRoutes from './user/postRoutes.ts'
+import notificationRoutes from './user/notificationRoutes.ts'
 import { authMiddlewares } from '../middlewares/auth/authMiddlewares.ts'
 import { requiresRole } from '../middlewares/helpers/role.ts'
 
@@ -22,6 +23,8 @@ router.use(
 router.use('/users', userRoutes)
 
 router.use('/chats', chatRoutes)
+
+router.use('/notifications', notificationRoutes)
 
 router.use('/billing', billingRoutes)
 
