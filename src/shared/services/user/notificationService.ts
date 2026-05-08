@@ -6,16 +6,21 @@ import { userRepo } from '../../repos/userRepo'
 
 export const notificationService = {
   getNotifications: async ({ userId }: TokenPayload, cursor: number) => {
-    const userResult = await userRepo.findUserById(userId)
-    const {last_notification_read_at}: User = userResult.rows[0]
-
-    const dbNotifications: Notification[] =
+    const notifications: Notification[] =
       await notificationsRepo.getAllByUserId(userId, cursor)
 
-    const notificationsWithStatus = dbNotifications.map((n) => {
+    const last_notification_read_at =
+      notifications[0]?.last_notification_read_at
+    console.log(last_notification_read_at)
+
+    const notificationsWithStatus = notifications.map((n) => {
       return {
         ...n,
-        isRead: n.created_at >= last_notification_read_at ? 'read' : 'unread',
+        isRead: last_notification_read_at
+          ? n.created_at >= last_notification_read_at
+            ? 'read'
+            : 'unread'
+          : 'uread',
       }
     })
 
@@ -23,7 +28,7 @@ export const notificationService = {
 
     return {
       notifications: notificationsWithStatus,
-      nextCursor
+      nextCursor,
     }
   },
 }

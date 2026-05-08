@@ -46,9 +46,11 @@ export const notificationsRepo = {
         n.entity_id,
         n.created_at,
         n.opened_at,
-        u.name
+        sender.name AS sender_name,
+        receiver.last_notification_read_at
       FROM notifications n
-        JOIN users u ON n.receiver_id = u.id
+        JOIN users sender ON n.sender_id = sender.id
+        JOIN users receiver ON n.receiver_id = receiver.id
       WHERE n.receiver_id = $1
       AND n.opened_at IS NULL
       ${cursorCondition}
