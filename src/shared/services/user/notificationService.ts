@@ -1,9 +1,13 @@
 import { TokenPayload } from '../../interfaces/auth/authInterfaces'
-import { Notification } from '../../interfaces/user/notificationInterfaces'
+import {
+  Notification,
+  openNotificationDTO,
+} from '../../interfaces/user/notificationInterfaces'
+import { ApiError } from '../../lib/ApiErrors'
 import { notificationsRepo } from '../../repos/user/notificationsRepo'
 
 export const notificationService = {
-  getNotifications: async ({ userId }: TokenPayload, cursor: number) => {    
+  getNotifications: async ({ userId }: TokenPayload, cursor: number) => {
     const notifications: Notification[] =
       await notificationsRepo.getAllByUserId(userId, cursor)
 
@@ -27,5 +31,18 @@ export const notificationService = {
       notifications: notificationsWithStatus,
       nextCursor,
     }
+  },
+  openNotification: async (
+    { userId }: TokenPayload,
+    { validIds: { notificationId } }: openNotificationDTO
+  ) => {
+    const notification: Notification =
+      await notificationsRepo.updateNotificationToOpened(notificationId, userId)
+
+    if (!notification) {
+      throw ApiError('Notification not found', 404)
+    }
+
+    return notification
   },
 }

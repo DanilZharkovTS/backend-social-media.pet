@@ -2,6 +2,7 @@ import { Server } from 'socket.io'
 import { registerChatEvents } from './events/chatEvents'
 import { ioAuthMiddlewares } from './middlewares/authMiddlewares'
 import { chatHandler } from './handlers/chatHandler'
+import { registerNotificationEvents } from './events/notificationEvents'
 
 export const registerSockets = (io: Server) => {
   io.use(ioAuthMiddlewares.verifyAccessToken)
@@ -12,5 +13,6 @@ export const registerSockets = (io: Server) => {
       chatHandler.notifyOfflineOpponents(socket)
     })
     registerChatEvents(io, socket)
+    registerNotificationEvents(socket)
   })
 }

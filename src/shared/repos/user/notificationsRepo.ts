@@ -61,4 +61,15 @@ export const notificationsRepo = {
 
     return result.rows
   },
+  updateNotificationToOpened: async (id: number, userId: number) => {
+    const result = await pool.query(
+      `UPDATE notifications
+      SET opened_at = NOW()
+      WHERE id = $1
+      AND receiver_id = $2
+      RETURNING *`,
+      [id, userId]
+    )
+    return result.rows[0]
+  },
 }

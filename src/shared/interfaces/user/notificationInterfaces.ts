@@ -13,3 +13,9 @@ export interface Notification {
 
 export type NotificationType = 'reply' | 'reaction' | 'peep'
 export type NotificationEntityType = 'peep'
+
+export interface openNotificationDTO {
+  validIds: {
+    notificationId: number
+  }
+}

@@ -3,7 +3,7 @@ import io from 'socket.io-client'
 const socket = io(`http://localhost:3000`, {
   auth: {
     accessToken:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE1LCJlbWFpbCI6ImFkbWlua2FAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc4MTkzMjcyLCJleHAiOjE3NzgxOTQxNzJ9.lbBgar1XQKNW69MuNWXD0YhnFi_yU-LWv8sFj2k2l20',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE1LCJlbWFpbCI6ImFkbWlua2FAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc4MjYxMDg0LCJleHAiOjE3NzgyNjE5ODR9.fdLVV1yWA7iX_NNV25IwK27gAQ6rZ4kqkoP7RK-mMBg',
   },
 })
 
@@ -12,9 +12,10 @@ socket.on('connect', () => {
   socket.emit('joinChat', { chatId: 20 })
 
   setTimeout(() => {
-    socket.emit('addPeep', { chatId: 20, content: 'hello', replyTo: 1261 })
+    socket.emit('notification:open', {  notificationId: 99 })
   }, 500)
-  socket.on('newPeep', (data) => {
+
+  socket.on('notification:opened', (data) => {
     console.log(data)
   })
 })
