@@ -1,29 +1,44 @@
 import type { NextFunction, Request, Response } from 'express'
+import { PaginationType } from '../../../shared/interfaces/global/index'
 
-export const paginate = (req: Request, res: Response, next: NextFunction) => {
-  let pageStr = req.query.page
-  let limitStr = req.query.limit
+export const paginate = (type: PaginationType) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    switch (type) {
+      case 'cursor':
+        const cursor = String(req.query.cursor)
 
-  pageStr = Array.isArray(pageStr) ? pageStr[0] : pageStr
-  limitStr = Array.isArray(limitStr) ? limitStr[0] : limitStr
+        const cursorNum = parseInt(cursor, 10)
+        const isNum = typeof cursorNum === 'number' && cursorNum > 0
 
-  let pageInt = parseInt(String(pageStr) || '1', 10)
-  let limitInt = parseInt(String(limitStr) || '1', 10)
+        req.pagination = { cursor: isNum ? cursorNum : null }
+        break
+      case 'offset':
+        let pageStr = req.query.page
+        let limitStr = req.query.limit
 
-  if (isNaN(pageInt) || pageInt < 1) pageInt = 1
-  if (isNaN(limitInt) || limitInt < 1 || limitInt > 50) limitInt = 50
+        pageStr = Array.isArray(pageStr) ? pageStr[0] : pageStr
+        limitStr = Array.isArray(limitStr) ? limitStr[0] : limitStr
 
-  const offsetInt = (pageInt - 1) * limitInt
+        let pageInt = parseInt(String(pageStr) || '1', 10)
+        let limitInt = parseInt(String(limitStr) || '1', 10)
 
-  const start = -(pageInt * limitInt)
-  const end = -((pageInt - 1) * limitInt + 1)
+        if (isNaN(pageInt) || pageInt < 1) pageInt = 1
+        if (isNaN(limitInt) || limitInt < 1 || limitInt > 50) limitInt = 50
 
-  req.pagination = {
-    page: pageInt,
-    offset: offsetInt,
-    limit: limitInt,
-    start,
-    end,
+        const offsetInt = (pageInt - 1) * limitInt
+
+        const start = -(pageInt * limitInt)
+        const end = -((pageInt - 1) * limitInt + 1)
+
+        req.pagination = {
+          page: pageInt,
+          offset: offsetInt,
+          limit: limitInt,
+          start,
+          end,
+        }
+        break
+    }
+    next()
   }
-  next()
 }

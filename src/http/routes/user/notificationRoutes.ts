@@ -1,14 +1,14 @@
 import { Router } from 'express'
 import { authMiddlewares } from '../../middlewares/auth/authMiddlewares'
-import { notificationMiddleware } from '../../middlewares/user/notificationMiddlewares'
 import { notificationController } from '../../controllers/user/notificationController'
+import { paginate } from '../../middlewares/helpers/pagination'
 
 const router = Router()
 
 router.get(
   '/',
   authMiddlewares.verifyAccessToken,
-  notificationMiddleware.getNotififcations,
+  paginate('cursor'),
   notificationController.getNotifications
 )
 

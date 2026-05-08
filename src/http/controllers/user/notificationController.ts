@@ -3,10 +3,10 @@ import { notificationService } from '../../../shared/services/user/notificationS
 
 export const notificationController = {
   getNotifications: async (req: Request, res: Response, next: NextFunction) => {
-    try {
+    try {      
       const result = await notificationService.getNotifications(
         req.user,
-        req.queryMap.cursor
+        req.pagination.cursor
       )
       res.status(200).json(result)
     } catch (err) {

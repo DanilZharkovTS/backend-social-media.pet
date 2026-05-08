@@ -24,7 +24,7 @@ router.post(
 router.get(
   '/getAll',
   rateLimiter(60, 60, 'getPosts'),
-  paginate,
+  paginate('offset'),
   postController.readAll
 )
 
@@ -32,7 +32,7 @@ router.get(
   '/find',
   rateLimiter(60, 60, 'findPost'),
   authMiddlewares.verifyAccessToken,
-  paginate,
+  paginate('offset'),
   postMiddlewares.find,
   postController.find
 )
@@ -79,7 +79,7 @@ router.get(
   '/:postId/comments',
   rateLimiter(60, 60, 'getComments'),
   authMiddlewares.verifyAccessToken,
-  paginate,
+  paginate('offset'),
   setParamsId(['postId']),
   commentController.readAll
 )
