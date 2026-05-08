@@ -8,7 +8,7 @@ export const registerSockets = (io: Server) => {
   io.use(ioAuthMiddlewares.verifyAccessToken)
 
   io.on('connection', (socket) => {
-    socket.join(`userRooms:${socket.user.userId}`)
+    socket.join(`user:${socket.user.userId}`)
     socket.on('disconnect', () => {
       chatHandler.notifyOfflineOpponents(socket)
     })

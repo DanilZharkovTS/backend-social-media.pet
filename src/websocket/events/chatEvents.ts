@@ -4,6 +4,7 @@ import { withMiddlewares } from '../middlewares/helpers/withMiddlewares'
 import { resolveIds } from '../middlewares/helpers/resolveIds'
 import { ioChatMiddlewares } from '../middlewares/user/chatMiddlewares'
 import { chatPeepHandler } from '../handlers/chatPeepHandler'
+import { ioAuthMiddlewares } from '../middlewares/authMiddlewares'
 
 export const registerChatEvents = async (io: Server, socket: Socket) => {
   chatHandler.notifyOnlineOpponents(socket)
@@ -17,7 +18,10 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
     'leaveChat',
     withMiddlewares(
       socket,
-      [resolveIds(['chatId']), ioChatMiddlewares.requireRoomMember],
+      [
+        resolveIds(['chatId']),
+        ioAuthMiddlewares.requireRoomMember('chats', 'chatId'),
+      ],
       chatHandler.leaveChatRoom
     )
   )
@@ -38,7 +42,7 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
       socket,
       [
         resolveIds(['chatId']),
-        ioChatMiddlewares.requireRoomMember,
+        ioAuthMiddlewares.requireRoomMember('chats', 'chatId'),
         ioChatMiddlewares.setChatAutoDeletePeeps,
       ],
       chatHandler.setAutoDeletePeeps
@@ -71,7 +75,7 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
       socket,
       [
         resolveIds(['chatId', 'peepId']),
-        ioChatMiddlewares.requireRoomMember,
+        ioAuthMiddlewares.requireRoomMember('chats', 'chatId'),
         ioChatMiddlewares.updateReaction,
       ],
       chatPeepHandler.updateReaction
