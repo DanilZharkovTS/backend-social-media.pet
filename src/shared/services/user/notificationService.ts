@@ -19,11 +19,7 @@ export const notificationService = {
     const notificationsWithStatus = notifications.map((n) => {
       return {
         ...n,
-        isRead: last_read_notification_id
-          ? n.id <= last_read_notification_id
-            ? 'read'
-            : 'unread'
-          : 'uread',
+        isRead: n.id <= last_read_notification_id ? 'read' : 'unread',
       }
     })
 
