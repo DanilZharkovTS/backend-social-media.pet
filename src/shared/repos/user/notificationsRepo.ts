@@ -47,7 +47,7 @@ export const notificationsRepo = {
         n.created_at,
         n.opened_at,
         sender.name AS sender_name,
-        receiver.last_notification_read_at
+        receiver.last_read_notification_id
       FROM notifications n
         JOIN users sender ON n.sender_id = sender.id
         JOIN users receiver ON n.receiver_id = receiver.id

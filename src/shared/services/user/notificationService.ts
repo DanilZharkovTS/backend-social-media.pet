@@ -11,14 +11,14 @@ export const notificationService = {
     const notifications: Notification[] =
       await notificationsRepo.getAllByUserId(userId, cursor)
 
-    const last_notification_read_at =
-      notifications[0]?.last_notification_read_at
+    const last_read_notification_id =
+      notifications[0]?.last_read_notification_id
 
     const notificationsWithStatus = notifications.map((n) => {
       return {
         ...n,
-        isRead: last_notification_read_at
-          ? n.created_at >= last_notification_read_at
+        isRead: last_read_notification_id
+          ? n.id <= last_read_notification_id
             ? 'read'
             : 'unread'
           : 'uread',
