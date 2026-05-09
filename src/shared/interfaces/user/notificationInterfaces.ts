@@ -19,3 +19,9 @@ export interface openNotificationDTO {
     notificationId: number
   }
 }
+
+export interface readNotificationsUpToDTO {
+  validIds: {
+    lastReadNotificationId: number
+  }
+}

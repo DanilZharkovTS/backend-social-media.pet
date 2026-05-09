@@ -1,6 +1,9 @@
 import { Socket } from 'socket.io'
 import { IoNextFn } from '../../shared/interfaces/global/socket'
-import { openNotificationDTO } from '../../shared/interfaces/user/notificationInterfaces'
+import {
+  openNotificationDTO,
+  readNotificationsUpToDTO,
+} from '../../shared/interfaces/user/notificationInterfaces'
 import { notificationService } from '../../shared/services/user/notificationService'
 
 export const notificationHandler = {
@@ -17,8 +20,34 @@ export const notificationHandler = {
       )
       socket
         .to(`users:${result.receiver_id}`)
-        .emit('notification:opened', result)
-      socket.emit('notification:opened', result)
+        .emit('notifications:opened', result)
+      socket.emit('notifications:opened', result)
+    } catch (err) {
+      next(err)
+    }
+  },
+  readNotificationUpTo: async (
+    socket: Socket,
+    data: any,
+    ctx: readNotificationsUpToDTO,
+    next: IoNextFn
+  ) => {
+    try {
+      const result = await notificationService.readNotificationsUpTo(
+        socket.user,
+        ctx
+      )
+
+      if (result) {
+        const { lastReadNotificationId, userId } = result
+
+        socket.emit('notifications:readUpToSuccess', {
+          lastReadNotificationId,
+        })
+        socket.to(`user:${userId}`).emit('notifications:readUpToSuccess', {
+          lastReadNotificationId,
+        })
+      }
     } catch (err) {
       next(err)
     }

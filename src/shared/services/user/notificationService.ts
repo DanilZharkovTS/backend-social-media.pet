@@ -3,8 +3,10 @@ import {
   Notification,
   openNotificationDTO,
 } from '../../interfaces/user/notificationInterfaces'
+import { User } from '../../interfaces/user/userInterfaces'
 import { ApiError } from '../../lib/ApiErrors'
 import { notificationsRepo } from '../../repos/user/notificationsRepo'
+import { userRepo } from '../../repos/userRepo'
 
 export const notificationService = {
   getNotifications: async ({ userId }: TokenPayload, cursor: number) => {
@@ -44,5 +46,19 @@ export const notificationService = {
     }
 
     return notification
+  },
+  readNotificationsUpTo: async (
+    { userId }: TokenPayload,
+    { validIds: { lastReadNotificationId: notificationId } }
+  ) => {
+    const updatedUser: User = await userRepo.updateLastReadNotificationId(
+      userId,
+      notificationId
+    )
+    if (!updatedUser) return
+
+    const lastReadNotificationId = updatedUser.last_read_notification_id
+
+    return { lastReadNotificationId, userId }
   },
 }

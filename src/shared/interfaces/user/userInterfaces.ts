@@ -11,7 +11,7 @@ export interface User {
   email_is_verified: boolean
   has_checkmark: boolean
   stripe_customer_id: string | null
-  last_notification_read_at: Date | null
+  last_read_notification_id: number | null
 }
 
 export interface updateMyInfoDTO {
