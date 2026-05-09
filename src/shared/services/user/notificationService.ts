@@ -7,6 +7,7 @@ import { User } from '../../interfaces/user/userInterfaces'
 import { ApiError } from '../../lib/ApiErrors'
 import { notificationsRepo } from '../../repos/user/notificationsRepo'
 import { userRepo } from '../../repos/userRepo'
+import { cacheService } from '../shared/cacheService'
 
 export const notificationService = {
   getNotifications: async ({ userId }: TokenPayload, cursor: number) => {
@@ -41,7 +42,12 @@ export const notificationService = {
       throw ApiError('Notification not found', 404)
     }
 
-    return notification
+    const newNotificationsCount = await cacheService.updateNotificationsCount(
+      userId,
+      +1
+    )
+
+    return { notification, newNotificationsCount }
   },
   readNotificationsUpTo: async (
     { userId }: TokenPayload,
@@ -54,7 +60,10 @@ export const notificationService = {
     if (!updatedUser) return
 
     const lastReadNotificationId = updatedUser.last_read_notification_id
+    const newNotificationsCount = await cacheService.resetNotificationsCount(
+      userId
+    )
 
-    return { lastReadNotificationId, userId }
+    return { lastReadNotificationId, userId, newNotificationsCount }
   },
 }

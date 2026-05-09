@@ -18,8 +18,10 @@ export const notificationHandler = {
         socket.user,
         ctx
       )
+      const { notification } = result
+
       socket
-        .to(`users:${result.receiver_id}`)
+        .to(`users:${notification.receiver_id}`)
         .emit('notifications:opened', result)
       socket.emit('notifications:opened', result)
     } catch (err) {
@@ -39,13 +41,15 @@ export const notificationHandler = {
       )
 
       if (result) {
-        const { lastReadNotificationId, userId } = result
+        const { lastReadNotificationId, userId, newNotificationsCount } = result
 
         socket.emit('notifications:readUpToSuccess', {
           lastReadNotificationId,
+          newNotificationsCount,
         })
         socket.to(`user:${userId}`).emit('notifications:readUpToSuccess', {
           lastReadNotificationId,
+          newNotificationsCount,
         })
       }
     } catch (err) {
