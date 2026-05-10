@@ -1,6 +1,7 @@
 import { Socket } from 'socket.io'
 import { IoNextFn } from '../../shared/interfaces/global/socket'
 import {
+  internalNotificationPayload,
   openNotificationDTO,
   readNotificationsUpToDTO,
 } from '../../shared/interfaces/user/notificationInterfaces'
@@ -56,20 +57,16 @@ export const notificationHandler = {
       next(err)
     }
   },
-  notifyOpp: (socket: Socket, internal) => {
-    if (internal.notifyOpp) {
+  notifyOpp: (socket: Socket, internal: internalNotificationPayload) => {
+    if (internal.notifyOpp && internal.notificationUpdate) {
       const {
-        notificationUpdate: {
-          userId,
-          newNotificationsCount,
-          newNotification,
-        },
+        notificationUpdate: { userId, newNotificationsCount, newNotification },
       } = internal
 
       socket.to(`user:${userId}`).emit('notifications:new', newNotification)
       socket.to(`user:${userId}`).emit('notifications:countUpdated', {
         newNotificationsCount,
-      })
+      })      
     }
   },
 }

@@ -55,7 +55,11 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
     'addPeep',
     withMiddlewares(
       socket,
-      [resolveIds(['chatId']), ioChatMiddlewares.addPeep],
+      [
+        resolveIds(['chatId']),
+        ioAuthMiddlewares.requireRoomMember('chats', 'chatId'),
+        ioChatMiddlewares.addPeep,
+      ],
       chatPeepHandler.addPeep
     )
   )

@@ -27,7 +27,6 @@ export const chatPeepHandler = {
       socket.to(`chats:${chatId}`).emit('newPeep', { newPeep: response })
 
       notificationHandler.notifyOpp(socket, internal)
-      console.log('Peep added')
     } catch (err) {
       console.log(err)
       next(err)
@@ -91,7 +90,7 @@ export const chatPeepHandler = {
     next: IoNextFn
   ) => {
     try {
-      const { chatId } = ctx.validIds
+      const chatId = ctx.validIds.chatId
       const { response, internal } = await chatPeepService.updateReaction(
         socket.user,
         ctx
@@ -100,7 +99,8 @@ export const chatPeepHandler = {
       socket.emit('peeps:updateReaction', response)
       socket.to(`chats:${chatId}`).emit('peeps:updateReaction', response)
 
-      notificationHandler.notifyOpp(socket, internal)
+      
+      notificationHandler.notifyOpp(socket, internal)      
     } catch (err) {
       console.log(err)
       next(err)

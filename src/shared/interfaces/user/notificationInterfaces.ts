@@ -25,3 +25,12 @@ export interface readNotificationsUpToDTO {
     lastReadNotificationId: number
   }
 }
+
+export interface internalNotificationPayload {
+  notifyOpp: boolean
+  notificationUpdate: {
+    userId: number
+    newNotification: Notification
+    newNotificationsCount: number
+  } | null
+}
