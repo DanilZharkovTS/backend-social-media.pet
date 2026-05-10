@@ -56,4 +56,20 @@ export const notificationHandler = {
       next(err)
     }
   },
+  notifySender: (socket: Socket, internal) => {
+    if (internal.notifySender) {
+      const {
+        notificationCountUpdate: {
+          userId,
+          newNotificationsCount,
+          newNotification,
+        },
+      } = internal
+
+      socket.to(`user:${userId}`).emit('notifications:new', newNotification)
+      socket.to(`user:${userId}`).emit('notifications:countUpdated', {
+        newNotificationsCount,
+      })
+    }
+  },
 }

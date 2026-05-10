@@ -257,17 +257,19 @@ export const chatPeepService = {
 
     await cacheService.invalidateByPrefix(`chats:${chatId}:peeps`)
 
-    const notifySender = type === 'added' && dbPeep.sender_id !== userId
+    const notifySender = !!newNotification
 
     return {
       response: { peepId, reactions, type },
       internal: {
         notifySender,
-        notificationCountUpdate: {
-          userId: dbPeep.sender_id,
-          newNotification,
-          newNotificationsCount,
-        },
+        notificationCountUpdate: notifySender
+          ? {
+              userId: dbPeep.sender_id,
+              newNotification,
+              newNotificationsCount,
+            }
+          : null,
       },
     }
   },

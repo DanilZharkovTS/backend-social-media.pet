@@ -8,6 +8,7 @@ import {
   markPeepsAsReadUpToDTO,
   updateReactionDTO,
 } from '../../shared/interfaces/user/chat/chatInterfaces'
+import { notificationHandler } from './notificationHandler'
 
 export const chatPeepHandler = {
   addPeep: async (
@@ -25,7 +26,7 @@ export const chatPeepHandler = {
 
       socket.emit('newPeep', { newPeep })
       socket.to(`chats:${chatId}`).emit('newPeep', { newPeep })
-      socket.to(`users:${n.receiver_id}`).emit('nofications:new', n)
+      socket.to(`user:${n.receiver_id}`).emit('nofications:new', n)
       console.log('Peep added')
     } catch (err) {
       console.log(err)
@@ -99,25 +100,10 @@ export const chatPeepHandler = {
 
       socket.emit('peeps:updateReaction', response)
       socket.to(`chats:${chatId}`).emit('peeps:updateReaction', response)
-      console.log('reaction updated')
 
-      if (internal.notifySender) {
-        const {
-          notificationCountUpdate: {
-            userId,
-            newNotificationsCount,
-            newNotification,
-          },
-        } = internal
-
-        socket.to(`user:${userId}`).emit('notifications:new', newNotification)
-        socket.to(`user:${userId}`).emit('notifications:countUpdated', {
-          newNotificationsCount,
-        })
-      }
+      notificationHandler.notifySender(socket, internal)
     } catch (err) {
       console.log(err)
-
       next(err)
     }
   },
