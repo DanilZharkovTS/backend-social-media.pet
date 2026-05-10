@@ -3,7 +3,7 @@ import io from 'socket.io-client'
 const socket = io(`http://localhost:3000`, {
   auth: {
     accessToken:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE1LCJlbWFpbCI6ImFkbWlua2FAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc4MzYxMzExLCJleHAiOjE3NzgzNjIyMTF9.POs5auYPZcnW69N-xaw7yyaiCKpGrQcC6rYwnvjUUb0',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE1LCJlbWFpbCI6ImFkbWlua2FAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc4NDI1NzE1LCJleHAiOjE3Nzg0MjY2MTV9.DqaXd5vKsFp-5lAp_xTZUcPnWL7BkgSKcryKOQqLC-0',
   },
 })
 
@@ -12,10 +12,14 @@ socket.on('connect', () => {
   socket.emit('joinChat', { chatId: 20 })
 
   setTimeout(() => {
-    socket.emit('notifications:readUpTo', {  lastReadNotificationId: 84 })
+    socket.emit('peep:updateReaction', { chatId: 20, peepId: 1279, emoji: '💯' })
   }, 500)
 
-  socket.on('notifications:readUpToSuccess', (data) => {
-    console.log(data)
+  socket.on('notifications:new', (data) => {
+    console.log('New notification: ', data)
+  })
+  socket.on('notifications:countUpdated', (data) => {
+    console.log('Notifications count updated: ', data);
+    
   })
 })

@@ -106,6 +106,7 @@ export const chatPeepsRepo = {
     const result = await pool.query(
       `SELECT 
         cp.id,
+        cp.sender_id,
         COALESCE(
             json_agg(
               json_build_object(

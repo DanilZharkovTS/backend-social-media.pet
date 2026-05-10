@@ -227,7 +227,10 @@ export const chatPeepService = {
 
     const myReaction = dbPeep.reactions.find((r) => r.user_id === userId)
     let reactions = dbPeep.reactions.filter((r) => r.user_id !== userId)
+
     let type: ReactionActionType
+    let newNotification: Notification
+    let newNotificationsCount: number
 
     if (myReaction && myReaction.emoji === emoji) {
       await chatPeepsRepo.deleteReactionByPeepAndUserIds(peepId, userId)
@@ -236,11 +239,37 @@ export const chatPeepService = {
       const reaction = await chatPeepsRepo.upsertReaction(peepId, userId, emoji)
       reactions = [...reactions, reaction]
       type = myReaction ? 'updated' : 'added'
+
+      if (type === 'added' && dbPeep.sender_id !== userId) {
+        newNotification = await notificationsRepo.addNotification(
+          userId,
+          dbPeep.sender_id,
+          'reaction',
+          'peep',
+          peepId
+        )
+        newNotificationsCount = await cacheService.updateNotificationsCount(
+          dbPeep.sender_id,
+          +1
+        )
+      }
     }
 
     await cacheService.invalidateByPrefix(`chats:${chatId}:peeps`)
 
-    return { peepId, reactions, type }
+    const notifySender = type === 'added' && dbPeep.sender_id !== userId
+
+    return {
+      response: { peepId, reactions, type },
+      internal: {
+        notifySender,
+        notificationCountUpdate: {
+          userId: dbPeep.sender_id,
+          newNotification,
+          newNotificationsCount,
+        },
+      },
+    }
   },
   deletePeep: async (user: TokenPayload, { validIds }: deletePeepDTO) => {
     const { peepId } = validIds

@@ -18,16 +18,18 @@ export const chatPeepHandler = {
   ) => {
     try {
       const chatId = ctx.validIds.chatId
-      const {newPeep, notification: n} = await chatPeepService.addPeep(socket.user, ctx)
-      
- 
-      socket.emit('newPeep', {newPeep})
-      socket.to(`chats:${chatId}`).emit('newPeep', {newPeep})
+      const { newPeep, notification: n } = await chatPeepService.addPeep(
+        socket.user,
+        ctx
+      )
+
+      socket.emit('newPeep', { newPeep })
+      socket.to(`chats:${chatId}`).emit('newPeep', { newPeep })
       socket.to(`users:${n.receiver_id}`).emit('nofications:new', n)
       console.log('Peep added')
     } catch (err) {
-      console.log(err);
-      
+      console.log(err)
+
       next(err)
     }
   },
@@ -90,13 +92,32 @@ export const chatPeepHandler = {
   ) => {
     try {
       const { chatId } = ctx.validIds
-      const r = await chatPeepService.updateReaction(socket.user, ctx)
+      const { response, internal } = await chatPeepService.updateReaction(
+        socket.user,
+        ctx
+      )
 
-      socket.emit('peeps:updateReaction', r)
-      socket.to(`chats:${chatId}`).emit('peeps:updateReaction', r)
+      socket.emit('peeps:updateReaction', response)
+      socket.to(`chats:${chatId}`).emit('peeps:updateReaction', response)
+      console.log('reaction updated')
+
+      if (internal.notifySender) {
+        const {
+          notificationCountUpdate: {
+            userId,
+            newNotificationsCount,
+            newNotification,
+          },
+        } = internal
+
+        socket.to(`user:${userId}`).emit('notifications:new', newNotification)
+        socket.to(`user:${userId}`).emit('notifications:countUpdated', {
+          newNotificationsCount,
+        })
+      }
     } catch (err) {
-      console.log(err);
-      
+      console.log(err)
+
       next(err)
     }
   },

@@ -25,8 +25,11 @@ export const notificationsRepo = {
           created_at,
           opened_at,
           (
-            SELECT u.name FROM users u WHERE id = $1
-          ) as sender_name`,
+            SELECT name FROM users WHERE id = $1
+          ) as sender_name,
+          (
+            SELECT last_read_notification_id FROM users WHERE id = $2
+          ) last_read_notification_id`,
       [from, to, type, entityType, entityId]
     )
     return result.rows[0]
