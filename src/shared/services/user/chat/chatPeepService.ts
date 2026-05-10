@@ -7,6 +7,7 @@ import {
   markPeepsAsReadUpToDTO,
   Peep,
   PeepWithReaction,
+  PeepWithReplyInfo,
   Reaction,
   ReactionActionType,
   updateReactionDTO,
@@ -34,21 +35,23 @@ export const chatPeepService = {
       content,
       replyTo
     )
-    const dbPeep: PeepWithReaction = peepResult.rows[0]
+    const dbPeep: PeepWithReplyInfo = peepResult.rows[0]
 
     const opponentResult = await chatParticipantsRepo.findOpponentByChatId(
       chatId,
       userId
     )
-    const dbOpponent = opponentResult.rows[0]
+    const dbOpponent: ChatParticipant = opponentResult.rows[0]
 
-    const notification: Notification = await notificationsRepo.addNotification(
-      userId,
-      dbOpponent.user_id,
-      'peep',
-      'peep',
-      dbPeep.id
-    )
+    const newNotification: Notification =
+      await notificationsRepo.addNotification(
+        userId,
+        dbOpponent.user_id,
+        dbPeep.reply_id ? 'reply' : 'peep',
+        'peep',
+        dbPeep.id
+      )
+    
 
     const redisResult = await redis.lrange(redisKey, -50, -1)
     const redisPeeps = redisResult.map((p) => JSON.parse(p))
@@ -58,9 +61,25 @@ export const chatPeepService = {
       await redis.ltrim(redisKey, -1000, -1)
     }
 
+    const newNotificationsCount = await cacheService.updateNotificationsCount(
+      dbOpponent.user_id,
+      +1
+    )
+
+    const notifyOpp = !!dbOpponent
+
     return {
-      newPeep: { ...dbPeep, reactions: [], status: 'sent' },
-      notification,
+      response: { ...dbPeep, reactions: [], status: 'sent' },
+      internal: {
+        notifyOpp,
+        notificationUpdate: notifyOpp
+          ? {
+              userId: dbOpponent.user_id,
+              newNotification,
+              newNotificationsCount,
+            }
+          : null,
+      },
     }
   },
 
@@ -257,13 +276,13 @@ export const chatPeepService = {
 
     await cacheService.invalidateByPrefix(`chats:${chatId}:peeps`)
 
-    const notifySender = !!newNotification
+    const notifyOpp = !!newNotification
 
     return {
       response: { peepId, reactions, type },
       internal: {
-        notifySender,
-        notificationCountUpdate: notifySender
+        notifyOpp,
+        notificationUpdate: notifyOpp
           ? {
               userId: dbPeep.sender_id,
               newNotification,

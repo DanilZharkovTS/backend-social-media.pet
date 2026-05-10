@@ -56,10 +56,10 @@ export const notificationHandler = {
       next(err)
     }
   },
-  notifySender: (socket: Socket, internal) => {
-    if (internal.notifySender) {
+  notifyOpp: (socket: Socket, internal) => {
+    if (internal.notifyOpp) {
       const {
-        notificationCountUpdate: {
+        notificationUpdate: {
           userId,
           newNotificationsCount,
           newNotification,
