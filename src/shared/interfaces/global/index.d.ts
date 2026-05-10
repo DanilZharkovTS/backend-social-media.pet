@@ -4,11 +4,12 @@ import Stripe from 'stripe'
 declare module 'express-serve-static-core' {
   interface Request {
     pagination?: {
-      page: number
-      offset: number
-      limit: number
-      start: number
-      end: number
+      page?: number
+      offset?: number
+      limit?: number
+      start?: number
+      end?: number
+      cursor?: number | null
     }
     paramsMap?: Record<string, number>
     queryMap?: {
@@ -17,6 +18,7 @@ declare module 'express-serve-static-core' {
       emailChangeToken?: string
       resetPasswordToken?: string
       adminDeleteUserToken?: string
+      cursor?: number | string | null
     }
     user?: {
       userId: number
@@ -29,3 +31,5 @@ declare module 'express-serve-static-core' {
     fileValidationError?: null | string
   }
 }
+
+export type PaginationType = 'cursor' | 'offset'

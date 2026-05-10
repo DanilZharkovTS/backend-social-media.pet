@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "lib": ["ES2022"],
     "esModuleInterop": true,
     "noEmit": true,
     "allowImportingTsExtensions": true

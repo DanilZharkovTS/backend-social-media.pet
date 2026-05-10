@@ -14,4 +14,17 @@ export const cacheService = {
       }
     })
   },
+  updateNotificationsCount: async (userId: number, value: number) => {
+    const redis = getRedis()
+    const redisKey = `users:${userId}:notifications:count`
+
+    return await redis.incrby(redisKey, value)
+  },
+  resetNotificationsCount: async (userId: number) => {
+    const redis = getRedis()
+    const redisKey = `users:${userId}:notifications:count`
+
+    await redis.set(redisKey, 0)
+    return 0
+  },
 }

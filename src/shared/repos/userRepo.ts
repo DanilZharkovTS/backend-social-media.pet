@@ -97,6 +97,20 @@ export const userRepo = {
       [stripeCustomerId, userId]
     )
   },
+  updateLastReadNotificationId: async (
+    userId: number,
+    notificationId: number
+  ) => {
+    const result = await pool.query(
+      `UPDATE users
+        SET last_read_notification_id = $2
+      WHERE id = $1
+      AND last_read_notification_id < $2
+      RETURNING *`,
+      [userId, notificationId]
+    )    
+    return result.rows[0]
+  },
   deleteUserById: (userId: number) => {
     return pool.query(
       `DELETE FROM users

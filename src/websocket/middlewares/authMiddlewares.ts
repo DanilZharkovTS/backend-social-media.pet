@@ -18,8 +18,23 @@ export const ioAuthMiddlewares = {
       socket.user = payload
       next()
     } catch (err) {
-      const error = ApiError('Unauthorized', 401)
-      console.log(error)
+      next(err)
+    }
+  },
+  requireRoomMember: (roomName: string, idKey: string) => {
+    return (socket: Socket, data: any, ctx: any, next: IoNextFn) => {
+      const key = idKey ?? `${roomName}Id`
+      const roomId = ctx.validIds[key]
+
+      if (roomId === undefined) {
+        throw ApiError(`Missing id: ${key}`, 400)
+      }
+
+      if (!socket.rooms.has(`${roomName}:${roomId}`)) {
+        throw ApiError('You are not in this chat', 403)
+      }
+
+      next()
     }
   },
 }

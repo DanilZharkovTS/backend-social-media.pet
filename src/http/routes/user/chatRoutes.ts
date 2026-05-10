@@ -12,7 +12,7 @@ router.get(
   '/',
   rateLimiter(60, 60, 'getChats'),
   authMiddlewares.verifyAccessToken,
-  paginate,
+  paginate('offset'),
   chatController.getUserChats
 )
 router.get(
@@ -45,7 +45,7 @@ router.get(
   '/:chatId/peeps',
   authMiddlewares.verifyAccessToken,
   setParamsId(['chatId']),
-  paginate,
+  paginate('offset'),
   chatMiddlewares.findPeeps,
   chatController.findPeeps
 )

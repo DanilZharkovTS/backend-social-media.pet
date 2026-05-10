@@ -8,6 +8,7 @@ import {
   markPeepsAsReadUpToDTO,
   updateReactionDTO,
 } from '../../shared/interfaces/user/chat/chatInterfaces'
+import { notificationHandler } from './notificationHandler'
 
 export const chatPeepHandler = {
   addPeep: async (
@@ -18,14 +19,16 @@ export const chatPeepHandler = {
   ) => {
     try {
       const chatId = ctx.validIds.chatId
-      const result = await chatPeepService.addPeep(socket.user, ctx)
- 
-      socket.emit('newPeep', result)
-      socket.to(`chats:${chatId}`).emit('newPeep', result)
-      console.log('Peep added')
+      const { response, internal } = await chatPeepService.addPeep(
+        socket.user,
+        ctx
+      )
+      socket.emit('newPeep', { newPeep: response })
+      socket.to(`chats:${chatId}`).emit('newPeep', { newPeep: response })
+
+      notificationHandler.notifyOpp(socket, internal)
     } catch (err) {
-      console.log(err);
-      
+      console.log(err)
       next(err)
     }
   },
@@ -87,14 +90,19 @@ export const chatPeepHandler = {
     next: IoNextFn
   ) => {
     try {
-      const { chatId } = ctx.validIds
-      const r = await chatPeepService.updateReaction(socket.user, ctx)
+      const chatId = ctx.validIds.chatId
+      const { response, internal } = await chatPeepService.updateReaction(
+        socket.user,
+        ctx
+      )
 
-      socket.emit('peeps:updateReaction', r)
-      socket.to(`chats:${chatId}`).emit('peeps:updateReaction', r)
-    } catch (err) {
-      console.log(err);
+      socket.emit('peeps:updateReaction', response)
+      socket.to(`chats:${chatId}`).emit('peeps:updateReaction', response)
+
       
+      notificationHandler.notifyOpp(socket, internal)      
+    } catch (err) {
+      console.log(err)
       next(err)
     }
   },

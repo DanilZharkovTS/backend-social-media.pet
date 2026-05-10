@@ -7,43 +7,80 @@ import {
   markPeepsAsReadUpToDTO,
   Peep,
   PeepWithReaction,
+  PeepWithReplyInfo,
   Reaction,
   ReactionActionType,
   updateReactionDTO,
 } from '../../../interfaces/user/chat/chatInterfaces'
+import { Notification } from '../../../interfaces/user/notificationInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'
 import { ApiError } from '../../../lib/ApiErrors'
 import { getRedis } from '../../../lib/redisClient'
 import { chatParticipantsRepo } from '../../../repos/user/chats/chatParticipantsRepo'
 import { chatPeepsRepo } from '../../../repos/user/chats/chatPeepsRepo'
+import { notificationsRepo } from '../../../repos/user/notificationsRepo'
 import { cacheService } from '../../shared/cacheService'
 
 export const chatPeepService = {
   addPeep: async (
-    user: TokenPayload,
+    { userId }: TokenPayload,
     { validIds: { chatId, replyTo }, validData: { content } }: addPeepDTO
   ) => {
     const redis = getRedis()
     const redisKey = `chats:${chatId}:peeps`
 
     const peepResult = await chatPeepsRepo.addPeep(
-      user.userId,
+      userId,
       chatId,
       content,
       replyTo
     )
+    const dbPeep: PeepWithReplyInfo = peepResult.rows[0]
 
-    const dbPeep = peepResult.rows[0]
+    const opponentResult = await chatParticipantsRepo.findOpponentByChatId(
+      chatId,
+      userId
+    )
+    const dbOpponent: ChatParticipant = opponentResult.rows[0]
+
+    const newNotification: Notification =
+      await notificationsRepo.addNotification(
+        userId,
+        dbOpponent.user_id,
+        dbPeep.reply_id ? 'reply' : 'peep',
+        'peep',
+        dbPeep.id
+      )
+    
 
     const redisResult = await redis.lrange(redisKey, -50, -1)
     const redisPeeps = redisResult.map((p) => JSON.parse(p))
 
     if (redisPeeps.length) {
-      await redis.rpush(redisKey, JSON.stringify({...dbPeep, reactions: []}))
+      await redis.rpush(redisKey, JSON.stringify({ ...dbPeep, reactions: [] }))
       await redis.ltrim(redisKey, -1000, -1)
     }
 
-    return { newPeep: { ...dbPeep, reactions: [], status: 'sent' } }
+    const newNotificationsCount = await cacheService.updateNotificationsCount(
+      dbOpponent.user_id,
+      +1
+    )
+
+    const notifyOpp = !!dbOpponent
+
+    return {
+      response: { ...dbPeep, reactions: [], status: 'sent' },
+      internal: {
+        notifyOpp,
+        notificationUpdate: notifyOpp
+          ? {
+              userId: dbOpponent.user_id,
+              newNotification,
+              newNotificationsCount,
+            }
+          : null,
+      },
+    }
   },
 
   findPeeps: async (
@@ -67,7 +104,7 @@ export const chatPeepService = {
 
     const lastRead = dbOpponent.last_read_peep_id ?? 0
 
-    if (!search && p.page === 1) {      
+    if (!search && p.page === 1) {
       const redisResult = await redis.lrange(redisKey, p.start, p.end)
 
       if (redisResult.length) {
@@ -209,7 +246,10 @@ export const chatPeepService = {
 
     const myReaction = dbPeep.reactions.find((r) => r.user_id === userId)
     let reactions = dbPeep.reactions.filter((r) => r.user_id !== userId)
+
     let type: ReactionActionType
+    let newNotification: Notification
+    let newNotificationsCount: number
 
     if (myReaction && myReaction.emoji === emoji) {
       await chatPeepsRepo.deleteReactionByPeepAndUserIds(peepId, userId)
@@ -218,11 +258,39 @@ export const chatPeepService = {
       const reaction = await chatPeepsRepo.upsertReaction(peepId, userId, emoji)
       reactions = [...reactions, reaction]
       type = myReaction ? 'updated' : 'added'
+
+      if (type === 'added' && dbPeep.sender_id !== userId) {
+        newNotification = await notificationsRepo.addNotification(
+          userId,
+          dbPeep.sender_id,
+          'reaction',
+          'peep',
+          peepId
+        )
+        newNotificationsCount = await cacheService.updateNotificationsCount(
+          dbPeep.sender_id,
+          +1
+        )
+      }
     }
 
     await cacheService.invalidateByPrefix(`chats:${chatId}:peeps`)
 
-    return { peepId, reactions, type }
+    const notifyOpp = !!newNotification
+
+    return {
+      response: { peepId, reactions, type },
+      internal: {
+        notifyOpp,
+        notificationUpdate: notifyOpp
+          ? {
+              userId: dbPeep.sender_id,
+              newNotification,
+              newNotificationsCount,
+            }
+          : null,
+      },
+    }
   },
   deletePeep: async (user: TokenPayload, { validIds }: deletePeepDTO) => {
     const { peepId } = validIds

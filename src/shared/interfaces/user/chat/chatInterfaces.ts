@@ -50,6 +50,13 @@ export interface PeepWithReaction extends Peep {
   reactions: Reaction[]
 }
 
+export interface PeepWithReplyInfo extends Peep {
+  reply_id: number
+  reply_content: string
+  reply_sender_id: number
+  reply_name: string
+}
+
 export type ReactionActionType = 'added' | 'updated' | 'deleted' | 'unchanged'
 
 export interface createOrFindPrivateChatDTO {

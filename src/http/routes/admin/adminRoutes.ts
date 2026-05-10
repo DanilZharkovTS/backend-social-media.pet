@@ -16,7 +16,7 @@ const router = Router()
 router.get(
   '/users',
   rateLimiter(10, 60, 'adminUsersList'),
-  paginate,
+  paginate('offset'),
   userMiddlewares.findAsAdmin,
   userController.findAsAdmin
 )
