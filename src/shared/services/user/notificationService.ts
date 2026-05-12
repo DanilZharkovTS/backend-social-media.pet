@@ -26,9 +26,12 @@ export const notificationService = {
 
     const nextCursor = notificationsWithStatus.at(-1)?.id
 
+    const hasMore = notificationsWithStatus.length === 50
+
     return {
       notifications: notificationsWithStatus,
       nextCursor,
+      hasMore,
     }
   },
   openNotification: async (
