@@ -20,15 +20,18 @@ export const notificationService = {
     const notificationsWithStatus = notifications.map((n) => {
       return {
         ...n,
-        isRead: n.id <= last_read_notification_id ? 'read' : 'unread',
+        isRead: n.id <= last_read_notification_id ? true : false,
       }
     })
 
     const nextCursor = notificationsWithStatus.at(-1)?.id
 
+    const hasMore = notificationsWithStatus.length === 50
+
     return {
       notifications: notificationsWithStatus,
       nextCursor,
+      hasMore,
     }
   },
   openNotification: async (
