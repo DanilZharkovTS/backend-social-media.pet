@@ -28,6 +28,9 @@ export const notificationsRepo = {
             SELECT name FROM users WHERE id = $1
           ) as sender_name,
           (
+            SELECT avatar_url FROM users WHERE id = $1
+          ) as sender_avatar_url,
+          (
             SELECT last_read_notification_id FROM users WHERE id = $2
           ) last_read_notification_id`,
       [from, to, type, entityType, entityId]
@@ -50,6 +53,7 @@ export const notificationsRepo = {
         n.created_at,
         n.opened_at,
         sender.name AS sender_name,
+        sender.avatar_url AS sender_avatar_url,
         receiver.last_read_notification_id
       FROM notifications n
         JOIN users sender ON n.sender_id = sender.id
