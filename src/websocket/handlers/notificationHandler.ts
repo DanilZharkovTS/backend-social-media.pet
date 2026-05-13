@@ -46,8 +46,8 @@ export const notificationHandler = {
 
       socket
         .to(`user:${userId}`)
-        .emit('chat:notifications:opened_all', notificationIds)
-      socket.emit('chat:notifications:opened_all', notificationIds)
+        .emit('notifications:opened_some', notificationIds)
+      socket.emit('notifications:opened_some', notificationIds)
 
       socket
         .to(`user:${userId}`)
