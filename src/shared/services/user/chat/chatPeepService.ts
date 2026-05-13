@@ -49,9 +49,9 @@ export const chatPeepService = {
         dbOpponent.user_id,
         dbPeep.reply_id ? 'reply' : 'peep',
         'peep',
-        dbPeep.id
+        dbPeep.id,
+        { chat_id: chatId}
       )
-    
 
     const redisResult = await redis.lrange(redisKey, -50, -1)
     const redisPeeps = redisResult.map((p) => JSON.parse(p))
