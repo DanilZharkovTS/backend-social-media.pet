@@ -28,6 +28,9 @@ export const notificationService = {
 
     const hasMore = notificationsWithStatus.length === 50
 
+    console.log(notificationsWithStatus);
+    
+
     return {
       notifications: notificationsWithStatus,
       nextCursor,

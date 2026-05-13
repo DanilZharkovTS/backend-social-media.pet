@@ -10,11 +10,12 @@ export const notificationsRepo = {
     to: number,
     type: NotificationType,
     entityType: NotificationEntityType,
-    entityId: number
+    entityId: number,
+    context?: Record<string, number>
   ) => {
     const result = await pool.query(
-      `INSERT INTO notifications (sender_id, receiver_id, type, entity_type, entity_id)
-        VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO notifications (sender_id, receiver_id, type, entity_type, entity_id, context)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING
           id::int,
           sender_id::int,
@@ -23,6 +24,7 @@ export const notificationsRepo = {
           entity_type,
           entity_id,
           created_at,
+          context,
           opened_at,
           (
             SELECT name FROM users WHERE id = $1
@@ -33,7 +35,7 @@ export const notificationsRepo = {
           (
             SELECT last_read_notification_id FROM users WHERE id = $2
           ) last_read_notification_id`,
-      [from, to, type, entityType, entityId]
+      [from, to, type, entityType, entityId, context ?? {}]
     )
     return result.rows[0]
   },
@@ -52,6 +54,7 @@ export const notificationsRepo = {
         n.entity_id,
         n.created_at,
         n.opened_at,
+        n.context,
         sender.name AS sender_name,
         sender.avatar_url AS sender_avatar_url,
         receiver.last_read_notification_id

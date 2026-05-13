@@ -22,7 +22,7 @@ export const notificationHandler = {
       const { notification } = result
 
       socket
-        .to(`users:${notification.receiver_id}`)
+        .to(`user:${notification.receiver_id}`)
         .emit('notifications:opened', result)
       socket.emit('notifications:opened', result)
     } catch (err) {
