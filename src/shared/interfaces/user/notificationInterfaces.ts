@@ -34,3 +34,9 @@ export interface internalNotificationPayload {
     newNotificationsCount: number
   } | null
 }
+
+export interface openAllChatNotificationsDTO {
+  validIds: {
+    chatId: number
+  }
+}

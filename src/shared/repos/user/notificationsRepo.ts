@@ -82,4 +82,16 @@ export const notificationsRepo = {
     )
     return result.rows[0]
   },
+  updateChatNotificationsToOpened: async (userId: number, chatId: number) => {
+    const res = await pool.query(
+      `UPDATE notifications
+      SET opened_at = NOW()
+      WHERE receiver_id = $1
+      AND context->>'chat_id' = $2
+      AND opened_at IS NULL
+      RETURNING *`,
+      [userId, chatId]
+    )
+    return res.rows
+  },
 }

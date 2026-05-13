@@ -1,6 +1,7 @@
 import { TokenPayload } from '../../interfaces/auth/authInterfaces'
 import {
   Notification,
+  openAllChatNotificationsDTO,
   openNotificationDTO,
 } from '../../interfaces/user/notificationInterfaces'
 import { User } from '../../interfaces/user/userInterfaces'
@@ -28,8 +29,7 @@ export const notificationService = {
 
     const hasMore = notificationsWithStatus.length === 50
 
-    console.log(notificationsWithStatus);
-    
+    console.log(notificationsWithStatus)
 
     return {
       notifications: notificationsWithStatus,
@@ -71,5 +71,23 @@ export const notificationService = {
     )
 
     return { lastReadNotificationId, userId, newNotificationsCount }
+  },
+  openAllChatNotifications: async (
+    { userId }: TokenPayload,
+    { validIds: { chatId } }: openAllChatNotificationsDTO
+  ) => {
+    const notifications: Notification[] =
+      await notificationsRepo.updateChatNotificationsToOpened(userId, chatId)
+
+    if (notifications.length === 0) return
+
+    const notificationIds = notifications.map((n) => n.id)
+
+    const newNotificationsCount = await cacheService.updateNotificationsCount(
+      userId,
+      -notificationIds.length
+    )
+
+    return { notificationIds, newNotificationsCount, userId}
   },
 }

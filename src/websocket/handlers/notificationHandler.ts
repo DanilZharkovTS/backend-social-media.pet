@@ -2,6 +2,7 @@ import { Socket } from 'socket.io'
 import { IoNextFn } from '../../shared/interfaces/global/socket'
 import {
   internalNotificationPayload,
+  openAllChatNotificationsDTO,
   openNotificationDTO,
   readNotificationsUpToDTO,
 } from '../../shared/interfaces/user/notificationInterfaces'
@@ -27,6 +28,31 @@ export const notificationHandler = {
       socket.emit('notifications:opened', result)
     } catch (err) {
       next(err)
+    }
+  },
+  openAllChatNotifications: async (
+    socket: Socket,
+    data: any,
+    ctx: openAllChatNotificationsDTO,
+    next: IoNextFn
+  ) => {
+    const result = await notificationService.openAllChatNotifications(
+      socket.user,
+      ctx
+    )
+
+    if (result) {
+      const { notificationIds, userId, newNotificationsCount } = result
+
+      socket
+        .to(`user:${userId}`)
+        .emit('chat:notifications:opened_all', notificationIds)
+      socket.emit('chat:notifications:opened_all', notificationIds)
+
+      socket
+        .to(`user:${userId}`)
+        .emit('notifications:count', { newNotificationsCount })
+      socket.emit('notifications:countUpdated', { newNotificationsCount })
     }
   },
   readNotificationUpTo: async (
@@ -66,7 +92,7 @@ export const notificationHandler = {
       socket.to(`user:${userId}`).emit('notifications:new', newNotification)
       socket.to(`user:${userId}`).emit('notifications:countUpdated', {
         newNotificationsCount,
-      })      
+      })
     }
   },
 }

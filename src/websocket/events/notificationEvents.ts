@@ -15,6 +15,18 @@ export const registerNotificationEvents = (socket: Socket) => {
   )
 
   socket.on(
+    'chat:notifications:open_all',
+    withMiddlewares(
+      socket,
+      [
+        resolveIds(['chatId']),
+        ioAuthMiddlewares.requireRoomMember('chats', 'chatId'),
+      ],
+      notificationHandler.openAllChatNotifications
+    )
+  )
+
+  socket.on(
     'notifications:readUpTo',
     withMiddlewares(
       socket,
