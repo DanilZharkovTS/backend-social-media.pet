@@ -74,7 +74,7 @@ export const notificationService = {
 
     const newNotificationsCount = await cacheService.updateNotificationsCount(
       userId,
-      +1
+      -1
     )
 
     return { notification, newNotificationsCount }

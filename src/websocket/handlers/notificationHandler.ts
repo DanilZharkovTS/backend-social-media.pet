@@ -16,16 +16,17 @@ export const notificationHandler = {
     next: IoNextFn
   ) => {
     try {
-      const result = await notificationService.openNotification(
-        socket.user,
-        ctx
-      )
-      const { notification } = result
+      const { notification, newNotificationsCount } =
+        await notificationService.openNotification(socket.user, ctx)
+      const receiver = notification.receiver_id
+
+      socket.to(`user:${receiver}`).emit('notifications:opened', notification)
+      socket.emit('notifications:opened', notification)
 
       socket
-        .to(`user:${notification.receiver_id}`)
-        .emit('notifications:opened', result)
-      socket.emit('notifications:opened', result)
+        .to(`user:${receiver}`)
+        .emit('notifications:countUpdated', { newNotificationsCount })
+      socket.emit('notifications:countUpdated', { newNotificationsCount })
     } catch (err) {
       next(err)
     }
@@ -51,7 +52,7 @@ export const notificationHandler = {
 
       socket
         .to(`user:${userId}`)
-        .emit('notifications:count', { newNotificationsCount })
+        .emit('notifications:countUpdated', { newNotificationsCount })
       socket.emit('notifications:countUpdated', { newNotificationsCount })
     }
   },
@@ -86,7 +87,7 @@ export const notificationHandler = {
   notifyOpp: (socket: Socket, internal: internalNotificationPayload) => {
     if (internal.notifyOpp && internal.notificationUpdate) {
       console.log(internal)
-      
+
       const {
         notificationUpdate: { userId, newNotificationsCount, newNotification },
       } = internal
