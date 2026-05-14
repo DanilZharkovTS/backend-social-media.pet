@@ -85,6 +85,8 @@ export const notificationHandler = {
   },
   notifyOpp: (socket: Socket, internal: internalNotificationPayload) => {
     if (internal.notifyOpp && internal.notificationUpdate) {
+      console.log(internal)
+      
       const {
         notificationUpdate: { userId, newNotificationsCount, newNotification },
       } = internal

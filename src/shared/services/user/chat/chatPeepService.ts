@@ -20,6 +20,7 @@ import { chatParticipantsRepo } from '../../../repos/user/chats/chatParticipants
 import { chatPeepsRepo } from '../../../repos/user/chats/chatPeepsRepo'
 import { notificationsRepo } from '../../../repos/user/notificationsRepo'
 import { cacheService } from '../../shared/cacheService'
+import { notificationService } from '../notificationService'
 
 export const chatPeepService = {
   addPeep: async (
@@ -43,16 +44,6 @@ export const chatPeepService = {
     )
     const dbOpponent: ChatParticipant = opponentResult.rows[0]
 
-    const newNotification: Notification =
-      await notificationsRepo.addNotification(
-        userId,
-        dbOpponent.user_id,
-        dbPeep.reply_id ? 'reply' : 'peep',
-        'peep',
-        dbPeep.id,
-        { chat_id: chatId}
-      )
-
     const redisResult = await redis.lrange(redisKey, -50, -1)
     const redisPeeps = redisResult.map((p) => JSON.parse(p))
 
@@ -61,10 +52,15 @@ export const chatPeepService = {
       await redis.ltrim(redisKey, -1000, -1)
     }
 
-    const newNotificationsCount = await cacheService.updateNotificationsCount(
-      dbOpponent.user_id,
-      +1
-    )
+    const { newNotification, newNotificationsCount } =
+      await notificationService.createAndCount(
+        userId,
+        dbOpponent.user_id,
+        dbPeep.reply_id ? 'reply' : 'peep',
+        'peep',
+        dbPeep.id,
+        { chat_id: chatId }
+      )
 
     const notifyOpp = !!dbOpponent
 
@@ -240,7 +236,7 @@ export const chatPeepService = {
     const { emoji } = validData
 
     const dbPeep: PeepWithReaction =
-      await chatPeepsRepo.findByIdAndUserIdWithReactions(peepId, userId)
+      await chatPeepsRepo.findByIdAndUserIdWithReactions(peepId, userId)    
 
     if (!dbPeep) throw ApiError('Peep not found', 404)
 
@@ -260,17 +256,18 @@ export const chatPeepService = {
       type = myReaction ? 'updated' : 'added'
 
       if (type === 'added' && dbPeep.sender_id !== userId) {
-        newNotification = await notificationsRepo.addNotification(
-          userId,
-          dbPeep.sender_id,
-          'reaction',
-          'peep',
-          peepId
-        )
-        newNotificationsCount = await cacheService.updateNotificationsCount(
-          dbPeep.sender_id,
-          +1
-        )
+        const { newNotification: n, newNotificationsCount: nc } =
+          await notificationService.createAndCount(
+            userId,
+            dbPeep.sender_id,
+            'reaction',
+            'peep',
+            peepId,
+            { chat_id:dbPeep.chat_id }
+          )
+
+        newNotification = n
+        newNotificationsCount = nc
       }
     }
 
