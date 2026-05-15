@@ -1,6 +1,9 @@
 import { TokenPayload } from '../../interfaces/auth/authInterfaces'
 import {
   Notification,
+  NotificationEntityType,
+  NotificationType,
+  openAllChatNotificationsDTO,
   openNotificationDTO,
 } from '../../interfaces/user/notificationInterfaces'
 import { User } from '../../interfaces/user/userInterfaces'
@@ -10,6 +13,30 @@ import { userRepo } from '../../repos/userRepo'
 import { cacheService } from '../shared/cacheService'
 
 export const notificationService = {
+  createAndCount: async (
+    userId: number,
+    opponentId: number,
+    type: NotificationType,
+    entityType: NotificationEntityType,
+    entityId: number,
+    context?: Record<string, number>
+  ) => {
+    const newNotification: Notification =
+      await notificationsRepo.addNotification(
+        userId,
+        opponentId,
+        type,
+        entityType,
+        entityId,
+        context
+      )
+    const newNotificationsCount = await cacheService.updateNotificationsCount(
+      opponentId,
+      +1
+    )
+
+    return {newNotification,newNotificationsCount}
+  },
   getNotifications: async ({ userId }: TokenPayload, cursor: number) => {
     const notifications: Notification[] =
       await notificationsRepo.getAllByUserId(userId, cursor)
@@ -27,9 +54,6 @@ export const notificationService = {
     const nextCursor = notificationsWithStatus.at(-1)?.id
 
     const hasMore = notificationsWithStatus.length === 50
-
-    console.log(notificationsWithStatus);
-    
 
     return {
       notifications: notificationsWithStatus,
@@ -50,7 +74,7 @@ export const notificationService = {
 
     const newNotificationsCount = await cacheService.updateNotificationsCount(
       userId,
-      +1
+      -1
     )
 
     return { notification, newNotificationsCount }
@@ -71,5 +95,23 @@ export const notificationService = {
     )
 
     return { lastReadNotificationId, userId, newNotificationsCount }
+  },
+  openAllChatNotifications: async (
+    { userId }: TokenPayload,
+    { validIds: { chatId } }: openAllChatNotificationsDTO
+  ) => {
+    const notifications: Notification[] =
+      await notificationsRepo.updateChatNotificationsToOpened(userId, chatId)
+
+    if (notifications.length === 0) return
+
+    const notificationIds = notifications.map((n) => n.id)
+
+    const newNotificationsCount = await cacheService.updateNotificationsCount(
+      userId,
+      -notificationIds.length
+    )
+
+    return { notificationIds, newNotificationsCount, userId }
   },
 }

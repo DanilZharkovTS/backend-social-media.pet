@@ -107,6 +107,7 @@ export const chatPeepsRepo = {
       `SELECT 
         cp.id,
         cp.sender_id,
+        cp.chat_id,
         COALESCE(
             json_agg(
               json_build_object(

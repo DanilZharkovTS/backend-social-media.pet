@@ -17,8 +17,15 @@ export const cacheService = {
   updateNotificationsCount: async (userId: number, value: number) => {
     const redis = getRedis()
     const redisKey = `users:${userId}:notifications:count`
+    let newCount: number
 
-    return await redis.incrby(redisKey, value)
+    newCount = await redis.incrby(redisKey, value)
+
+    if (newCount < 0) {
+      await redis.set(redisKey, 0)
+      newCount = 0
+    }
+    return newCount
   },
   resetNotificationsCount: async (userId: number) => {
     const redis = getRedis()

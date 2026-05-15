@@ -2,6 +2,7 @@ import { Socket } from 'socket.io'
 import { IoNextFn } from '../../shared/interfaces/global/socket'
 import {
   internalNotificationPayload,
+  openAllChatNotificationsDTO,
   openNotificationDTO,
   readNotificationsUpToDTO,
 } from '../../shared/interfaces/user/notificationInterfaces'
@@ -15,18 +16,44 @@ export const notificationHandler = {
     next: IoNextFn
   ) => {
     try {
-      const result = await notificationService.openNotification(
-        socket.user,
-        ctx
-      )
-      const { notification } = result
+      const { notification, newNotificationsCount } =
+        await notificationService.openNotification(socket.user, ctx)
+      const receiver = notification.receiver_id
+
+      socket.to(`user:${receiver}`).emit('notifications:opened', notification)
+      socket.emit('notifications:opened', notification)
 
       socket
-        .to(`user:${notification.receiver_id}`)
-        .emit('notifications:opened', result)
-      socket.emit('notifications:opened', result)
+        .to(`user:${receiver}`)
+        .emit('notifications:countUpdated', { newNotificationsCount })
+      socket.emit('notifications:countUpdated', { newNotificationsCount })
     } catch (err) {
       next(err)
+    }
+  },
+  openAllChatNotifications: async (
+    socket: Socket,
+    data: any,
+    ctx: openAllChatNotificationsDTO,
+    next: IoNextFn
+  ) => {
+    const result = await notificationService.openAllChatNotifications(
+      socket.user,
+      ctx
+    )
+
+    if (result) {
+      const { notificationIds, userId, newNotificationsCount } = result
+
+      socket
+        .to(`user:${userId}`)
+        .emit('notifications:opened_some', notificationIds)
+      socket.emit('notifications:opened_some', notificationIds)
+
+      socket
+        .to(`user:${userId}`)
+        .emit('notifications:countUpdated', { newNotificationsCount })
+      socket.emit('notifications:countUpdated', { newNotificationsCount })
     }
   },
   readNotificationUpTo: async (
@@ -59,6 +86,8 @@ export const notificationHandler = {
   },
   notifyOpp: (socket: Socket, internal: internalNotificationPayload) => {
     if (internal.notifyOpp && internal.notificationUpdate) {
+      console.log(internal)
+
       const {
         notificationUpdate: { userId, newNotificationsCount, newNotification },
       } = internal
@@ -66,7 +95,7 @@ export const notificationHandler = {
       socket.to(`user:${userId}`).emit('notifications:new', newNotification)
       socket.to(`user:${userId}`).emit('notifications:countUpdated', {
         newNotificationsCount,
-      })      
+      })
     }
   },
 }
