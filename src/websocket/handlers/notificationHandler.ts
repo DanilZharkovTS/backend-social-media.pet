@@ -73,12 +73,14 @@ export const notificationHandler = {
 
         socket.emit('notifications:readUpToSuccess', {
           lastReadNotificationId,
-          newNotificationsCount,
         })
         socket.to(`user:${userId}`).emit('notifications:readUpToSuccess', {
           lastReadNotificationId,
-          newNotificationsCount,
         })
+        socket
+          .to(`user:${userId}`)
+          .emit('notifications:countUpdated', { newNotificationsCount })
+        socket.emit('notifications:countUpdated', { newNotificationsCount })
       }
     } catch (err) {
       next(err)
