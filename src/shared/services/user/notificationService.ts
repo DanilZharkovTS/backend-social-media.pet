@@ -67,7 +67,7 @@ export const notificationService = {
 
     const notificationsCount = await cacheService.findByKey(redisKey)
 
-    return { notificationsCount: Number(notificationsCount) ?? 0 }
+    return { newNotificationsCount: Number(notificationsCount) ?? 0 }
   },
 
   openNotification: async (
