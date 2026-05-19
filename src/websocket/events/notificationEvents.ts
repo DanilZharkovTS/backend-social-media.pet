@@ -6,6 +6,10 @@ import { ioAuthMiddlewares } from '../middlewares/authMiddlewares'
 
 export const registerNotificationEvents = (socket: Socket) => {
   socket.on(
+    'notifications:count',
+    withMiddlewares(socket, [], notificationHandler.getNotificationsCount)
+  )
+  socket.on(
     'notifications:open',
     withMiddlewares(
       socket,

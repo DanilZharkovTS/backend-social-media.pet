@@ -1,6 +1,11 @@
 import { getRedis } from '../../lib/redisClient'
 
 export const cacheService = {
+  findByKey: async (key: string) => {
+    const redis = getRedis()
+    const result = await redis.get(key)
+    return result
+  },
   invalidateByPrefix: async (prefix: string) => {
     const redis = getRedis()
 

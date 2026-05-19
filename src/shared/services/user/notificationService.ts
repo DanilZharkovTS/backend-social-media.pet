@@ -1,3 +1,4 @@
+import { no } from 'zod/v4/locales'
 import { TokenPayload } from '../../interfaces/auth/authInterfaces'
 import {
   Notification,
@@ -35,7 +36,7 @@ export const notificationService = {
       +1
     )
 
-    return {newNotification,newNotificationsCount}
+    return { newNotification, newNotificationsCount }
   },
   getNotifications: async ({ userId }: TokenPayload, cursor: number) => {
     const notifications: Notification[] =
@@ -61,6 +62,14 @@ export const notificationService = {
       hasMore,
     }
   },
+  getNotificationsCount: async ({ userId }: TokenPayload) => {
+    const redisKey = `users:${userId}:notifications:count`
+
+    const notificationsCount = await cacheService.findByKey(redisKey)
+
+    return { newNotificationsCount: Number(notificationsCount) ?? 0 }
+  },
+
   openNotification: async (
     { userId }: TokenPayload,
     { validIds: { notificationId } }: openNotificationDTO
