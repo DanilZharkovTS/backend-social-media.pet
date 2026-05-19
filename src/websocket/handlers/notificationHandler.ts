@@ -7,8 +7,24 @@ import {
   readNotificationsUpToDTO,
 } from '../../shared/interfaces/user/notificationInterfaces'
 import { notificationService } from '../../shared/services/user/notificationService'
+import { tr } from 'zod/v4/locales'
 
 export const notificationHandler = {
+  getNotificationsCount: async (
+    socket: Socket,
+    data: any,
+    ctx: any,
+    next: IoNextFn
+  ) => {
+    try {
+      const result = await notificationService.getNotificationsCount(
+        socket.user
+      )
+      socket.emit('notifications:countUpdated', result)
+    } catch (err) {
+      next(err)
+    }
+  },
   openNotification: async (
     socket: Socket,
     data: any,
