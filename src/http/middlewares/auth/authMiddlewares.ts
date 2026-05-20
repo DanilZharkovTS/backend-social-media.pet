@@ -6,6 +6,7 @@ import { ApiError } from '../../../shared/lib/ApiErrors.ts'
 import {
   validateChangeEmail,
   validateForgotPassword,
+  validateGetAuthProviderUrl,
   validateLoginEmailConfirm,
   validateLoginUser,
   validateRegisterUser,
@@ -14,6 +15,7 @@ import {
   validateResetPasswordQuery,
   validateVerifyEmail,
 } from '../../../shared/utils/validators/authValidator.ts'
+import { ALLOWED_AUTH_PROVIDERS } from '../../../shared/cfg/providers.ts'
 
 export const authMiddlewares = {
   register: (req: Request, res: Response, next: NextFunction) => {
@@ -187,6 +189,23 @@ export const authMiddlewares = {
 
       req.queryMap = { resetPasswordToken: hashedResetPasswordToken }
 
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  //oauth
+  getAuthProviderUrl: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const provider = ALLOWED_AUTH_PROVIDERS.find(
+        (p) => p === req.params.provider
+      )
+
+      if (!provider) {
+        throw ApiError('Provider is not allowed', 400)
+      }
+
+      req.paramsMap = { provider }
       next()
     } catch (err) {
       next(err)

@@ -65,3 +65,5 @@ export interface resetPasswordDTO {
   newPassword: string
   confirmPassword: string
 }
+
+export type AuthProvider = 'google'

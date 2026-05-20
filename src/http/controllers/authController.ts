@@ -1,5 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import { authService } from '../../shared/services/auth/authService.ts'
+import { oauthService } from '../../shared/services/auth/oauthService.ts'
+import { AuthProvider } from '../../shared/interfaces/auth/authInterfaces.ts'
 
 export const authController = {
   register: async (req: Request, res: Response, next: NextFunction) => {
@@ -144,6 +146,17 @@ export const authController = {
     } catch (err) {
       console.log(err)
 
+      next(err)
+    }
+  },
+  //oauth
+  getAuthProviderUrl: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = oauthService.getAuthProviderUrl(
+        req.paramsMap.provider as AuthProvider
+      )
+      res.status(200).json(result)
+    } catch (err) {      
       next(err)
     }
   },

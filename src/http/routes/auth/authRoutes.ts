@@ -83,4 +83,12 @@ router.get(
   authController.logout
 )
 
+//oauth
+
+router.get(
+  '/:provider',
+  authMiddlewares.getAuthProviderUrl,
+  authController.getAuthProviderUrl
+)
+
 export default router
