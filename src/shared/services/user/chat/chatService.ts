@@ -62,8 +62,7 @@ export const chatService = {
     )
 
     const userIds = ops.map((o) => `users:${o.user_id}:online`)
-    const statuses = await redis.mget(...userIds)
-
+    const statuses = userIds.length ? await redis.mget(...userIds) : []
     const onlineOps = ops.filter((o, i) => statuses[i])
 
     return { ops, onlineOps, userId }

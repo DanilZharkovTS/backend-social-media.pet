@@ -160,14 +160,24 @@ export const authController = {
       next(err)
     }
   },
-  authProviderCallback: (req: Request, res: Response, next: NextFunction) => {
+  authProviderCallback: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      const result = oauthService.providerCallback(
+      const result = await oauthService.providerCallback(
         req.paramsMap.provider as AuthProvider,
         req.query.code as string,
         req.query.state as string
       )
-      res.status(200).json(result)
+
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      })
+      res.redirect(`${process.env.FRONTEND_URL}/profile`)
     } catch (err) {
       next(err)
     }

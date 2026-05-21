@@ -42,6 +42,12 @@ export interface registerUserDTO {
   name: string
 }
 
+export interface createVerifiedUserData {
+  email: string
+  name: string
+  avatar_url: string
+}
+
 export interface loginUserDTO {
   email: string
   password: string
