@@ -42,7 +42,7 @@ export interface registerUserDTO {
   name: string
 }
 
-export interface createVerifiedUserData {
+export interface providerUserDTO {
   email: string
   name: string
   avatar_url: string

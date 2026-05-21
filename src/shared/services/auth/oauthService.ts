@@ -1,9 +1,13 @@
 import axios from 'axios'
-import { AuthProvider } from '../../interfaces/auth/authInterfaces'
+import {
+  AuthProvider,
+  providerUserDTO,
+} from '../../interfaces/auth/authInterfaces'
 import { userRepo } from '../../repos/userRepo'
 import { generateRefreshToken } from '../../utils/helpers/auth/refreshToken'
 import { authRepo } from '../../repos/authRepo'
 import { generateAccessToken } from '../../utils/helpers/auth/accessToken'
+import { ApiError } from '../../lib/ApiErrors'
 
 export const oauthService = {
   getGoogleAuthUrl: () => {
@@ -20,120 +24,73 @@ export const oauthService = {
     return { url }
   },
   providerCallback: async (
-  provider: AuthProvider,
-  code: string,
-  state: string
-) => {
-  console.log("🚀 providerCallback started", { provider, code, state })
-
-  switch (provider) {
-    case "google":
-      try {
-        console.log("📡 Step 1: exchanging code for token")
-
-        const { data: res } = await axios.post(
-          "https://oauth2.googleapis.com/token",
+    provider: AuthProvider,
+    code: string,
+    state: string
+  ) => {
+    switch (provider) {
+      case 'google':
+        const { data: tokenData } = await axios.post(
+          'https://oauth2.googleapis.com/token',
           new URLSearchParams({
             client_id: process.env.GOOGLE_CLIENT_ID,
             client_secret: process.env.GOOGLE_CLIENT_SECRET,
             code,
-            grant_type: "authorization_code",
+            grant_type: 'authorization_code',
             redirect_uri: process.env.GOOGLE_REDIRECT_URI,
           })
         )
 
-        console.log("✅ Step 1 done: token received", {
-          hasAccessToken: !!res?.access_token,
-          expiresIn: res?.expires_in,
-        })
-
-        console.log("📡 Step 2: fetching userInfo")
-
+        if (!tokenData.access_token) {
+          throw ApiError('Google access token was not received', 401)
+        }
         const { data: userInfo } = await axios.get(
-          "https://openidconnect.googleapis.com/v1/userinfo",
+          'https://openidconnect.googleapis.com/v1/userinfo',
           {
             headers: {
-              Authorization: `Bearer ${res.access_token}`,
+              Authorization: `Bearer ${tokenData.access_token}`,
             },
           }
         )
-
-        console.log("✅ Step 2 done: userInfo received", userInfo)
-
-        console.log("📡 Step 3: checking user in DB", userInfo.email)
-
-        const userResult = await userRepo.findByEmail(userInfo.email)
-
-        console.log("📦 DB result:", userResult?.rows?.length)
-
-        let user = userResult.rows[0]
-
-        if (!user) {
-          console.log("🆕 User not found → creating user")
-
-          user = await userRepo.createVerifiedUser({
-            email: userInfo.email,
-            name: userInfo.name,
-            avatar_url: userInfo.picture,
-          })
-
-          console.log("✅ User created:", user)
-        } else {
-          console.log("👤 User found:", user.id)
-        }
-
-        console.log("📡 Step 4: generating refresh token")
-
-        const {
-          rawRefreshToken,
-          hashedRefreshToken,
-          refreshExpiresAt,
-        } = generateRefreshToken()
-
-        console.log("🔐 Refresh token generated")
-
-        await authRepo.insertRefreshToken(
-          user.id,
-          hashedRefreshToken,
-          refreshExpiresAt
-        )
-
-        console.log("💾 Refresh token saved")
-
-        console.log("📡 Step 5: generating access token")
-
-        const accessToken = generateAccessToken(
-          user.id,
-          user.email,
-          user.role
-        )
-
-        console.log("🎉 Auth flow completed")
-
-        return {
-          response: {
-            accessToken,
-            user: {
-              email: user.email,
-              role: user.role,
-              userId: user.id,
-            },
-          },
-          refreshToken: rawRefreshToken,
-        }
-      } catch (err) {
-        console.error("❌ GOOGLE OAUTH FAILED", {
-          message: err.message,
-          response: err.response?.data,
-          stack: err.stack,
+        return oauthService.authenticateProviderUser({
+          email: userInfo.email,
+          name: userInfo.name,
+          avatar_url: userInfo.picture,
         })
 
-        throw err
-      }
+      default:
+        throw ApiError('Unsupported auth provider', 400)
+    }
+  },
+  authenticateProviderUser: async (userInfo: providerUserDTO) => {
+    const userResult = await userRepo.findByEmail(userInfo.email)
+    let user = userResult.rows[0]
 
-    default:
-      console.warn("⚠️ Unknown provider:", provider)
-      break
-  }
-}
+    if (!user) {
+      user = await userRepo.createVerifiedUser(userInfo)
+    }
+
+    const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
+      generateRefreshToken()
+
+    await authRepo.insertRefreshToken(
+      user.id,
+      hashedRefreshToken,
+      refreshExpiresAt
+    )
+
+    const accessToken = generateAccessToken(user.id, user.email, user.role)
+
+    return {
+      response: {
+        accessToken,
+        user: {
+          email: user.email,
+          role: user.role,
+          userId: user.id,
+        },
+      },
+      refreshToken: rawRefreshToken,
+    }
+  },
 }

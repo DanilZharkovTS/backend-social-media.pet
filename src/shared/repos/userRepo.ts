@@ -1,5 +1,5 @@
 import pool from '../../pool.ts'
-import type { createVerifiedUserData, registerUserDTO } from '../interfaces/auth/authInterfaces.ts'
+import type { providerUserDTO, registerUserDTO } from '../interfaces/auth/authInterfaces.ts'
 import type { dynamicUpdateMyInfo } from '../interfaces/user/userInterfaces.ts'
 import type { paginationDTO } from '../interfaces/user/postInterfaces.ts'
 
@@ -13,7 +13,7 @@ export const userRepo = {
     )
   },
 
-  createVerifiedUser: async (data: createVerifiedUserData) => {
+  createVerifiedUser: async (data: providerUserDTO) => {
     const result = await pool.query(
       `INSERT INTO users (email, name, email_is_verified, avatar_url)
       VALUES ($1, $2, true, $3)
