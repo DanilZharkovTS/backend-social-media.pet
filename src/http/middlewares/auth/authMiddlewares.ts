@@ -195,7 +195,7 @@ export const authMiddlewares = {
     }
   },
   //oauth
-  getAuthProviderUrl: (req: Request, res: Response, next: NextFunction) => {
+  checkProviderParam: (req: Request, res: Response, next: NextFunction) => {
     try {
       const provider = ALLOWED_AUTH_PROVIDERS.find(
         (p) => p === req.params.provider

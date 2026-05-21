@@ -156,7 +156,19 @@ export const authController = {
         req.paramsMap.provider as AuthProvider
       )
       res.status(200).json(result)
-    } catch (err) {      
+    } catch (err) {
+      next(err)
+    }
+  },
+  authProviderCallback: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = oauthService.providerCallback(
+        req.paramsMap.provider as AuthProvider,
+        req.query.code as string,
+        req.query.state as string
+      )
+      res.status(200).json(result)
+    } catch (err) {
       next(err)
     }
   },

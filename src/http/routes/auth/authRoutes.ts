@@ -87,8 +87,10 @@ router.get(
 
 router.get(
   '/:provider',
-  authMiddlewares.getAuthProviderUrl,
+  authMiddlewares.checkProviderParam,
   authController.getAuthProviderUrl
 )
+
+router.get('/:provider/callback', authMiddlewares.checkProviderParam,authController.authProviderCallback)
 
 export default router
