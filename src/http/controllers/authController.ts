@@ -1,5 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import { authService } from '../../shared/services/auth/authService.ts'
+import { authProvidersService } from '../../shared/services/auth/providers/authProvidersService.ts'
+import { AuthProvider } from '../../shared/interfaces/auth/authInterfaces.ts'
 
 export const authController = {
   register: async (req: Request, res: Response, next: NextFunction) => {
@@ -144,6 +146,39 @@ export const authController = {
     } catch (err) {
       console.log(err)
 
+      next(err)
+    }
+  },
+  //oauth
+  getAuthProviderUrl: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = authProvidersService.getAuthProviderUrl(
+        req.paramsMap.provider as AuthProvider
+      )
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
+  authProviderCallback: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await authProvidersService.providerCallback(
+        req.paramsMap.provider as AuthProvider,
+        req.query.code as string,
+        req.query.state as string
+      )
+
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      })
+      res.redirect(`${process.env.FRONTEND_URL}/profile`)
+    } catch (err) {
       next(err)
     }
   },

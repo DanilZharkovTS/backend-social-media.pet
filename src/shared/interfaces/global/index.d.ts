@@ -1,5 +1,6 @@
 import 'express'
 import Stripe from 'stripe'
+import { AuthProvider } from '../auth/authInterfaces'
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -11,7 +12,7 @@ declare module 'express-serve-static-core' {
       end?: number
       cursor?: number | null
     }
-    paramsMap?: Record<string, number>
+    paramsMap?: Record<string, number> | Record<string, string>
     queryMap?: {
       search?: string
       emailToken?: string

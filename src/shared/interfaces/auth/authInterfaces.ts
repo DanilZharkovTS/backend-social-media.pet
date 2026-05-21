@@ -42,6 +42,17 @@ export interface registerUserDTO {
   name: string
 }
 
+export interface providerUserDTO {
+  email: string
+  name: string
+  avatar_url: string
+}
+
+export type ProviderCallbackHandler = (code: string) => Promise<providerUserDTO>
+
+export type ProviderUrlHandler = () => string
+
+
 export interface loginUserDTO {
   email: string
   password: string
@@ -65,3 +76,5 @@ export interface resetPasswordDTO {
   newPassword: string
   confirmPassword: string
 }
+
+export type AuthProvider = 'google'

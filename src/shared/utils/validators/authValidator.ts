@@ -52,3 +52,7 @@ export const validateResetPasswordBody = z.object({
   newPassword: passwordSchema,
   confirmPassword: z.string('Password confirmation needs to be a string'),
 })
+
+export const validateGetAuthProviderUrl = z.object({
+  provider: z.enum(['google'], 'Provider must be google'),
+})
