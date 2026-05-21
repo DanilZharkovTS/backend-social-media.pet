@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 import { authService } from '../../shared/services/auth/authService.ts'
-import { oauthService } from '../../shared/services/auth/oauthService.ts'
+import { authProvidersService } from '../../shared/services/auth/providers/authProvidersService.ts'
 import { AuthProvider } from '../../shared/interfaces/auth/authInterfaces.ts'
 
 export const authController = {
@@ -152,7 +152,7 @@ export const authController = {
   //oauth
   getAuthProviderUrl: (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = oauthService.getAuthProviderUrl(
+      const result = authProvidersService.getAuthProviderUrl(
         req.paramsMap.provider as AuthProvider
       )
       res.status(200).json(result)
@@ -166,7 +166,7 @@ export const authController = {
     next: NextFunction
   ) => {
     try {
-      const result = await oauthService.providerCallback(
+      const result = await authProvidersService.providerCallback(
         req.paramsMap.provider as AuthProvider,
         req.query.code as string,
         req.query.state as string

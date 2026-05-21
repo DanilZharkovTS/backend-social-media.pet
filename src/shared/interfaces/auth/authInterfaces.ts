@@ -48,6 +48,9 @@ export interface providerUserDTO {
   avatar_url: string
 }
 
+export type ProviderHandler = (code: string) => Promise<providerUserDTO>
+
+
 export interface loginUserDTO {
   email: string
   password: string
