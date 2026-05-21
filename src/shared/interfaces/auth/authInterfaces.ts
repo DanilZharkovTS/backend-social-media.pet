@@ -48,7 +48,9 @@ export interface providerUserDTO {
   avatar_url: string
 }
 
-export type ProviderHandler = (code: string) => Promise<providerUserDTO>
+export type ProviderCallbackHandler = (code: string) => Promise<providerUserDTO>
+
+export type ProviderUrlHandler = () => string
 
 
 export interface loginUserDTO {

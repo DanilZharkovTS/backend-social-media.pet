@@ -1,7 +1,8 @@
 import axios from 'axios'
 import {
   AuthProvider,
-  ProviderHandler,
+  ProviderCallbackHandler,
+  ProviderUrlHandler,
   providerUserDTO,
 } from '../../../interfaces/auth/authInterfaces'
 import { userRepo } from '../../../repos/userRepo'
@@ -11,37 +12,33 @@ import { generateAccessToken } from '../../../utils/helpers/auth/accessToken'
 import { ApiError } from '../../../lib/ApiErrors'
 import { googleProvider } from './googleProvider'
 
-const providerHandlers: Record<AuthProvider, ProviderHandler> = {
-  google: googleProvider.getGoogleUser,
+const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
+  google: googleProvider.getGoogleAuthUrl,
 }
 
+const providerCallbackHandlers: Record<AuthProvider, ProviderCallbackHandler> =
+  {
+    google: googleProvider.getGoogleUser,
+  }
+
 export const authProvidersService = {
-  getGoogleAuthUrl: () => {
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`
-    return url
-  },
   getAuthProviderUrl: (provider: AuthProvider) => {
-    let url: string
-    switch (provider) {
-      case 'google':
-        url = authProvidersService.getGoogleAuthUrl()
-        break
-    }
-    return { url }
+    const providerUrlHandler = providerUrlHandlers[provider]
+    return { url: providerUrlHandler() }
   },
   providerCallback: async (
     provider: AuthProvider,
     code: string,
     state: string
   ) => {
-    const providerHandler = providerHandlers[provider]
+    const providerHandler = providerCallbackHandlers[provider]
 
     if (!providerHandler) {
       throw ApiError('Provider is not allowed', 400)
     }
 
     const userInfo = await providerHandler(code)
-    
+
     return authProvidersService.authenticateProviderUser(userInfo)
   },
   authenticateProviderUser: async (userInfo: providerUserDTO) => {
