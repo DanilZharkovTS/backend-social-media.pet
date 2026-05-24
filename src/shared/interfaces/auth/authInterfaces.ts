@@ -77,4 +77,4 @@ export interface resetPasswordDTO {
   confirmPassword: string
 }
 
-export type AuthProvider = 'google'
+export type AuthProvider = 'google' | 'github'

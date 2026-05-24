@@ -11,15 +11,17 @@ import { authRepo } from '../../../repos/authRepo'
 import { generateAccessToken } from '../../../utils/helpers/auth/accessToken'
 import { ApiError } from '../../../lib/ApiErrors'
 import { googleProvider } from './googleProvider'
+import { githubProvider } from './githubProvider'
 
 const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
   google: googleProvider.getGoogleAuthUrl,
+  github: githubProvider.getGithubAuthUrl,
 }
 
-const providerCallbackHandlers: Record<AuthProvider, ProviderCallbackHandler> =
-  {
-    google: googleProvider.getGoogleUser,
-  }
+const providerCallbackHandlers: Record<string, ProviderCallbackHandler> = {
+  google: googleProvider.getGoogleUser,
+  github: githubProvider.getGithubUser,
+}
 
 export const authProvidersService = {
   getAuthProviderUrl: (provider: AuthProvider) => {
