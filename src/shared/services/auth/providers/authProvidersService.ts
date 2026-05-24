@@ -18,10 +18,10 @@ const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
   github: githubProvider.getGithubAuthUrl,
 }
 
-const providerCallbackHandlers: Record<string, ProviderCallbackHandler> =
-  {
-    google: googleProvider.getGoogleUser,
-  }
+const providerCallbackHandlers: Record<string, ProviderCallbackHandler> = {
+  google: googleProvider.getGoogleUser,
+  github: githubProvider.getGithubUser,
+}
 
 export const authProvidersService = {
   getAuthProviderUrl: (provider: AuthProvider) => {
