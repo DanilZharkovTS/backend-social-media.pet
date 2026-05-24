@@ -16,6 +16,7 @@ import { githubProvider } from './githubProvider'
 const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
   google: googleProvider.getGoogleAuthUrl,
   github: githubProvider.getGithubAuthUrl,
+  discord: () => '',
 }
 
 const providerCallbackHandlers: Record<string, ProviderCallbackHandler> = {
