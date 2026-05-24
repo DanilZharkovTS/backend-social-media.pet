@@ -23,6 +23,7 @@ const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
 const providerCallbackHandlers: Record<string, ProviderCallbackHandler> = {
   google: googleProvider.getGoogleUser,
   github: githubProvider.getGithubUser,
+  discord: discordProvider.getDiscordUser,
 }
 
 export const authProvidersService = {
