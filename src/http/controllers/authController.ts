@@ -177,7 +177,7 @@ export const authController = {
         sameSite: 'none',
         secure: true,
       })
-      res.redirect(`${process.env.FRONTEND_URL}/profile`)
+      res.redirect(`${process.env.FRONTEND_URL}/posts`)
     } catch (err) {
       next(err)
     }

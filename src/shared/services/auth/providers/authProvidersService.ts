@@ -12,15 +12,18 @@ import { generateAccessToken } from '../../../utils/helpers/auth/accessToken'
 import { ApiError } from '../../../lib/ApiErrors'
 import { googleProvider } from './googleProvider'
 import { githubProvider } from './githubProvider'
+import { discordProvider } from './discordProvider'
 
 const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
   google: googleProvider.getGoogleAuthUrl,
   github: githubProvider.getGithubAuthUrl,
+  discord: discordProvider.getDiscordAuthUrl,
 }
 
 const providerCallbackHandlers: Record<string, ProviderCallbackHandler> = {
   google: googleProvider.getGoogleUser,
   github: githubProvider.getGithubUser,
+  discord: discordProvider.getDiscordUser,
 }
 
 export const authProvidersService = {

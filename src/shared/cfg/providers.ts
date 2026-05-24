@@ -1,1 +1,1 @@
-export const ALLOWED_AUTH_PROVIDERS = ['google', 'github']
+export const ALLOWED_AUTH_PROVIDERS = ['google', 'github', 'discord']
