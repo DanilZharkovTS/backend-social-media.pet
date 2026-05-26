@@ -50,7 +50,7 @@ export interface providerUserDTO {
 
 export type ProviderCallbackHandler = (code: string) => Promise<providerUserDTO>
 
-export type ProviderUrlHandler = () => string
+export type ProviderUrlHandler = (state: string) => string
 
 
 export interface loginUserDTO {

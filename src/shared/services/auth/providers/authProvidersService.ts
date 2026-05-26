@@ -28,8 +28,15 @@ const providerCallbackHandlers: Record<string, ProviderCallbackHandler> = {
 
 export const authProvidersService = {
   getAuthProviderUrl: (provider: AuthProvider) => {
+    const state = authProvidersService.generateState()
     const providerUrlHandler = providerUrlHandlers[provider]
-    return { url: providerUrlHandler() }
+
+    return {
+      response: {
+        url: providerUrlHandler(state),
+      },
+      state,
+    }
   },
   providerCallback: async (
     provider: AuthProvider,
@@ -76,5 +83,9 @@ export const authProvidersService = {
       },
       refreshToken: rawRefreshToken,
     }
+  },
+  generateState: () => {
+    const state = crypto.randomUUID()
+    return state
   },
 }

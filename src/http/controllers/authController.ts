@@ -155,7 +155,14 @@ export const authController = {
       const result = authProvidersService.getAuthProviderUrl(
         req.paramsMap.provider as AuthProvider
       )
-      res.status(200).json(result)
+
+      res.cookie('oauth_state', result.state, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+        maxAge: 1000 * 60 * 5,
+      })
+      res.status(200).json(result.response)
     } catch (err) {
       next(err)
     }
