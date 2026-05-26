@@ -33,7 +33,7 @@ router.post(
   authController.loginEmailConfirm
 )
 
-router.get(
+router.post(
   '/refresh',
   rateLimiter(10, 60, 'refresh'),
   authMiddlewares.refresh,
