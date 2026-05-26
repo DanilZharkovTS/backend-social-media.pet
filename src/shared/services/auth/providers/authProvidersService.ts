@@ -41,8 +41,13 @@ export const authProvidersService = {
   providerCallback: async (
     provider: AuthProvider,
     code: string,
-    state: string
+    state: string,
+    clientState: string
   ) => {
+    if (state !== clientState) {
+      throw ApiError('Invalid state', 400)
+    }
+
     const providerHandler = providerCallbackHandlers[provider]
 
     if (!providerHandler) {
