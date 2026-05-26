@@ -156,12 +156,6 @@ export const authController = {
         req.paramsMap.provider as AuthProvider
       )
 
-      res.cookie('oauth_state', result.state, {
-        httpOnly: true,
-        sameSite: 'none',
-        secure: true,
-        maxAge: 1000 * 60 * 5,
-      })
       res.status(200).json(result.response)
     } catch (err) {
       next(err)
@@ -176,15 +170,17 @@ export const authController = {
       const result = await authProvidersService.providerCallback(
         req.paramsMap.provider as AuthProvider,
         req.query.code as string,
-        req.query.state as string,
-        req.cookies.oauth_state
+        req.query.state as string
       )
 
-      res.cookie('refreshToken', result.refreshToken, {
-        httpOnly: true,
-        sameSite: 'none',
-        secure: true,
-      })
+      if (result.refreshToken) {
+        res.cookie('refreshToken', result.refreshToken, {
+          httpOnly: true,
+          sameSite: 'none',
+          secure: true,
+        })
+      }
+
       res.redirect(`${process.env.FRONTEND_URL}/posts`)
     } catch (err) {
       next(err)

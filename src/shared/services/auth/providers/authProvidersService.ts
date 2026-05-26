@@ -13,6 +13,7 @@ import { ApiError } from '../../../lib/ApiErrors'
 import { googleProvider } from './googleProvider'
 import { githubProvider } from './githubProvider'
 import { discordProvider } from './discordProvider'
+import { getRedis } from '../../../lib/redisClient'
 
 const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
   google: googleProvider.getGoogleAuthUrl,
@@ -28,33 +29,35 @@ const providerCallbackHandlers: Record<string, ProviderCallbackHandler> = {
 
 export const authProvidersService = {
   getAuthProviderUrl: (provider: AuthProvider) => {
+    const redis = getRedis()
     const state = authProvidersService.generateState()
+    redis.set(`auth:state:${state}`, state, 'EX', 15)
+
     const providerUrlHandler = providerUrlHandlers[provider]
 
     return {
       response: {
         url: providerUrlHandler(state),
       },
-      state,
     }
   },
   providerCallback: async (
     provider: AuthProvider,
     code: string,
-    state: string,
-    clientState: string
+    state: string
   ) => {
-    if (state !== clientState) {
-      throw ApiError('Invalid state', 400)
+    const redis = getRedis()
+    const redisResult = await redis.get(`auth:state:${state}`)
+
+    if (!redisResult) {
+      throw ApiError('Invalid state', 401)
     }
 
     const providerHandler = providerCallbackHandlers[provider]
 
-    if (!providerHandler) {
-      throw ApiError('Provider is not allowed', 400)
-    }
-
     const userInfo = await providerHandler(code)
+
+    await redis.del(`auth:state:${state}`)
 
     return authProvidersService.authenticateProviderUser(userInfo)
   },
@@ -75,17 +78,7 @@ export const authProvidersService = {
       refreshExpiresAt
     )
 
-    const accessToken = generateAccessToken(user.id, user.email, user.role)
-
     return {
-      response: {
-        accessToken,
-        user: {
-          email: user.email,
-          role: user.role,
-          userId: user.id,
-        },
-      },
       refreshToken: rawRefreshToken,
     }
   },

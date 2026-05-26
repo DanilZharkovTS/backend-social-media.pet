@@ -3,7 +3,7 @@ import { ApiError } from '../../../lib/ApiErrors'
 
 export const githubProvider = {
   getGithubAuthUrl: (state: string) => {
-    const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${process.env.GITHUB_REDIRECT_URI}&scope=user:email&${state}`
+    const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${process.env.GITHUB_REDIRECT_URI}&scope=user:email&state=${state}`
     return url
   },
   fetchGithubTokens: async (code: string) => {
