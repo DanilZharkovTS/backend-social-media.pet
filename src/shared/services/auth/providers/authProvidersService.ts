@@ -70,7 +70,12 @@ export const authProvidersService = {
       user = await userRepo.createVerifiedUser(userInfo)
     }
 
-    if (!primaryProvider || primaryProvider !== userInfo.provider) {
+    const existingProvider = await authRepo.findProviderByProviderId(
+      userInfo.provider,
+      userInfo.provider_id
+    )
+
+    if (!existingProvider || existingProvider.provider !== userInfo.provider) {
       const key = `users:${user.id}:providers`
 
       await authRepo.insertUserProvider(
