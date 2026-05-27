@@ -31,9 +31,9 @@ export const authProvidersService = {
   getAuthProviderUrl: (provider: AuthProvider) => {
     const redis = getRedis()
     const state = authProvidersService.generateState()
-    redis.set(`auth:state:${state}`, state, 'EX', 15)
 
     const providerUrlHandler = providerUrlHandlers[provider]
+    redis.set(`auth:state:${state}`, state, 'EX', 15)
 
     return {
       response: {
