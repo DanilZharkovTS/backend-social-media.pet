@@ -1,9 +1,10 @@
 import axios from 'axios'
 import { ApiError } from '../../../lib/ApiErrors'
+import { AuthProvider, UserPrimaryProvider } from '../../../interfaces/auth/authInterfaces'
 
 export const githubProvider = {
   getGithubAuthUrl: (state: string) => {
-    const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${process.env.GITHUB_REDIRECT_URI}&scope=user:email&${state}`
+    const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${process.env.GITHUB_REDIRECT_URI}&scope=user:email&state=${state}&prompt=consent`
     return url
   },
   fetchGithubTokens: async (code: string) => {
@@ -41,6 +42,9 @@ export const githubProvider = {
       email: userInfo.email,
       name: userInfo.name,
       avatar_url: userInfo.avatar_url,
+      primary_provider: 'github' as UserPrimaryProvider,
+      provider: 'github' as AuthProvider,
+      provider_id: userInfo.id,
     }
   },
 }

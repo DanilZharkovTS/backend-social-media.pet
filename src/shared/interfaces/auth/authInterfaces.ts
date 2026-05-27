@@ -40,18 +40,21 @@ export interface registerUserDTO {
   email: string
   password: string
   name: string
+  primary_provider: UserPrimaryProvider
 }
 
 export interface providerUserDTO {
   email: string
   name: string
   avatar_url: string
+  primary_provider: UserPrimaryProvider
+  provider: AuthProvider
+  provider_id: string
 }
 
 export type ProviderCallbackHandler = (code: string) => Promise<providerUserDTO>
 
 export type ProviderUrlHandler = (state: string) => string
-
 
 export interface loginUserDTO {
   email: string
@@ -78,3 +81,5 @@ export interface resetPasswordDTO {
 }
 
 export type AuthProvider = 'google' | 'github' | 'discord'
+
+export type UserPrimaryProvider = 'google' | 'github' | 'discord' | 'email'

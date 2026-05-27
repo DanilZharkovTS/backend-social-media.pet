@@ -39,13 +39,12 @@ export const authService = {
 
     const hashedPassword = await bcrypt.hash(data.password, saltRounds)
 
-    const userToCreate = {
+    const createdUserResult = await userRepo.createUser({
       email: data.email,
       password: hashedPassword,
       name: data.name,
-    }
-
-    const createdUserResult = await userRepo.createUser(userToCreate)
+      primary_provider: 'email',
+    })
     const createdUser = createdUserResult.rows[0]
 
     const tokenData = generateEmailVerificationToken()
@@ -96,6 +95,13 @@ export const authService = {
 
     const dbUser = user.rows[0]
     if (!dbUser.email_is_verified) throw ApiError('Email was not verified', 403)
+
+    if (!dbUser.password) {
+      throw ApiError(
+        'This account uses social login. Please continue with Google/GitHub/Discord.',
+        400
+      )
+    }
 
     const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
     if (!isValidPassword) throw ApiError('Email or password is not right', 400)

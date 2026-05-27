@@ -8,11 +8,11 @@ import {
 import { userRepo } from '../../../repos/userRepo'
 import { generateRefreshToken } from '../../../utils/helpers/auth/refreshToken'
 import { authRepo } from '../../../repos/authRepo'
-import { generateAccessToken } from '../../../utils/helpers/auth/accessToken'
 import { ApiError } from '../../../lib/ApiErrors'
 import { googleProvider } from './googleProvider'
 import { githubProvider } from './githubProvider'
 import { discordProvider } from './discordProvider'
+import { getRedis } from '../../../lib/redisClient'
 
 const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
   google: googleProvider.getGoogleAuthUrl,
@@ -28,42 +28,53 @@ const providerCallbackHandlers: Record<string, ProviderCallbackHandler> = {
 
 export const authProvidersService = {
   getAuthProviderUrl: (provider: AuthProvider) => {
+    const redis = getRedis()
     const state = authProvidersService.generateState()
+
     const providerUrlHandler = providerUrlHandlers[provider]
+    redis.set(`auth:state:${state}`, state, 'EX', 15)
 
     return {
       response: {
         url: providerUrlHandler(state),
       },
-      state,
     }
   },
   providerCallback: async (
     provider: AuthProvider,
     code: string,
-    state: string,
-    clientState: string
+    state: string
   ) => {
-    if (state !== clientState) {
-      throw ApiError('Invalid state', 400)
+    const redis = getRedis()
+    const redisResult = await redis.get(`auth:state:${state}`)
+
+    if (!redisResult) {
+      throw ApiError('Invalid state', 401)
     }
 
     const providerHandler = providerCallbackHandlers[provider]
 
-    if (!providerHandler) {
-      throw ApiError('Provider is not allowed', 400)
-    }
-
     const userInfo = await providerHandler(code)
+
+    await redis.del(`auth:state:${state}`)
 
     return authProvidersService.authenticateProviderUser(userInfo)
   },
   authenticateProviderUser: async (userInfo: providerUserDTO) => {
     const userResult = await userRepo.findByEmail(userInfo.email)
     let user = userResult.rows[0]
+    const primaryProvider = user?.primary_provider
 
     if (!user) {
       user = await userRepo.createVerifiedUser(userInfo)
+    }
+
+    if (!primaryProvider || primaryProvider !== userInfo.provider) {
+      await authRepo.insertUserProvider(
+        user.id,
+        userInfo.provider,
+        userInfo.provider_id
+      )
     }
 
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
@@ -75,17 +86,7 @@ export const authProvidersService = {
       refreshExpiresAt
     )
 
-    const accessToken = generateAccessToken(user.id, user.email, user.role)
-
     return {
-      response: {
-        accessToken,
-        user: {
-          email: user.email,
-          role: user.role,
-          userId: user.id,
-        },
-      },
       refreshToken: rawRefreshToken,
     }
   },
