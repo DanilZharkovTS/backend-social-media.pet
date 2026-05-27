@@ -183,6 +183,8 @@ export const authController = {
 
       res.redirect(`${process.env.FRONTEND_URL}/posts`)
     } catch (err) {
+      console.log(err);
+      
       res.redirect(`${process.env.FRONTEND_URL}/auth/login`)
       next(err)
     }

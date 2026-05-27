@@ -1,5 +1,9 @@
 import axios from 'axios'
 import { ApiError } from '../../../lib/ApiErrors'
+import {
+  AuthProvider,
+  UserPrimaryProvider,
+} from '../../../interfaces/auth/authInterfaces'
 
 export const discordProvider = {
   getDiscordAuthUrl: (state: string) => {
@@ -40,7 +44,9 @@ export const discordProvider = {
       email: userInfo.email,
       name: userInfo.username,
       avatar_url,
-      primary_provider: 'discord',
+      primary_provider: 'discord' as UserPrimaryProvider,
+      provider: 'discord' as AuthProvider,
+      provider_id: userInfo.id,
     }
   },
 }

@@ -8,7 +8,6 @@ import {
 import { userRepo } from '../../../repos/userRepo'
 import { generateRefreshToken } from '../../../utils/helpers/auth/refreshToken'
 import { authRepo } from '../../../repos/authRepo'
-import { generateAccessToken } from '../../../utils/helpers/auth/accessToken'
 import { ApiError } from '../../../lib/ApiErrors'
 import { googleProvider } from './googleProvider'
 import { githubProvider } from './githubProvider'
@@ -64,9 +63,18 @@ export const authProvidersService = {
   authenticateProviderUser: async (userInfo: providerUserDTO) => {
     const userResult = await userRepo.findByEmail(userInfo.email)
     let user = userResult.rows[0]
+    const primaryProvider = user?.primary_provider
 
     if (!user) {
       user = await userRepo.createVerifiedUser(userInfo)
+    }
+
+    if (!primaryProvider || primaryProvider !== userInfo.provider) {
+      await authRepo.insertUserProvider(
+        user.id,
+        userInfo.provider,
+        userInfo.provider_id
+      )
     }
 
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =

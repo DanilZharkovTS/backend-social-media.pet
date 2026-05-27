@@ -119,4 +119,24 @@ export const authRepo = {
       [tokenId]
     )
   },
+  insertUserProvider: async (
+    userId: number,
+    provider: string,
+    providerId: string
+  ) => {
+    return pool.query(
+      `INSERT INTO user_providers (user_id, provider, provider_user_id)
+      VALUES ($1, $2, $3)
+      RETURNING *`,
+      [userId, provider, providerId]
+    )
+  },
+  findProviderByProviderId: async (provider: string, providerId: string) => {
+    const result = await pool.query(
+      `SELECT * FROM user_providers
+      WHERE provider = $1 AND provider_user_id = $2`,
+      [provider, providerId]
+    )
+    return result.rows[0]
+  },
 }

@@ -48,6 +48,8 @@ export interface providerUserDTO {
   name: string
   avatar_url: string
   primary_provider: UserPrimaryProvider
+  provider: AuthProvider
+  provider_id: string
 }
 
 export type ProviderCallbackHandler = (code: string) => Promise<providerUserDTO>

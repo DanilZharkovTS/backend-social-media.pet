@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ApiError } from '../../../lib/ApiErrors'
+import { AuthProvider, UserPrimaryProvider } from '../../../interfaces/auth/authInterfaces'
 
 export const googleProvider = {
   getGoogleAuthUrl: (state: string) => {
@@ -40,7 +41,9 @@ export const googleProvider = {
         email: userInfo.email,
         name: userInfo.name,
         avatar_url: userInfo.picture,
-        primary_provider: 'google',
+        primary_provider: 'google' as UserPrimaryProvider,
+        provider: 'google' as AuthProvider,
+        provider_id: userInfo.sub,
       }
     } catch (err) {
       throw ApiError('Google authentication failed', 401)
