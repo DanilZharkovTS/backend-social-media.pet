@@ -13,6 +13,7 @@ import { googleProvider } from './googleProvider'
 import { githubProvider } from './githubProvider'
 import { discordProvider } from './discordProvider'
 import { getRedis } from '../../../lib/redisClient'
+import { cacheService } from '../../shared/cacheService'
 
 const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
   google: googleProvider.getGoogleAuthUrl,
@@ -70,11 +71,14 @@ export const authProvidersService = {
     }
 
     if (!primaryProvider || primaryProvider !== userInfo.provider) {
+      const key = `users:${user.id}:providers`
+
       await authRepo.insertUserProvider(
         user.id,
         userInfo.provider,
         userInfo.provider_id
       )
+      await cacheService.invalidateByPrefix(key)
     }
 
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =

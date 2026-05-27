@@ -30,6 +30,13 @@ router.get(
   userController.getFavoritePosts
 )
 
+router.get(
+  '/me/providers',
+  rateLimiter(60, 60, 'me_providers'),
+  authMiddlewares.verifyAccessToken,
+  userController.getMyProviders
+)
+
 router.patch(
   '/me/email',
   rateLimiter(5, 60, 'myEmail'),
