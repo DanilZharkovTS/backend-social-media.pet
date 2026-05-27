@@ -41,6 +41,7 @@ export const githubProvider = {
       email: userInfo.email,
       name: userInfo.name,
       avatar_url: userInfo.avatar_url,
+      primary_provider: 'github',
     }
   },
 }

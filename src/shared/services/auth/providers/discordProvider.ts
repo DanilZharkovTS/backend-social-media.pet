@@ -40,6 +40,7 @@ export const discordProvider = {
       email: userInfo.email,
       name: userInfo.username,
       avatar_url,
+      primary_provider: 'discord',
     }
   },
 }

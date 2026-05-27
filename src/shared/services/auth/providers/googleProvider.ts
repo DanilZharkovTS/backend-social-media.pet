@@ -40,6 +40,7 @@ export const googleProvider = {
         email: userInfo.email,
         name: userInfo.name,
         avatar_url: userInfo.picture,
+        primary_provider: 'google',
       }
     } catch (err) {
       throw ApiError('Google authentication failed', 401)

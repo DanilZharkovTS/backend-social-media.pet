@@ -6,19 +6,19 @@ import type { paginationDTO } from '../interfaces/user/postInterfaces.ts'
 export const userRepo = {
   createUser: (data: registerUserDTO) => {
     return pool.query(
-      `INSERT INTO users (email, password, name)
-      VALUES ($1, $2, $3)
+      `INSERT INTO users (email, password, name, primary_provider)
+      VALUES ($1, $2, $3, $4)
       RETURNING users.id, users.email, users.name, users.created_at`,
-      [data.email, data.password, data.name]
+      [data.email, data.password, data.name, data.primary_provider]
     )
   },
 
   createVerifiedUser: async (data: providerUserDTO) => {
     const result = await pool.query(
-      `INSERT INTO users (email, name, email_is_verified, avatar_url)
-      VALUES ($1, $2, true, $3)
-      RETURNING users.id, users.email, users.name, users.created_at`,
-      [data.email, data.name,data.avatar_url]
+      `INSERT INTO users (email, name, email_is_verified, avatar_url, primary_provider)
+      VALUES ($1, $2, true, $3, $4)
+      RETURNING users.id, users.email, users.name, users.primary_provider, users.created_at`,
+      [data.email, data.name,data.avatar_url, data.primary_provider]
     )
     return result.rows[0]
   },

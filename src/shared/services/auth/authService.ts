@@ -39,13 +39,12 @@ export const authService = {
 
     const hashedPassword = await bcrypt.hash(data.password, saltRounds)
 
-    const userToCreate = {
+    const createdUserResult = await userRepo.createUser({
       email: data.email,
       password: hashedPassword,
       name: data.name,
-    }
-
-    const createdUserResult = await userRepo.createUser(userToCreate)
+      primary_provider: 'email',
+    })
     const createdUser = createdUserResult.rows[0]
 
     const tokenData = generateEmailVerificationToken()
