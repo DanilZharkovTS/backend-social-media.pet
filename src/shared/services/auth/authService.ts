@@ -96,6 +96,13 @@ export const authService = {
     const dbUser = user.rows[0]
     if (!dbUser.email_is_verified) throw ApiError('Email was not verified', 403)
 
+    if (!dbUser.password) {
+      throw ApiError(
+        'This account uses social login. Please continue with Google/GitHub/Discord.',
+        400
+      )
+    }
+
     const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
     if (!isValidPassword) throw ApiError('Email or password is not right', 400)
 
