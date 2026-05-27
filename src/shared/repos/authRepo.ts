@@ -139,4 +139,12 @@ export const authRepo = {
     )
     return result.rows[0]
   },
+  findProvidersByUserId: async (userId: number) => {
+    const result = await pool.query(
+      `SELECT * FROM user_providers
+      WHERE user_id = $1`,
+      [userId]
+    )
+    return result.rows
+  },
 }
