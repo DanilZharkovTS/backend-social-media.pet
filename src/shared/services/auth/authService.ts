@@ -443,6 +443,7 @@ export const authService = {
   issueTokens: async ({ id: userId, email, role }) => {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
+    
 
     await authRepo.insertRefreshToken(
       userId,
