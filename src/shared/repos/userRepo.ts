@@ -1,5 +1,9 @@
 import pool from '../../pool.ts'
-import type { providerUserDTO, registerUserDTO } from '../interfaces/auth/authInterfaces.ts'
+import type {
+  AuthProvider,
+  providerUserDTO,
+  registerUserDTO,
+} from '../interfaces/auth/authInterfaces.ts'
 import type { dynamicUpdateMyInfo } from '../interfaces/user/userInterfaces.ts'
 import type { paginationDTO } from '../interfaces/user/postInterfaces.ts'
 
@@ -18,7 +22,7 @@ export const userRepo = {
       `INSERT INTO users (email, name, email_is_verified, avatar_url, primary_provider)
       VALUES ($1, $2, true, $3, $4)
       RETURNING users.id, users.email, users.name, users.primary_provider, users.created_at`,
-      [data.email, data.name,data.avatar_url, data.primary_provider]
+      [data.email, data.name, data.avatar_url, data.primary_provider]
     )
     return result.rows[0]
   },
@@ -45,6 +49,15 @@ export const userRepo = {
       LIMIT $2 OFFSET $3`,
       [search, pagination.limit, pagination.offset]
     )
+  },
+  findByEmailWithProvider: async (email: string, provider: AuthProvider) => {
+    const result = await pool.query(
+      `SELECT u.id, u.email, u.name, u.primary_provider, up.provider, up.provider_user_id FROM users u
+      LEFT JOIN user_providers up ON u.id = up.user_id AND up.provider = $2
+      WHERE u.email = $1`,
+      [email, provider]
+    )
+    return result.rows[0]
   },
   updateIsVerified: (value: boolean, userId: number) => {
     return pool.query(
@@ -119,7 +132,7 @@ export const userRepo = {
       AND last_read_notification_id < $2
       RETURNING *`,
       [userId, notificationId]
-    )    
+    )
     return result.rows[0]
   },
   deleteUserById: (userId: number) => {

@@ -173,8 +173,9 @@ export const authController = {
         req.query.state as string
       )
 
-      if (result.refreshToken) {
-        res.cookie('refreshToken', result.refreshToken, {
+      if (result) {
+        const { tokens } = result
+        res.cookie('refreshToken', tokens.rawRefreshToken, {
           httpOnly: true,
           sameSite: 'none',
           secure: true,
@@ -183,8 +184,8 @@ export const authController = {
 
       res.redirect(`${process.env.FRONTEND_URL}/posts`)
     } catch (err) {
-      console.log(err);
-      
+      console.log(err)
+
       res.redirect(`${process.env.FRONTEND_URL}/auth/login`)
       next(err)
     }

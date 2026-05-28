@@ -21,6 +21,7 @@ import { generateResetPasswordToken } from '../../utils/helpers/auth/resetPasswo
 import { generateTrustedDeviceToken } from '../../utils/helpers/auth/trustedDeviceToken.ts'
 import { generateEmailChangeToken } from '../../utils/helpers/auth/emailChangeToken.ts'
 import { getRedis } from '../../lib/redisClient.ts'
+import { User } from '../../interfaces/user/userInterfaces.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
@@ -438,5 +439,25 @@ export const authService = {
     await authRepo.revokeActionTokenById(dbToken.id)
 
     return { passwordIsChanged: true }
+  },
+  issueTokens: async ({ id: userId, email, role }) => {
+    const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
+      generateRefreshToken()
+
+    await authRepo.insertRefreshToken(
+      userId,
+      hashedRefreshToken,
+      refreshExpiresAt
+    )
+
+    const accessToken = generateAccessToken(userId, email, role)
+
+    return {
+      tokens: {
+        rawRefreshToken,
+        hashedRefreshToken,
+        accessToken,
+      },
+    }
   },
 }

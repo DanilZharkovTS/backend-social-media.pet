@@ -14,6 +14,7 @@ import { githubProvider } from './githubProvider'
 import { discordProvider } from './discordProvider'
 import { getRedis } from '../../../lib/redisClient'
 import { cacheService } from '../../shared/cacheService'
+import { authService } from '../authService'
 
 const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
   google: googleProvider.getGoogleAuthUrl,
@@ -62,42 +63,31 @@ export const authProvidersService = {
     return authProvidersService.authenticateProviderUser(userInfo)
   },
   authenticateProviderUser: async (userInfo: providerUserDTO) => {
-    const userResult = await userRepo.findByEmail(userInfo.email)
-    let user = userResult.rows[0]
-    const primaryProvider = user?.primary_provider
-
-    if (!user) {
-      user = await userRepo.createVerifiedUser(userInfo)
-    }
-
-    const existingProvider = await authRepo.findProviderByProviderId(
-      userInfo.provider,
-      userInfo.provider_id
+    const existing = await userRepo.findByEmailWithProvider(
+      userInfo.email,
+      userInfo.provider
     )
 
-    if (!existingProvider || existingProvider.provider !== userInfo.provider) {
-      const key = `users:${user.id}:providers`
-
+    if (!existing) {
+      const user = await userRepo.createVerifiedUser(userInfo)
       await authRepo.insertUserProvider(
         user.id,
         userInfo.provider,
         userInfo.provider_id
       )
-      await cacheService.invalidateByPrefix(key)
+      return authService.issueTokens(user)
     }
 
-    const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
-      generateRefreshToken()
-
-    await authRepo.insertRefreshToken(
-      user.id,
-      hashedRefreshToken,
-      refreshExpiresAt
-    )
-
-    return {
-      refreshToken: rawRefreshToken,
+    if (!existing.provider) {
+      await authRepo.insertUserProvider(
+        existing.id,
+        userInfo.provider,
+        userInfo.provider_id
+      )
+      await cacheService.invalidateByPrefix(`users:${existing.id}:providers`)
     }
+
+    return authService.issueTokens(existing)
   },
   generateState: () => {
     const state = crypto.randomUUID()
