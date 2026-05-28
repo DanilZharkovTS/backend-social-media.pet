@@ -173,8 +173,9 @@ export const authController = {
         req.query.state as string
       )
 
-      if (result.refreshToken) {
-        res.cookie('refreshToken', result.refreshToken, {
+      if (result) {
+        const { tokens } = result
+        res.cookie('refreshToken', tokens.rawRefreshToken, {
           httpOnly: true,
           sameSite: 'none',
           secure: true,
