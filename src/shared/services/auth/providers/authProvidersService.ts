@@ -14,6 +14,7 @@ import { githubProvider } from './githubProvider'
 import { discordProvider } from './discordProvider'
 import { getRedis } from '../../../lib/redisClient'
 import { cacheService } from '../../shared/cacheService'
+import { authService } from '../authService'
 
 const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
   google: googleProvider.getGoogleAuthUrl,
@@ -86,18 +87,7 @@ export const authProvidersService = {
       await cacheService.invalidateByPrefix(key)
     }
 
-    const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
-      generateRefreshToken()
-
-    await authRepo.insertRefreshToken(
-      user.id,
-      hashedRefreshToken,
-      refreshExpiresAt
-    )
-
-    return {
-      refreshToken: rawRefreshToken,
-    }
+    return authService.issueTokens(user)
   },
   generateState: () => {
     const state = crypto.randomUUID()
