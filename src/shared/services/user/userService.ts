@@ -20,6 +20,7 @@ import { postLikesRepo } from '../../repos/user/postLikesRepo.ts'
 import { postRepo } from '../../repos/user/postRepo.ts'
 import { postFavoritiesRepo } from '../../repos/user/postFavoritiesRepo.ts'
 import { postService } from './postService.ts'
+import { authRepo } from '../../repos/authRepo.ts'
 
 export const userService = {
   //me
@@ -224,6 +225,20 @@ export const userService = {
     await redis.set(`users:${userId}:info`, JSON.stringify(dbUser))
 
     return toUserResponse(dbUser)
+  },
+  getUserProviders: async ({ userId }: TokenPayload) => {
+    const redis = getRedis()
+    const redisKey = `users:${userId}:providers`
+
+    const redisResult = await redis.get(redisKey)
+
+    if (redisResult) {
+      return { providers: JSON.parse(redisResult) }
+    }
+    const providers = await authRepo.findProvidersByUserId(userId)
+    await redis.set(redisKey, JSON.stringify(providers), 'EX', 60)
+
+    return { providers }
   },
   getUserPosts: async (
     user: TokenPayload,
