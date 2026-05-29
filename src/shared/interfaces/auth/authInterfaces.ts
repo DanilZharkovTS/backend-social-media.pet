@@ -27,6 +27,7 @@ export interface RefreshTokenWithUser {
   id: number
   user_id: number
   token: string
+  session_id: number
   device: string | null
   ip: string | null
   expires_at: Date
@@ -83,3 +84,5 @@ export interface resetPasswordDTO {
 export type AuthProvider = 'google' | 'github' | 'discord'
 
 export type UserPrimaryProvider = 'google' | 'github' | 'discord' | 'email'
+
+export type SessionType = 'normal' | 'shared'

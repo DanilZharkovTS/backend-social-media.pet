@@ -8,6 +8,7 @@ import type {
   requestChangeEmailDTO,
   resetPasswordDTO,
   RefreshTokenWithUser,
+  SessionType,
 } from '../../interfaces/auth/authInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { emailService } from '../email/emailService.ts'
@@ -140,8 +141,11 @@ export const authService = {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
+    const session = await authRepo.insertSession(dbUser.id, 'normal')
+
     await authRepo.insertRefreshToken(
       user.rows[0].id,
+      session.id,
       hashedRefreshToken,
       refreshExpiresAt
     )
@@ -188,8 +192,11 @@ export const authService = {
       generateRefreshToken()
     console.log(rawRefreshToken)
 
-    const refreshResult = await authRepo.insertRefreshToken(
+    const session = await authRepo.insertSession(dbUser.id, 'normal')
+
+    await authRepo.insertRefreshToken(
       dbUser.id,
+      session.id,
       hashedRefreshToken,
       refreshExpiresAt
     )
@@ -270,6 +277,7 @@ export const authService = {
 
     await authRepo.insertRefreshToken(
       token.user_id,
+      token.session_id,
       hashedRefreshToken,
       refreshExpiresAt
     )
@@ -439,13 +447,19 @@ export const authService = {
     await authRepo.revokeActionTokenById(dbToken.id)
 
     return { passwordIsChanged: true }
-  }, 
-  issueTokens: async ({ id: userId, email, role }) => {
+  },
+  issueTokens: async (
+    { id: userId, email, role },
+    sessionType: SessionType
+  ) => {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
+    const session = await authRepo.insertSession(userId, sessionType)
+
     await authRepo.insertRefreshToken(
       userId,
+      session.id,
       hashedRefreshToken,
       refreshExpiresAt
     )
