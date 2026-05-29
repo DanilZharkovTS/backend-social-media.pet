@@ -23,6 +23,7 @@ import { generateTrustedDeviceToken } from '../../utils/helpers/auth/trustedDevi
 import { generateEmailChangeToken } from '../../utils/helpers/auth/emailChangeToken.ts'
 import { getRedis } from '../../lib/redisClient.ts'
 import { User } from '../../interfaces/user/userInterfaces.ts'
+import { cacheService } from '../shared/cacheService.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
@@ -321,7 +322,10 @@ export const authService = {
       throw ApiError('Invalid or expired refresh token', 401)
     }
 
+    await authRepo.revokeSession(refreshTokenResult.rows[0].session_id)
     await authRepo.revokeRefreshTokenById(refreshTokenResult.rows[0].id)
+
+    await cacheService.invalidateByPrefix(`refresh:${clientRefreshToken}`)
 
     return { auth: false }
   },

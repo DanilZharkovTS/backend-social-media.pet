@@ -88,7 +88,8 @@ export const authController = {
       res.clearCookie('refreshToken')
       res.status(200).json(result)
     } catch (err) {
-      res.clearCookie('refreshToken')
+      console.log(err);
+      
       next(err)
     }
   },
