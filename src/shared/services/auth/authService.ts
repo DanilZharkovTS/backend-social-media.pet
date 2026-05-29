@@ -439,7 +439,7 @@ export const authService = {
     await authRepo.revokeActionTokenById(dbToken.id)
 
     return { passwordIsChanged: true }
-  },
+  }, 
   issueTokens: async ({ id: userId, email, role }) => {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
