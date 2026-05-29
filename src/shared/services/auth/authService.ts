@@ -266,6 +266,7 @@ export const authService = {
 
     if (source === 'db') {
       if (!token || new Date() > token.expires_at || token.revoked) {
+        await authRepo.expireSession(token.session_id)
         throw ApiError('Invalid or expired refresh token', 401)
       }
     }
