@@ -75,7 +75,7 @@ export const authProvidersService = {
         userInfo.provider,
         userInfo.provider_id
       )
-      return authService.issueTokens(user)
+      return authService.issueTokens(user, 'normal')
     }
 
     if (!existing.provider) {
@@ -87,7 +87,7 @@ export const authProvidersService = {
       await cacheService.invalidateByPrefix(`users:${existing.id}:providers`)
     }
 
-    return authService.issueTokens(existing)
+    return authService.issueTokens(existing, 'normal')
   },
   generateState: () => {
     const state = crypto.randomUUID()

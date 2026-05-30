@@ -1,21 +1,30 @@
 import pool from '../../pool.ts'
-import type { actionTokenType } from '../interfaces/auth/authInterfaces.ts'
+import type {
+  actionTokenType,
+  SessionType,
+} from '../interfaces/auth/authInterfaces.ts'
 
 export const authRepo = {
-  insertRefreshToken: (userId: number, token: string, expiresAt: Date) => {
+  insertRefreshToken: (
+    userId: number,
+    sessionId: number,
+    token: string,
+    expiresAt: Date
+  ) => {
     return pool.query(
-      `INSERT INTO refresh_tokens (user_id, token, expires_at)
-      VALUES ($1, $2, $3)
+      `INSERT INTO refresh_tokens (user_id, session_id, token, expires_at)
+      VALUES ($1, $2, $3, $4)
       RETURNING *`,
-      [userId, token, expiresAt]
+      [userId, sessionId, token, expiresAt]
     )
   },
   selectRefreshTokenByToken: (token: string) => {
     return pool.query(
-      `SELECT refresh_tokens.user_id, refresh_tokens.id, refresh_tokens.token, users.email, users.role
-       FROM refresh_tokens
-       JOIN users ON refresh_tokens.user_id = users.id
-       WHERE refresh_tokens.token = $1`,
+      `SELECT rf.user_id, rf.session_id, rf.expires_at AS refresh_expires_at, rf.id, rf.revoked AS refresh_revoked, s.expired_at AS session_expired_at, s.revoked_at AS session_revoked_at, rf.token, u.email, u.role
+       FROM refresh_tokens rf
+       JOIN sessions s ON rf.session_id = s.id
+       JOIN users u ON rf.user_id = u.id
+       WHERE rf.token = $1`,
       [token]
     )
   },
@@ -102,6 +111,35 @@ export const authRepo = {
       RETURNING *`,
       [userId, token, expiresAt, JSON.stringify({ targetUserId }), type]
     )
+  },
+  insertSession: async (userId: number, type: SessionType) => {
+    const result = await pool.query(
+      `INSERT INTO sessions (user_id, type)
+      VALUES ($1, $2)
+      RETURNING *`,
+      [userId, type]
+    )
+    return result.rows[0]
+  },
+  expireSession: async (sessionId: number) => {
+    const result = await pool.query(
+      `UPDATE sessions
+      SET expired_at = NOW()
+      WHERE id = $1
+      RETURNING *`,
+      [sessionId]
+    )
+    return result.rows[0]
+  },
+  revokeSession: async (sessionId: number) => {
+    const result = await pool.query(
+      `UPDATE sessions
+      SET revoked_at = NOW()
+      WHERE id = $1
+      RETURNING *`,
+      [sessionId]
+    )
+    return result.rows[0]
   },
   selectActionTokenByToken: (token: string) => {
     return pool.query(
