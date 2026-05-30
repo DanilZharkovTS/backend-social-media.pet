@@ -241,11 +241,6 @@ export const authService = {
     const redisKey = `refresh:${clientRefreshToken}`
     const redisResult = await redis.get(redisKey)
 
-    if (redisResult) {
-      const redisToken = JSON.parse(redisResult)
-      return authService.handleRefreshCondition(redisToken, 'redis')
-    }
-
     const dbResult = await authRepo.selectRefreshTokenByToken(
       clientRefreshToken
     )
@@ -266,7 +261,14 @@ export const authService = {
     const redis = getRedis()
 
     if (source === 'db') {
-      if (!token || new Date() > token.expires_at || token.revoked) {
+      console.log(token)
+
+      if (
+        token.session_expired_at ||
+        token.session_revoked_at ||
+        new Date() > token.refresh_expires_at ||
+        token.refresh_revoked
+      ) {
         await authRepo.expireSession(token.session_id)
         throw ApiError('Invalid or expired refresh token', 401)
       }

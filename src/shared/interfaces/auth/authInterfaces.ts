@@ -30,9 +30,11 @@ export interface RefreshTokenWithUser {
   session_id: number
   device: string | null
   ip: string | null
-  expires_at: Date
+  refresh_expires_at: Date
   created_at: Date
-  revoked: boolean
+  refresh_revoked: boolean
+  session_expired_at: Date | null
+  session_revoked_at: Date | null
   email: string
   role: string
 }

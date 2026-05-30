@@ -20,8 +20,9 @@ export const authRepo = {
   },
   selectRefreshTokenByToken: (token: string) => {
     return pool.query(
-      `SELECT rf.user_id, rf.session_id, rf.id, rf.token, u.email, u.role
+      `SELECT rf.user_id, rf.session_id, rf.expires_at AS refresh_expires_at, rf.id, rf.revoked AS refresh_revoked, s.expired_at AS session_expired_at, s.revoked_at AS session_revoked_at, rf.token, u.email, u.role
        FROM refresh_tokens rf
+       JOIN sessions s ON rf.session_id = s.id
        JOIN users u ON rf.user_id = u.id
        WHERE rf.token = $1`,
       [token]
