@@ -55,13 +55,14 @@ export const authRepo = {
     userId: number,
     tokenHash: string,
     expiresAt: Date,
-    type: actionTokenType
+    type: actionTokenType,
+    payload?: any
   ) => {
     return pool.query(
-      `INSERT INTO action_tokens (user_id, token_hash, expires_at, type)
-      VALUES ($1, $2, $3, $4)
+      `INSERT INTO action_tokens (user_id, token_hash, expires_at, type, payload)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *`,
-      [userId, tokenHash, expiresAt, type]
+      [userId, tokenHash, expiresAt, type, JSON.stringify(payload) || null]
     )
   },
   insertLoginEmailConfirmToken: (
@@ -147,6 +148,20 @@ export const authRepo = {
       WHERE token_hash = $1`,
       [token]
     )
+  },
+  findValidActionTokenByUserAndType: async (
+    userId: number,
+    type: actionTokenType
+  ) => {
+    const result = await pool.query(
+      `SELECT * FROM action_tokens
+      WHERE user_id = $1
+      AND type = $2
+      AND used_at IS NULL
+      AND expires_at > NOW()`,
+      [userId, type]
+    )
+    return result.rows[0]
   },
   revokeActionTokenById: (tokenId: number) => {
     return pool.query(

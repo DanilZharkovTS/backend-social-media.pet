@@ -83,6 +83,10 @@ router.get(
   authController.logout
 )
 
+//shared
+
+router.get('/invites/link', authMiddlewares.verifyAccessToken, authController.getAccountInviteUrl)
+
 //oauth
 
 router.get(

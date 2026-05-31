@@ -24,6 +24,7 @@ import { generateEmailChangeToken } from '../../utils/helpers/auth/emailChangeTo
 import { getRedis } from '../../lib/redisClient.ts'
 import { User } from '../../interfaces/user/userInterfaces.ts'
 import { cacheService } from '../shared/cacheService.ts'
+import { tokenService } from './tokenService.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
@@ -480,5 +481,22 @@ export const authService = {
         accessToken,
       },
     }
+  },
+  createAccountInviteUrl: async ({ userId }: TokenPayload) => {
+    const token = await authRepo.findValidActionTokenByUserAndType(
+      userId,
+      'ACCOUNT_INVITE'
+    )
+
+    if (token) {
+      return { inviteUrl: token.payload.inviteUrl }
+    }
+
+    const { inviteUrl } = await tokenService.saveActionToken(
+      userId,
+      'ACCOUNT_INVITE'
+    )
+
+    return { inviteUrl }
   },
 }

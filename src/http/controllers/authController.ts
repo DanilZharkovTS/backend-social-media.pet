@@ -190,4 +190,17 @@ export const authController = {
       next(err)
     }
   },
+  //shared
+  getAccountInviteUrl: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await authService.createAccountInviteUrl(req.user)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
 }
