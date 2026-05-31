@@ -5,6 +5,7 @@ export type actionTokenType =
   | 'EMAIL_CHANGE'
   | 'INVITE'
   | 'ADMIN_DELETE_USER'
+  | 'ACCOUNT_INVITE'
 
 export interface TokenPayload {
   userId: number
