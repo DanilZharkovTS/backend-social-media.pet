@@ -6,7 +6,6 @@ import { ApiError } from '../../../shared/lib/ApiErrors.ts'
 import {
   validateChangeEmail,
   validateForgotPassword,
-  validateGetAuthProviderUrl,
   validateLoginEmailConfirm,
   validateLoginUser,
   validatePasswordBody,
@@ -18,7 +17,6 @@ import {
   validateVerifyEmail,
 } from '../../../shared/utils/validators/authValidator.ts'
 import { ALLOWED_AUTH_PROVIDERS } from '../../../shared/cfg/providers.ts'
-import { ca } from 'zod/v4/locales'
 import { tokenService } from '../../../shared/services/auth/tokenService.ts'
 
 export const authMiddlewares = {

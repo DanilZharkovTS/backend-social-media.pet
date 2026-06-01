@@ -22,7 +22,6 @@ import { generateResetPasswordToken } from '../../utils/helpers/auth/resetPasswo
 import { generateTrustedDeviceToken } from '../../utils/helpers/auth/trustedDeviceToken.ts'
 import { generateEmailChangeToken } from '../../utils/helpers/auth/emailChangeToken.ts'
 import { getRedis } from '../../lib/redisClient.ts'
-import { User } from '../../interfaces/user/userInterfaces.ts'
 import { cacheService } from '../shared/cacheService.ts'
 import { tokenService } from './tokenService.ts'
 
