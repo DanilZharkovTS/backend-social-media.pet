@@ -50,6 +50,10 @@ export const validateChangeEmail = z.object({
   emailChangeToken: z.string('Token needs to be a string'),
 })
 
+export const validateTokenQuery = z.object({
+  token: z.string('Token needs to be a string'),
+})
+
 export const validateResetPasswordQuery = z.object({
   resetPasswordToken: z.string('Token needs to be a string'),
 })

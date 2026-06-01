@@ -149,6 +149,15 @@ export const authRepo = {
       [token]
     )
   },
+  findActionTokenWithUserByToken: async (token: string) => {
+    const result = await pool.query(
+      `SELECT at.*, u.email, u.role, u.name, u.avatar_url FROM action_tokens at
+      JOIN users u ON at.user_id = u.id
+      WHERE at.token_hash = $1`,
+      [token]
+    )
+    return result.rows[0]
+  },
   findValidActionTokenByUserAndType: async (
     userId: number,
     type: actionTokenType

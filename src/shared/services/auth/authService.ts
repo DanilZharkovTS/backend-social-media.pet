@@ -472,7 +472,12 @@ export const authService = {
       refreshExpiresAt
     )
 
-    const accessToken = generateAccessToken(userId, email, role)
+    const accessToken = tokenService.generateAccessToken(
+      userId,
+      email,
+      role,
+      sessionType
+    )
 
     return {
       tokens: {
@@ -510,6 +515,41 @@ export const authService = {
 
     return {
       inviteUrl: payload.inviteUrl,
+    }
+  },
+
+  acceptAccountInvite: async (hashedToken: string) => {
+    const token = await authRepo.findActionTokenWithUserByToken(hashedToken)
+
+    if (!token || new Date() > token.expires_at || token.used_at) {
+      throw ApiError('Account invite token is invalid or expired', 400)
+    }
+
+    const {
+      tokens: { rawRefreshToken, accessToken },
+    } = await authService.issueTokens(
+      { id: token.user_id, email: token.email, role: token.role },
+      'shared'
+    )
+
+    await authRepo.revokeActionTokenById(token.id)
+
+    console.log(token);
+    
+
+    return {
+      tokens: {
+        rawRefreshToken,
+      },
+      response: {
+        accessToken,
+        user: {
+          id: token.user_id,
+          email: token.email,
+          role: token.role,
+          sessionType: 'shared',
+        },
+      },
     }
   },
 }

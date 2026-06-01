@@ -92,6 +92,12 @@ router.get(
   authController.getAccountInviteUrl
 )
 
+router.post(
+  '/invites/accept',
+  authMiddlewares.validateToken,
+  authController.acceptAccountInvite
+)
+
 //oauth
 
 router.get(

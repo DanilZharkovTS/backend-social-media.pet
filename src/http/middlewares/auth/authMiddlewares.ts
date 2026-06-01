@@ -14,9 +14,12 @@ import {
   validateRequestChangeEmail,
   validateResetPasswordBody,
   validateResetPasswordQuery,
+  validateTokenQuery,
   validateVerifyEmail,
 } from '../../../shared/utils/validators/authValidator.ts'
 import { ALLOWED_AUTH_PROVIDERS } from '../../../shared/cfg/providers.ts'
+import { ca } from 'zod/v4/locales'
+import { tokenService } from '../../../shared/services/auth/tokenService.ts'
 
 export const authMiddlewares = {
   register: (req: Request, res: Response, next: NextFunction) => {
@@ -216,6 +219,16 @@ export const authMiddlewares = {
   validatePassword: (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = validatePasswordBody.parse(req.body)
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  validateToken: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validQuery = validateTokenQuery.parse(req.query)
+      const hashedToken  = tokenService.hash(validQuery.token) 
+      req.queryMap = { token: hashedToken }
       next()
     } catch (err) {
       next(err)

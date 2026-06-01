@@ -197,8 +197,31 @@ export const authController = {
     next: NextFunction
   ) => {
     try {
-      const result = await authService.createAccountInviteUrl(req.user, req.body)
+      const result = await authService.createAccountInviteUrl(
+        req.user,
+        req.body
+      )
       res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
+  acceptAccountInvite: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await authService.acceptAccountInvite(req.queryMap.token)
+      const { response, tokens } = result
+
+      res.cookie('refreshToken', tokens.rawRefreshToken, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      })
+
+      res.status(200).json(response)
     } catch (err) {
       next(err)
     }
