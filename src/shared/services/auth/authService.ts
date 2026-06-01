@@ -534,9 +534,6 @@ export const authService = {
 
     await authRepo.revokeActionTokenById(token.id)
 
-    console.log(token);
-    
-
     return {
       tokens: {
         rawRefreshToken,
@@ -549,6 +546,18 @@ export const authService = {
           role: token.role,
           sessionType: 'shared',
         },
+      },
+    }
+  },
+  resolveInvite: async (hashedToken: string) => {
+    const { user_id, email, name, avatar_url } =
+      await authRepo.findActionTokenWithUserByToken(hashedToken)
+    return {
+      info: {
+        id: user_id,
+        email,
+        name,
+        avatar_url,
       },
     }
   },

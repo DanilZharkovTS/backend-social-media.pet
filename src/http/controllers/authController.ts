@@ -226,4 +226,12 @@ export const authController = {
       next(err)
     }
   },
+  resolveInvite: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await authService.resolveInvite(req.queryMap.token)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
 }

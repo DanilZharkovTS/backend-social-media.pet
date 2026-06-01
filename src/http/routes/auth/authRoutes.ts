@@ -98,6 +98,12 @@ router.post(
   authController.acceptAccountInvite
 )
 
+router.get(
+  '/invites/resolve',
+  authMiddlewares.validateToken,
+  authController.resolveInvite
+)
+
 //oauth
 
 router.get(
