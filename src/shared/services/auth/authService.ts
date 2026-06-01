@@ -485,6 +485,9 @@ export const authService = {
   createAccountInviteUrl: async ({ userId }: TokenPayload, data) => {
     const userResult = await userRepo.findUserById(userId)
     const dbUser = userResult.rows[0]
+
+    if (!dbUser) throw ApiError('User not found', 404)
+
     const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
 
     if (!isValidPassword) {
@@ -500,11 +503,13 @@ export const authService = {
       return { inviteUrl: token.payload.inviteUrl }
     }
 
-    const { inviteUrl } = await tokenService.saveActionToken(
+    const { payload } = await tokenService.saveActionToken(
       userId,
       'ACCOUNT_INVITE'
     )
 
-    return { inviteUrl }
+    return {
+      inviteUrl: payload.inviteUrl,
+    }
   },
 }

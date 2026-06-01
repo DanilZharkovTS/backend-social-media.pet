@@ -1,7 +1,12 @@
 import crypto from 'crypto'
 import { actionTokenType } from '../../interfaces/auth/authInterfaces'
 import { authRepo } from '../../repos/authRepo'
+import { urlBuilder } from '../shared/urlBuilder'
+import { ApiError } from '../../lib/ApiErrors'
 
+const actionTokenConfig = {
+  ACCOUNT_INVITE: urlBuilder.accountInviteUrl,
+}
 
 export const tokenService = {
   generateActionToken: () => {
@@ -17,19 +22,22 @@ export const tokenService = {
   saveActionToken: async (userId: number, type: actionTokenType) => {
     const { rawActionToken, hashedActionToken, expiresAt } =
       tokenService.generateActionToken()
-    
-    const inviteUrl = `${process.env.FRONTEND_URL}/invite/${userId}?token=${rawActionToken}`
 
-    await authRepo.insertActionToken(userId, hashedActionToken, expiresAt, type, {inviteUrl})
+    const handler = actionTokenConfig[type]
+    if (!handler) throw ApiError(`Unknown token type: ${type}`, 400)
+    const payload = handler(rawActionToken)
 
-
-    return {
-      rawActionToken,
+    await authRepo.insertActionToken(
+      userId,
       hashedActionToken,
       expiresAt,
       type,
-      userId,
-      inviteUrl
+      payload
+    )
+
+    return {
+      rawActionToken,
+      payload,
     }
   },
 }
