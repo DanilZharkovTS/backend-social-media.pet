@@ -84,6 +84,10 @@ export interface resetPasswordDTO {
   confirmPassword: string
 }
 
+export interface getAccountInvitelinkDTO {
+  password: string
+}
+
 export type AuthProvider = 'google' | 'github' | 'discord'
 
 export type UserPrimaryProvider = 'google' | 'github' | 'discord' | 'email'

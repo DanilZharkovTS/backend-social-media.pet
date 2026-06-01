@@ -22,6 +22,12 @@ export const validateLoginUser = z.object({
   password: passwordSchema,
 })
 
+export const validatePasswordBody = z.object({
+  password:  z
+    .string('Password needs to be a string')
+    .min(1, 'Password is required'),
+})
+
 export const validateVerifyEmail = z.object({
   emailToken: z.string('Token needs to be a string'),
 })

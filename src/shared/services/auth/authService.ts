@@ -482,7 +482,15 @@ export const authService = {
       },
     }
   },
-  createAccountInviteUrl: async ({ userId }: TokenPayload) => {
+  createAccountInviteUrl: async ({ userId }: TokenPayload, data) => {
+    const userResult = await userRepo.findUserById(userId)
+    const dbUser = userResult.rows[0]
+    const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
+
+    if (!isValidPassword) {
+      throw ApiError('Password is not right', 400)
+    }
+
     const token = await authRepo.findValidActionTokenByUserAndType(
       userId,
       'ACCOUNT_INVITE'

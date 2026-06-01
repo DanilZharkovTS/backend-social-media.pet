@@ -197,7 +197,7 @@ export const authController = {
     next: NextFunction
   ) => {
     try {
-      const result = await authService.createAccountInviteUrl(req.user)
+      const result = await authService.createAccountInviteUrl(req.user, req.body)
       res.status(200).json(result)
     } catch (err) {
       next(err)

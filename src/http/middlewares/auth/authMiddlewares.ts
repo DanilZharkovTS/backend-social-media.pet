@@ -9,6 +9,7 @@ import {
   validateGetAuthProviderUrl,
   validateLoginEmailConfirm,
   validateLoginUser,
+  validatePasswordBody,
   validateRegisterUser,
   validateRequestChangeEmail,
   validateResetPasswordBody,
@@ -206,6 +207,15 @@ export const authMiddlewares = {
       }
 
       req.paramsMap = { provider }
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  //shared
+  validatePassword: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      req.body = validatePasswordBody.parse(req.body)
       next()
     } catch (err) {
       next(err)
