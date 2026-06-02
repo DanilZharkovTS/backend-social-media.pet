@@ -251,15 +251,18 @@ export const authService = {
     const redisKey = `refresh:${clientRefreshToken}`
     const redisResult = await redis.get(redisKey)
 
+    if (redisResult) {
+      return authService.handleRefreshCondition(
+        JSON.parse(redisResult),
+        'redis'
+      )
+    }
+
     const dbResult = await authRepo.selectRefreshWithUserAndSessionByToken(
       clientRefreshToken
     )
 
     const dbToken = dbResult.rows[0]
-
-    if (!dbToken) {
-      throw ApiError('Refresh token not found', 401)
-    }
 
     return authService.handleRefreshCondition(dbToken, 'db')
   },
@@ -271,9 +274,8 @@ export const authService = {
     const redis = getRedis()
 
     if (source === 'db') {
-      console.log(token)
-
       if (
+        !token ||
         new Date() > token.session_expires_at ||
         token.session_revoked_at ||
         new Date() > token.refresh_expires_at ||
@@ -300,14 +302,18 @@ export const authService = {
       expiresAt
     )
 
+    const ttl = Math.floor((expiresAt.getTime() - Date.now()) / 1000)
+
     await redis.set(
       `refresh:${hashedRefreshToken}`,
       JSON.stringify(token),
       'EX',
-      60 * 60 * 24 * 30
+      ttl
     )
 
     if (source === 'redis') {
+      console.log('redis')
+
       await redis.del(`refresh:${token.token}`)
     }
 
