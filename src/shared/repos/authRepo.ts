@@ -122,16 +122,7 @@ export const authRepo = {
     )
     return result.rows[0]
   },
-  expireSession: async (sessionId: number) => {
-    const result = await pool.query(
-      `UPDATE sessions
-      SET expired_at = NOW()
-      WHERE id = $1
-      RETURNING *`,
-      [sessionId]
-    )
-    return result.rows[0]
-  },
+
   revokeSession: async (sessionId: number) => {
     const result = await pool.query(
       `UPDATE sessions

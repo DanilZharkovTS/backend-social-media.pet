@@ -279,7 +279,6 @@ export const authService = {
         new Date() > token.refresh_expires_at ||
         token.refresh_revoked
       ) {
-        await authRepo.expireSession(token.session_id)
         throw ApiError('Invalid or expired refresh token', 401)
       }
     }
