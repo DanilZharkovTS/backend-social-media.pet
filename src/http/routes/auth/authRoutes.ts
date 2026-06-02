@@ -85,10 +85,11 @@ router.get(
 
 //shared
 
-router.get(
+router.post(
   '/invites/link',
   authMiddlewares.verifyAccessToken,
   authMiddlewares.validatePassword,
+  authMiddlewares.validateInviteTimeInterval,
   authController.getAccountInviteUrl
 )
 

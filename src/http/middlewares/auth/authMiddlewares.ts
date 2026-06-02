@@ -6,6 +6,7 @@ import { ApiError } from '../../../shared/lib/ApiErrors.ts'
 import {
   validateChangeEmail,
   validateForgotPassword,
+  validateInviteTimeIntervalBody,
   validateLoginEmailConfirm,
   validateLoginUser,
   validatePasswordBody,
@@ -216,7 +217,8 @@ export const authMiddlewares = {
   //shared
   validatePassword: (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.body = validatePasswordBody.parse(req.body)
+      const validData = validatePasswordBody.parse(req.body)
+      req.validBody = { ...req.validBody, ...validData }
       next()
     } catch (err) {
       next(err)
@@ -225,8 +227,30 @@ export const authMiddlewares = {
   validateToken: (req: Request, res: Response, next: NextFunction) => {
     try {
       const validQuery = validateTokenQuery.parse(req.query)
-      const hashedToken  = tokenService.hash(validQuery.token) 
+      const hashedToken = tokenService.hash(validQuery.token)
       req.queryMap = { token: hashedToken }
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  validateInviteTimeInterval: (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.body.interval) {
+        throw ApiError('Time interval is required', 400)
+      }
+
+      const validData = (req.validBody = validateInviteTimeIntervalBody.parse(
+        req.body.interval
+      ))
+
+      req.validBody = {
+        ...req.validBody, interval: validData
+      }
       next()
     } catch (err) {
       next(err)

@@ -10,6 +10,7 @@ import type {
   RefreshTokenWithUser,
   SessionType,
   accountInviteUrlDTO,
+  Time,
 } from '../../interfaces/auth/authInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { emailService } from '../email/emailService.ts'
@@ -143,7 +144,11 @@ export const authService = {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
-    const session = await authRepo.insertSession(dbUser.id, 'normal', refreshExpiresAt)
+    const session = await authRepo.insertSession(
+      dbUser.id,
+      'normal',
+      refreshExpiresAt
+    )
 
     await authRepo.insertRefreshToken(
       user.rows[0].id,
@@ -283,8 +288,9 @@ export const authService = {
 
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
-    
-    const expiresAt = token.session_type === 'normal'
+
+    const expiresAt =
+      token.session_type === 'normal'
         ? refreshExpiresAt
         : token.session_expires_at
 
@@ -465,10 +471,14 @@ export const authService = {
   },
   issueTokens: async (
     { id: userId, email, role },
-    sessionType: SessionType
+    sessionType: SessionType,
+    interval: {
+      value: number
+      unit: Time
+    }
   ) => {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
-      generateRefreshToken()
+      generateRefreshToken(interval.unit, interval.value)
 
     const session = await authRepo.insertSession(
       userId,
@@ -524,7 +534,13 @@ export const authService = {
 
     const { payload } = await tokenService.saveActionToken(
       userId,
-      'ACCOUNT_INVITE'
+      'ACCOUNT_INVITE',
+      {
+        interval: {
+          unit: data.interval.unit,
+          value: data.interval.value,
+        },
+      }
     )
 
     return {
@@ -540,10 +556,15 @@ export const authService = {
     }
 
     const {
+      payload: { interval },
+    } = token
+
+    const {
       tokens: { rawRefreshToken, accessToken },
     } = await authService.issueTokens(
       { id: token.user_id, email: token.email, role: token.role },
-      'shared'
+      'shared',
+      { unit: interval.unit, value: interval.value }
     )
 
     await authRepo.revokeActionTokenById(token.id)

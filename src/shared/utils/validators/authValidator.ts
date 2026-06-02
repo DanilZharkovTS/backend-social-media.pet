@@ -22,6 +22,18 @@ export const validateLoginUser = z.object({
   password: passwordSchema,
 })
 
+export const validateInviteTimeIntervalBody = z.discriminatedUnion('unit', [
+  z.object({
+    unit: z.literal('minutes'),
+    value: z.number().int().min(1).max(59),
+  }),
+
+  z.object({
+    unit: z.literal('hours'),
+    value: z.number().int().min(1).max(2),
+  }),
+])
+
 export const validatePasswordBody = z.object({
   password:  z
     .string('Password needs to be a string')

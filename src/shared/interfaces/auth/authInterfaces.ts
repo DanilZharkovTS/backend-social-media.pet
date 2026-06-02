@@ -85,12 +85,12 @@ export interface resetPasswordDTO {
   confirmPassword: string
 }
 
-export interface getAccountInvitelinkDTO {
-  password: string
-}
-
 export interface accountInviteUrlDTO {
   password: string
+  interval: {
+    unit: Time
+    value: number
+  }
 }
 
 export type Time = 'minutes' | 'hours' | 'days'
