@@ -9,6 +9,8 @@ import type {
   resetPasswordDTO,
   RefreshTokenWithUser,
   SessionType,
+  accountInviteUrlDTO,
+  Time,
 } from '../../interfaces/auth/authInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { emailService } from '../email/emailService.ts'
@@ -22,8 +24,8 @@ import { generateResetPasswordToken } from '../../utils/helpers/auth/resetPasswo
 import { generateTrustedDeviceToken } from '../../utils/helpers/auth/trustedDeviceToken.ts'
 import { generateEmailChangeToken } from '../../utils/helpers/auth/emailChangeToken.ts'
 import { getRedis } from '../../lib/redisClient.ts'
-import { User } from '../../interfaces/user/userInterfaces.ts'
 import { cacheService } from '../shared/cacheService.ts'
+import { tokenService } from './tokenService.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
@@ -142,7 +144,11 @@ export const authService = {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
-    const session = await authRepo.insertSession(dbUser.id, 'normal')
+    const session = await authRepo.insertSession(
+      dbUser.id,
+      'normal',
+      refreshExpiresAt
+    )
 
     await authRepo.insertRefreshToken(
       user.rows[0].id,
@@ -151,10 +157,11 @@ export const authService = {
       refreshExpiresAt
     )
 
-    const accessToken = generateAccessToken(
+    const accessToken = tokenService.generateAccessToken(
       user.rows[0].id,
       user.rows[0].email,
-      user.rows[0].role
+      user.rows[0].role,
+      'normal'
     )
 
     return {
@@ -165,6 +172,7 @@ export const authService = {
           email: dbUser.email,
           role: dbUser.role,
           userId: dbUser.id,
+          sessionType: 'normal',
         },
       },
     }
@@ -193,7 +201,11 @@ export const authService = {
       generateRefreshToken()
     console.log(rawRefreshToken)
 
-    const session = await authRepo.insertSession(dbUser.id, 'normal')
+    const session = await authRepo.insertSession(
+      dbUser.id,
+      'normal',
+      refreshExpiresAt
+    )
 
     await authRepo.insertRefreshToken(
       dbUser.id,
@@ -202,10 +214,11 @@ export const authService = {
       refreshExpiresAt
     )
 
-    const accessToken = generateAccessToken(
+    const accessToken = tokenService.generateAccessToken(
       dbUser.id,
       dbUser.email,
-      dbUser.role
+      dbUser.role,
+      'normal'
     )
 
     await authRepo.revokeActionTokenById(dbToken.id)
@@ -231,6 +244,7 @@ export const authService = {
           email: dbUser.email,
           role: dbUser.role,
           userId: dbUser.id,
+          sessionType: 'normal',
         },
       },
     }
@@ -241,15 +255,18 @@ export const authService = {
     const redisKey = `refresh:${clientRefreshToken}`
     const redisResult = await redis.get(redisKey)
 
-    const dbResult = await authRepo.selectRefreshTokenByToken(
+    if (redisResult) {
+      return authService.handleRefreshCondition(
+        JSON.parse(redisResult),
+        'redis'
+      )
+    }
+
+    const dbResult = await authRepo.selectRefreshWithUserAndSessionByToken(
       clientRefreshToken
     )
 
     const dbToken = dbResult.rows[0]
-
-    if (!dbToken) {
-      throw ApiError('Refresh token not found', 401)
-    }
 
     return authService.handleRefreshCondition(dbToken, 'db')
   },
@@ -261,15 +278,13 @@ export const authService = {
     const redis = getRedis()
 
     if (source === 'db') {
-      console.log(token)
-
       if (
-        token.session_expired_at ||
+        !token ||
+        new Date() > token.session_expires_at ||
         token.session_revoked_at ||
         new Date() > token.refresh_expires_at ||
         token.refresh_revoked
       ) {
-        await authRepo.expireSession(token.session_id)
         throw ApiError('Invalid or expired refresh token', 401)
       }
     }
@@ -279,28 +294,38 @@ export const authService = {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
+    const expiresAt =
+      token.session_type === 'normal'
+        ? refreshExpiresAt
+        : new Date(token.session_expires_at)
+
     await authRepo.insertRefreshToken(
       token.user_id,
       token.session_id,
       hashedRefreshToken,
-      refreshExpiresAt
+      expiresAt
     )
+
+    const ttl = Math.floor((expiresAt.getTime() - Date.now()) / 1000)
 
     await redis.set(
       `refresh:${hashedRefreshToken}`,
       JSON.stringify(token),
       'EX',
-      60 * 60 * 24 * 30
+      ttl
     )
 
     if (source === 'redis') {
+      console.log('redis')
+
       await redis.del(`refresh:${token.token}`)
     }
 
-    const accessToken = generateAccessToken(
+    const accessToken = tokenService.generateAccessToken(
       token.user_id,
       token.email,
-      token.role
+      token.role,
+      token.session_type
     )
 
     return {
@@ -311,15 +336,15 @@ export const authService = {
           email: token.email,
           role: token.role,
           userId: token.user_id,
+          sessionType: token.session_type,
         },
       },
     }
   },
 
   logout: async (clientRefreshToken: string) => {
-    const refreshTokenResult = await authRepo.selectRefreshTokenByToken(
-      clientRefreshToken
-    )
+    const refreshTokenResult =
+      await authRepo.selectRefreshWithUserAndSessionByToken(clientRefreshToken)
     if (refreshTokenResult.rows.length === 0) {
       throw ApiError('Invalid or expired refresh token', 401)
     }
@@ -457,12 +482,20 @@ export const authService = {
   },
   issueTokens: async (
     { id: userId, email, role },
-    sessionType: SessionType
+    sessionType: SessionType,
+    interval: {
+      value: number
+      unit: Time
+    }
   ) => {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
-      generateRefreshToken()
+      generateRefreshToken(interval.unit, interval.value)
 
-    const session = await authRepo.insertSession(userId, sessionType)
+    const session = await authRepo.insertSession(
+      userId,
+      sessionType,
+      refreshExpiresAt
+    )
 
     await authRepo.insertRefreshToken(
       userId,
@@ -471,13 +504,112 @@ export const authService = {
       refreshExpiresAt
     )
 
-    const accessToken = generateAccessToken(userId, email, role)
+    const accessToken = tokenService.generateAccessToken(
+      userId,
+      email,
+      role,
+      sessionType
+    )
 
     return {
       tokens: {
         rawRefreshToken,
         hashedRefreshToken,
         accessToken,
+      },
+    }
+  },
+  createAccountInviteUrl: async (
+    { userId }: TokenPayload,
+    data: accountInviteUrlDTO
+  ) => {
+    const userResult = await userRepo.findUserById(userId)
+    const dbUser = userResult.rows[0]
+
+    if (!dbUser) throw ApiError('User not found', 404)
+
+    const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
+
+    if (!isValidPassword) {
+      throw ApiError('Password is not right', 400)
+    }
+
+    const token = await authRepo.findValidActionTokenByUserAndType(
+      userId,
+      'ACCOUNT_INVITE'
+    )
+
+    if (token) {
+      return { inviteUrl: token.payload.inviteUrl }
+    }
+
+    const { payload } = await tokenService.saveActionToken(
+      userId,
+      'ACCOUNT_INVITE',
+      {
+        interval: {
+          unit: data.interval.unit,
+          value: data.interval.value,
+        },
+      }
+    )
+
+    return {
+      inviteUrl: payload.inviteUrl,
+    }
+  },
+
+  acceptAccountInvite: async (hashedToken: string) => {
+    const token = await authRepo.findActionTokenWithUserByToken(hashedToken)
+
+    if (!token || new Date() > token.expires_at || token.used_at) {
+      throw ApiError('Account invite token is invalid or expired', 400)
+    }
+
+    const {
+      payload: { interval },
+    } = token
+
+    const {
+      tokens: { rawRefreshToken, accessToken },
+    } = await authService.issueTokens(
+      { id: token.user_id, email: token.email, role: token.role },
+      'shared',
+      { unit: interval.unit, value: interval.value }
+    )
+
+    await authRepo.revokeActionTokenById(token.id)
+
+    return {
+      tokens: {
+        rawRefreshToken,
+      },
+      response: {
+        accessToken,
+        user: {
+          id: token.user_id,
+          email: token.email,
+          role: token.role,
+          sessionType: 'shared',
+        },
+      },
+    }
+  },
+  resolveInvite: async (hashedToken: string) => {
+    const {
+      user_id,
+      email,
+      name,
+      avatar_url,
+      payload: { interval },
+    } = await authRepo.findActionTokenWithUserByToken(hashedToken)
+    return {
+      info: {
+        id: user_id,
+        email,
+        name,
+        avatar_url,
+        interval: `${interval.value} ${interval.unit}`,
       },
     }
   },

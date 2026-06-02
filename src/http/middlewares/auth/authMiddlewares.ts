@@ -6,16 +6,19 @@ import { ApiError } from '../../../shared/lib/ApiErrors.ts'
 import {
   validateChangeEmail,
   validateForgotPassword,
-  validateGetAuthProviderUrl,
+  validateInviteTimeIntervalBody,
   validateLoginEmailConfirm,
   validateLoginUser,
+  validatePasswordBody,
   validateRegisterUser,
   validateRequestChangeEmail,
   validateResetPasswordBody,
   validateResetPasswordQuery,
+  validateTokenQuery,
   validateVerifyEmail,
 } from '../../../shared/utils/validators/authValidator.ts'
 import { ALLOWED_AUTH_PROVIDERS } from '../../../shared/cfg/providers.ts'
+import { tokenService } from '../../../shared/services/auth/tokenService.ts'
 
 export const authMiddlewares = {
   register: (req: Request, res: Response, next: NextFunction) => {
@@ -206,6 +209,48 @@ export const authMiddlewares = {
       }
 
       req.paramsMap = { provider }
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  //shared
+  validatePassword: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validData = validatePasswordBody.parse(req.body)
+      req.validBody = { ...req.validBody, ...validData }
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  validateToken: (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validQuery = validateTokenQuery.parse(req.query)
+      const hashedToken = tokenService.hash(validQuery.token)
+      req.queryMap = { token: hashedToken }
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
+  validateInviteTimeInterval: (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.body.interval) {
+        throw ApiError('Time interval is required', 400)
+      }
+
+      const validData = (req.validBody = validateInviteTimeIntervalBody.parse(
+        req.body.interval
+      ))
+
+      req.validBody = {
+        ...req.validBody, interval: validData
+      }
       next()
     } catch (err) {
       next(err)

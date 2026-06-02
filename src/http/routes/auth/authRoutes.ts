@@ -83,6 +83,28 @@ router.get(
   authController.logout
 )
 
+//shared
+
+router.post(
+  '/invites/link',
+  authMiddlewares.verifyAccessToken,
+  authMiddlewares.validatePassword,
+  authMiddlewares.validateInviteTimeInterval,
+  authController.getAccountInviteUrl
+)
+
+router.post(
+  '/invites/accept',
+  authMiddlewares.validateToken,
+  authController.acceptAccountInvite
+)
+
+router.get(
+  '/invites/resolve',
+  authMiddlewares.validateToken,
+  authController.resolveInvite
+)
+
 //oauth
 
 router.get(
@@ -91,6 +113,10 @@ router.get(
   authController.getAuthProviderUrl
 )
 
-router.get('/:provider/callback', authMiddlewares.checkProviderParam,authController.authProviderCallback)
+router.get(
+  '/:provider/callback',
+  authMiddlewares.checkProviderParam,
+  authController.authProviderCallback
+)
 
 export default router

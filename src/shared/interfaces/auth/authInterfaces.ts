@@ -5,6 +5,7 @@ export type actionTokenType =
   | 'EMAIL_CHANGE'
   | 'INVITE'
   | 'ADMIN_DELETE_USER'
+  | 'ACCOUNT_INVITE'
 
 export interface TokenPayload {
   userId: number
@@ -33,8 +34,9 @@ export interface RefreshTokenWithUser {
   refresh_expires_at: Date
   created_at: Date
   refresh_revoked: boolean
-  session_expired_at: Date | null
+  session_expires_at: Date
   session_revoked_at: Date | null
+  session_type: SessionType
   email: string
   role: string
 }
@@ -82,6 +84,16 @@ export interface resetPasswordDTO {
   newPassword: string
   confirmPassword: string
 }
+
+export interface accountInviteUrlDTO {
+  password: string
+  interval: {
+    unit: Time
+    value: number
+  }
+}
+
+export type Time = 'minutes' | 'hours' | 'days'
 
 export type AuthProvider = 'google' | 'github' | 'discord'
 

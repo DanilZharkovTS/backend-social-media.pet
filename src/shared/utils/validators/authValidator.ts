@@ -22,6 +22,24 @@ export const validateLoginUser = z.object({
   password: passwordSchema,
 })
 
+export const validateInviteTimeIntervalBody = z.discriminatedUnion('unit', [
+  z.object({
+    unit: z.literal('minutes'),
+    value: z.number().int().min(1).max(59),
+  }),
+
+  z.object({
+    unit: z.literal('hours'),
+    value: z.number().int().min(1).max(2),
+  }),
+])
+
+export const validatePasswordBody = z.object({
+  password:  z
+    .string('Password needs to be a string')
+    .min(1, 'Password is required'),
+})
+
 export const validateVerifyEmail = z.object({
   emailToken: z.string('Token needs to be a string'),
 })
@@ -42,6 +60,10 @@ export const validateRequestChangeEmail = z.object({
 
 export const validateChangeEmail = z.object({
   emailChangeToken: z.string('Token needs to be a string'),
+})
+
+export const validateTokenQuery = z.object({
+  token: z.string('Token needs to be a string'),
 })
 
 export const validateResetPasswordQuery = z.object({

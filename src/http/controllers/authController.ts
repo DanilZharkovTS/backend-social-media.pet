@@ -78,7 +78,6 @@ export const authController = {
     } catch (err) {
       console.log(err)
 
-      res.clearCookie('refreshToken')
       next(err)
     }
   },
@@ -184,9 +183,51 @@ export const authController = {
 
       res.redirect(`${process.env.FRONTEND_URL}/posts`)
     } catch (err) {
-      console.log(err)
-
       res.redirect(`${process.env.FRONTEND_URL}/auth/login`)
+      next(err)
+    }
+  },
+  //shared
+  getAccountInviteUrl: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await authService.createAccountInviteUrl(
+        req.user,
+        req.body
+      )
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
+  acceptAccountInvite: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await authService.acceptAccountInvite(req.queryMap.token)
+      const { response, tokens } = result
+
+      res.cookie('refreshToken', tokens.rawRefreshToken, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      })
+
+      res.status(200).json(response)
+    } catch (err) {
+      next(err)
+    }
+  },
+  resolveInvite: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await authService.resolveInvite(req.queryMap.token)
+      res.status(200).json(result)
+    } catch (err) {
       next(err)
     }
   },

@@ -18,9 +18,11 @@ declare module 'express-serve-static-core' {
       emailToken?: string
       emailChangeToken?: string
       resetPasswordToken?: string
+      token?: string
       adminDeleteUserToken?: string
       cursor?: number | string | null
     }
+    validBody?: any
     user?: {
       userId: number
       email: string
