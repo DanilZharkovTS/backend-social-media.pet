@@ -38,20 +38,23 @@ export const tokenService = {
 
     return { rawActionToken, hashedActionToken, expiresAt }
   },
-  saveActionToken: async (userId: number, type: actionTokenType) => {
+  saveActionToken: async (
+    userId: number,
+    type: actionTokenType,
+    payload?: any
+  ) => {
     const { rawActionToken, hashedActionToken, expiresAt } =
       tokenService.generateActionToken()
 
     const handler = actionTokenConfig[type]
     if (!handler) throw ApiError(`Unknown token type: ${type}`, 400)
-    const payload = handler(rawActionToken)
 
     await authRepo.insertActionToken(
       userId,
       hashedActionToken,
       expiresAt,
       type,
-      payload
+      { ...handler(rawActionToken), ...payload }
     )
 
     return {

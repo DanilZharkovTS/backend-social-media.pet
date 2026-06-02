@@ -18,9 +18,9 @@ export const authRepo = {
       [userId, sessionId, token, expiresAt]
     )
   },
-  selectRefreshTokenByToken: (token: string) => {
+  selectRefreshWithUserAndSessionByToken: (token: string) => {
     return pool.query(
-      `SELECT rf.user_id, rf.session_id, rf.expires_at AS refresh_expires_at, rf.id, rf.revoked AS refresh_revoked, s.expired_at AS session_expired_at, s.revoked_at AS session_revoked_at, rf.token, u.email, u.role
+      `SELECT rf.user_id, rf.session_id, rf.expires_at AS refresh_expires_at, rf.id, rf.revoked AS refresh_revoked, s.expires_at AS session_expires_at, s.revoked_at AS session_revoked_at, s.type AS session_type, rf.token, u.email, u.role
        FROM refresh_tokens rf
        JOIN sessions s ON rf.session_id = s.id
        JOIN users u ON rf.user_id = u.id
@@ -113,12 +113,12 @@ export const authRepo = {
       [userId, token, expiresAt, JSON.stringify({ targetUserId }), type]
     )
   },
-  insertSession: async (userId: number, type: SessionType) => {
+  insertSession: async (userId: number, type: SessionType, expiresAt: Date) => {
     const result = await pool.query(
-      `INSERT INTO sessions (user_id, type)
-      VALUES ($1, $2)
+      `INSERT INTO sessions (user_id, type, expires_at)
+      VALUES ($1, $2, $3)
       RETURNING *`,
-      [userId, type]
+      [userId, type, expiresAt]
     )
     return result.rows[0]
   },
@@ -139,6 +139,16 @@ export const authRepo = {
       WHERE id = $1
       RETURNING *`,
       [sessionId]
+    )
+    return result.rows[0]
+  },
+  updateSessionExpiry: async (sessionId: number, expiresAt: Date) => {
+    const result = await pool.query(
+      `UPDATE sessions
+      SET expires_at = $1
+      WHERE id = $2
+      RETURNING *`,
+      [expiresAt, sessionId]
     )
     return result.rows[0]
   },

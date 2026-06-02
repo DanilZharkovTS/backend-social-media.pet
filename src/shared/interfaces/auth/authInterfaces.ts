@@ -34,8 +34,9 @@ export interface RefreshTokenWithUser {
   refresh_expires_at: Date
   created_at: Date
   refresh_revoked: boolean
-  session_expired_at: Date | null
+  session_expires_at: Date
   session_revoked_at: Date | null
+  session_type: SessionType
   email: string
   role: string
 }
@@ -87,6 +88,12 @@ export interface resetPasswordDTO {
 export interface getAccountInvitelinkDTO {
   password: string
 }
+
+export interface accountInviteUrlDTO {
+  password: string
+}
+
+export type Time = 'minutes' | 'hours' | 'days'
 
 export type AuthProvider = 'google' | 'github' | 'discord'
 

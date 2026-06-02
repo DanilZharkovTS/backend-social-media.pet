@@ -9,6 +9,7 @@ import type {
   resetPasswordDTO,
   RefreshTokenWithUser,
   SessionType,
+  accountInviteUrlDTO,
 } from '../../interfaces/auth/authInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { emailService } from '../email/emailService.ts'
@@ -142,7 +143,7 @@ export const authService = {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
-    const session = await authRepo.insertSession(dbUser.id, 'normal')
+    const session = await authRepo.insertSession(dbUser.id, 'normal', refreshExpiresAt)
 
     await authRepo.insertRefreshToken(
       user.rows[0].id,
@@ -193,7 +194,11 @@ export const authService = {
       generateRefreshToken()
     console.log(rawRefreshToken)
 
-    const session = await authRepo.insertSession(dbUser.id, 'normal')
+    const session = await authRepo.insertSession(
+      dbUser.id,
+      'normal',
+      refreshExpiresAt
+    )
 
     await authRepo.insertRefreshToken(
       dbUser.id,
@@ -241,7 +246,7 @@ export const authService = {
     const redisKey = `refresh:${clientRefreshToken}`
     const redisResult = await redis.get(redisKey)
 
-    const dbResult = await authRepo.selectRefreshTokenByToken(
+    const dbResult = await authRepo.selectRefreshWithUserAndSessionByToken(
       clientRefreshToken
     )
 
@@ -264,7 +269,7 @@ export const authService = {
       console.log(token)
 
       if (
-        token.session_expired_at ||
+        new Date() > token.session_expires_at ||
         token.session_revoked_at ||
         new Date() > token.refresh_expires_at ||
         token.refresh_revoked
@@ -278,12 +283,16 @@ export const authService = {
 
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
+    
+    const expiresAt = token.session_type === 'normal'
+        ? refreshExpiresAt
+        : token.session_expires_at
 
     await authRepo.insertRefreshToken(
       token.user_id,
       token.session_id,
       hashedRefreshToken,
-      refreshExpiresAt
+      expiresAt
     )
 
     await redis.set(
@@ -317,9 +326,8 @@ export const authService = {
   },
 
   logout: async (clientRefreshToken: string) => {
-    const refreshTokenResult = await authRepo.selectRefreshTokenByToken(
-      clientRefreshToken
-    )
+    const refreshTokenResult =
+      await authRepo.selectRefreshWithUserAndSessionByToken(clientRefreshToken)
     if (refreshTokenResult.rows.length === 0) {
       throw ApiError('Invalid or expired refresh token', 401)
     }
@@ -462,7 +470,11 @@ export const authService = {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
-    const session = await authRepo.insertSession(userId, sessionType)
+    const session = await authRepo.insertSession(
+      userId,
+      sessionType,
+      refreshExpiresAt
+    )
 
     await authRepo.insertRefreshToken(
       userId,
@@ -486,7 +498,10 @@ export const authService = {
       },
     }
   },
-  createAccountInviteUrl: async ({ userId }: TokenPayload, data) => {
+  createAccountInviteUrl: async (
+    { userId }: TokenPayload,
+    data: accountInviteUrlDTO
+  ) => {
     const userResult = await userRepo.findUserById(userId)
     const dbUser = userResult.rows[0]
 
