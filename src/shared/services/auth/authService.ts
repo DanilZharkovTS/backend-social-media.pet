@@ -157,10 +157,11 @@ export const authService = {
       refreshExpiresAt
     )
 
-    const accessToken = generateAccessToken(
+    const accessToken = tokenService.generateAccessToken(
       user.rows[0].id,
       user.rows[0].email,
-      user.rows[0].role
+      user.rows[0].role,
+      'normal'
     )
 
     return {
@@ -171,6 +172,7 @@ export const authService = {
           email: dbUser.email,
           role: dbUser.role,
           userId: dbUser.id,
+          sessionType: 'normal',
         },
       },
     }
@@ -212,10 +214,11 @@ export const authService = {
       refreshExpiresAt
     )
 
-    const accessToken = generateAccessToken(
+    const accessToken = tokenService.generateAccessToken(
       dbUser.id,
       dbUser.email,
-      dbUser.role
+      dbUser.role,
+      'normal'
     )
 
     await authRepo.revokeActionTokenById(dbToken.id)
@@ -241,6 +244,7 @@ export const authService = {
           email: dbUser.email,
           role: dbUser.role,
           userId: dbUser.id,
+          sessionType: 'normal',
         },
       },
     }
@@ -293,7 +297,7 @@ export const authService = {
     const expiresAt =
       token.session_type === 'normal'
         ? refreshExpiresAt
-        : token.session_expires_at
+        : new Date(token.session_expires_at)
 
     await authRepo.insertRefreshToken(
       token.user_id,
@@ -317,10 +321,11 @@ export const authService = {
       await redis.del(`refresh:${token.token}`)
     }
 
-    const accessToken = generateAccessToken(
+    const accessToken = tokenService.generateAccessToken(
       token.user_id,
       token.email,
-      token.role
+      token.role,
+      token.session_type
     )
 
     return {
@@ -331,6 +336,7 @@ export const authService = {
           email: token.email,
           role: token.role,
           userId: token.user_id,
+          sessionType: token.session_type,
         },
       },
     }
@@ -590,14 +596,20 @@ export const authService = {
     }
   },
   resolveInvite: async (hashedToken: string) => {
-    const { user_id, email, name, avatar_url } =
-      await authRepo.findActionTokenWithUserByToken(hashedToken)
+    const {
+      user_id,
+      email,
+      name,
+      avatar_url,
+      payload: { interval },
+    } = await authRepo.findActionTokenWithUserByToken(hashedToken)
     return {
       info: {
         id: user_id,
         email,
         name,
         avatar_url,
+        interval: `${interval.value} ${interval.unit}`,
       },
     }
   },
