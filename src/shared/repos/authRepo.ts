@@ -122,6 +122,17 @@ export const authRepo = {
     )
     return result.rows[0]
   },
+  findActiveSessionsByUserId: async (userId: number) => {
+    const result = await pool.query(
+      `SELECT * FROM sessions
+      WHERE user_id = $1
+      AND revoked_at IS NULL
+      AND expires_at > NOW()
+      LIMIT 100`,
+      [userId]
+    )
+    return result.rows
+  },
 
   revokeSession: async (sessionId: number) => {
     const result = await pool.query(
