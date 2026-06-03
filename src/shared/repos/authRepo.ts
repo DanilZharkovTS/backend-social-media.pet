@@ -144,6 +144,14 @@ export const authRepo = {
     )
     return result.rows
   },
+  findSessionById: async (sessionId: number) => {
+    const result = await pool.query(
+      `SELECT * FROM sessions
+      WHERE id = $1`,
+      [sessionId]
+    )
+    return result.rows[0]
+  },
 
   revokeSession: async (sessionId: number) => {
     const result = await pool.query(

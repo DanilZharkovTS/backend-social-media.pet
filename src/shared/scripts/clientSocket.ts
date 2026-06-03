@@ -3,7 +3,7 @@ import io from 'socket.io-client'
 const socket = io(`http://localhost:3000`, {
   auth: {
     accessToken:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2NywiZW1haWwiOiJncnRkckBhaXRkZGwuY29jbWZmZiIsInJvbGUiOiJ1c2VyIiwic2Vzc2lvblR5cGUiOiJub3JtYWwiLCJpYXQiOjE3ODA1MTk4MTIsImV4cCI6MTc4MDUyMDcxMn0.ppDLEROUmnMnnuPgVNOJ04vT0-8_dQsDT_opXS_b4rE',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2NywiZW1haWwiOiJncnRkckBhaXRkZGwuY29jbWZmZiIsInJvbGUiOiJ1c2VyIiwic2Vzc2lvblR5cGUiOiJub3JtYWwiLCJpYXQiOjE3ODA1MjE1NjEsImV4cCI6MTc4MDUyMjQ2MX0.LtiDWwe1JVtxK0twXsk4Ae0XBxG87C0zB3Gl1xEsrHM',
   },
 })
 
@@ -11,7 +11,7 @@ socket.on('connect', () => {
   console.log(`Connected ${socket.id}`)
 
   setTimeout(() => {
-    socket.emit('session:revoke', { sessionId: 52 })
+    socket.emit('session:revoke', { sessionId: 54 })
   }, 500)
 
   socket.on('session:revoked', (data) => {

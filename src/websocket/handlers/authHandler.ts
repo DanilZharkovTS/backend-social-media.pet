@@ -17,8 +17,7 @@ export const authHandler = {
 
       socket.emit('session:revoked', response)
       socket.to(`user:${response.user_id}`).emit('session:revoked', response)
-      console.log('was revoked');
-      
+      console.log('was revoked')
     } catch (err) {
       next(err)
     }

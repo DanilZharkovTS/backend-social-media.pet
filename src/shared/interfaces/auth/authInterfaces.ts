@@ -35,11 +35,18 @@ export interface RefreshTokenWithUser {
   refresh_expires_at: Date
   created_at: Date
   refresh_revoked: boolean
-  session_expires_at: Date
-  session_revoked_at: Date | null
-  session_type: SessionType
   email: string
   role: string
+}
+
+export interface Session {
+  id: number
+  user_id: number
+  type: SessionType
+  name: string | null
+  expires_at: Date
+  revoked_at: Date | null
+  created_at: Date
 }
 
 export interface registerUserDTO {
