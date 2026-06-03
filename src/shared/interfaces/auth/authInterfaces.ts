@@ -11,6 +11,7 @@ export interface TokenPayload {
   userId: number
   email: string
   role: string
+  sessionType: SessionType
 }
 
 export interface RefreshToken {

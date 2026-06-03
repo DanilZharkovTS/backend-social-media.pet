@@ -278,6 +278,9 @@ export const authService = {
   ) => {
     const redis = getRedis()
 
+    console.log(token);
+    
+
     if (source === 'db') {
       if (
         !token ||

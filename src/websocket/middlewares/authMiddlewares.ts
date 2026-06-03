@@ -1,7 +1,10 @@
 import jwt from 'jsonwebtoken'
 import { IoNextFn } from '../../shared/interfaces/global/socket'
 import { Socket } from 'socket.io'
-import { TokenPayload } from '../../shared/interfaces/auth/authInterfaces'
+import {
+  SessionType,
+  TokenPayload,
+} from '../../shared/interfaces/auth/authInterfaces'
 import { ApiError } from '../../shared/lib/ApiErrors'
 
 export const ioAuthMiddlewares = {
@@ -34,6 +37,14 @@ export const ioAuthMiddlewares = {
         throw ApiError('You are not in this chat', 403)
       }
 
+      next()
+    }
+  },
+  requireSessionType: (type: SessionType) => {
+    return (socket: Socket, data: any, ctx: any, next: IoNextFn) => {
+      if (socket.user.sessionType !== type) {
+        throw ApiError('Unauthorized', 401)
+      }
       next()
     }
   },

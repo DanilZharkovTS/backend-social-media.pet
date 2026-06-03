@@ -1,6 +1,8 @@
+import { th } from 'zod/v4/locales'
 import { TokenPayload } from '../../interfaces/auth/authInterfaces'
 import { authRepo } from '../../repos/authRepo'
 import { userService } from '../user/userService'
+import { ApiError } from '../../lib/ApiErrors'
 
 export const sessionService = {
   getActiveUserSessions: async ({ userId }: TokenPayload) => {
@@ -11,8 +13,14 @@ export const sessionService = {
     return { sessions }
   },
   revokeSession: async (sessionId: number) => {
-    await authRepo.revokeRefreshBySessionId(sessionId)
-    await authRepo.revokeSession(sessionId)
-    return
+    const session = await authRepo.revokeSession(sessionId)
+
+    if (!session) {
+      throw ApiError('Active session was not found', 404)
+    }
+
+    await authRepo.revokeValidRefreshBySessionId(sessionId)
+
+    return { response: session }
   },
 }

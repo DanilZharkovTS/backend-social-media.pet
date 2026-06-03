@@ -36,7 +36,7 @@ export const authRepo = {
       [tokenId]
     )
   },
-  revokeRefreshBySessionId: async (sessionId: number) => {
+  revokeValidRefreshBySessionId: async (sessionId: number) => {
     const result = await pool.query(
       `UPDATE refresh_tokens
       SET revoked = true
@@ -150,6 +150,7 @@ export const authRepo = {
       `UPDATE sessions
       SET revoked_at = NOW()
       WHERE id = $1
+      AND revoked_at IS NULL
       RETURNING *`,
       [sessionId]
     )
