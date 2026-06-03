@@ -26,6 +26,7 @@ import { generateEmailChangeToken } from '../../utils/helpers/auth/emailChangeTo
 import { getRedis } from '../../lib/redisClient.ts'
 import { cacheService } from '../shared/cacheService.ts'
 import { tokenService } from './tokenService.ts'
+import { sessionService } from './sessionService.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
@@ -289,8 +290,6 @@ export const authService = {
       }
     }
 
-    await authRepo.revokeRefreshTokenById(token.id)
-
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
@@ -316,8 +315,6 @@ export const authService = {
     )
 
     if (source === 'redis') {
-      console.log('redis')
-
       await redis.del(`refresh:${token.token}`)
     }
 
@@ -327,6 +324,8 @@ export const authService = {
       token.role,
       token.session_type
     )
+
+    await authRepo.revokeRefreshTokenById(token.id)
 
     return {
       refreshToken: rawRefreshToken,
@@ -349,8 +348,7 @@ export const authService = {
       throw ApiError('Invalid or expired refresh token', 401)
     }
 
-    await authRepo.revokeSession(refreshTokenResult.rows[0].session_id)
-    await authRepo.revokeRefreshTokenById(refreshTokenResult.rows[0].id)
+    await sessionService.revokeSession(refreshTokenResult.rows[0].session_id)
 
     await cacheService.invalidateByPrefix(`refresh:${clientRefreshToken}`)
 

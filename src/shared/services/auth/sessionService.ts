@@ -10,4 +10,9 @@ export const sessionService = {
 
     return { sessions }
   },
+  revokeSession: async (sessionId: number) => {
+    await authRepo.revokeRefreshBySessionId(sessionId)
+    await authRepo.revokeSession(sessionId)
+    return
+  },
 }
