@@ -85,6 +85,12 @@ router.get(
 
 //shared
 
+router.get(
+  '/sessions',
+  authMiddlewares.verifyAccessToken,
+  authController.getMySessions
+)
+
 router.post(
   '/invites/link',
   authMiddlewares.verifyAccessToken,

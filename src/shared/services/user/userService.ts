@@ -330,6 +330,12 @@ export const userService = {
 
     return { posts: postsWithFavorite, pagination }
   },
+  validateUser: async (userId: number) => {
+    const userResult = await userRepo.findUserById(userId)
+    if (userResult.rows.length === 0) {
+      throw ApiError('User not found', 404)
+    }
+  },
   //admin
   findAsAdmin: async (search: string, pagination: paginationDTO) => {
     const userResult = await userRepo.findBySearch(search, pagination)

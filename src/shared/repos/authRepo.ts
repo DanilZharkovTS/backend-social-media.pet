@@ -36,6 +36,32 @@ export const authRepo = {
       [tokenId]
     )
   },
+  revokeValidRefreshBySessionId: async (sessionId: number) => {
+    const result = await pool.query(
+      `UPDATE refresh_tokens
+      SET revoked = true
+      WHERE session_id = $1
+      AND revoked = false
+      AND expires_at > NOW()`,
+      [sessionId]
+    )
+    return result.rows
+  },
+  revokeValidRefreshesByUserIdExcept: async (
+    userId: number,
+    sessionId: number
+  ) => {
+    const result = await pool.query(
+      `UPDATE refresh_tokens
+      SET revoked = true
+      WHERE user_id = $1
+      AND revoked = false
+      AND session_id != $2
+      AND expires_at > NOW()`,
+      [userId, sessionId]
+    )
+    return result.rows
+  },
   insertTrustedDevice: (user_id: number, token: string, expires_at: Date) => {
     return pool.query(
       `INSERT INTO trusted_devices (user_id, token_hash, expires_at)
@@ -122,16 +148,48 @@ export const authRepo = {
     )
     return result.rows[0]
   },
+  findActiveSessionsByUserId: async (userId: number) => {
+    const result = await pool.query(
+      `SELECT * FROM sessions
+      WHERE user_id = $1
+      AND revoked_at IS NULL
+      AND expires_at > NOW()
+      LIMIT 100`,
+      [userId]
+    )
+    return result.rows
+  },
+  findSessionById: async (sessionId: number) => {
+    const result = await pool.query(
+      `SELECT * FROM sessions
+      WHERE id = $1`,
+      [sessionId]
+    )
+    return result.rows[0]
+  },
 
   revokeSession: async (sessionId: number) => {
     const result = await pool.query(
       `UPDATE sessions
       SET revoked_at = NOW()
       WHERE id = $1
+      AND revoked_at IS NULL
       RETURNING *`,
       [sessionId]
     )
     return result.rows[0]
+  },
+  revokeSessionsByUserIdExcept: async (userId: number, sessionId: number) => {
+    const result = await pool.query(
+      `UPDATE sessions
+      SET revoked_at = NOW()
+      WHERE user_id = $1
+      AND revoked_at IS NULL
+      AND id != $2
+      RETURNING *`,
+      [userId, sessionId]
+    )
+    return result.rows
   },
   updateSessionExpiry: async (sessionId: number, expiresAt: Date) => {
     const result = await pool.query(

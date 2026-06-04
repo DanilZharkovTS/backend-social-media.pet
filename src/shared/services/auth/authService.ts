@@ -11,6 +11,7 @@ import type {
   SessionType,
   accountInviteUrlDTO,
   Time,
+  Session,
 } from '../../interfaces/auth/authInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { emailService } from '../email/emailService.ts'
@@ -26,6 +27,7 @@ import { generateEmailChangeToken } from '../../utils/helpers/auth/emailChangeTo
 import { getRedis } from '../../lib/redisClient.ts'
 import { cacheService } from '../shared/cacheService.ts'
 import { tokenService } from './tokenService.ts'
+import { sessionService } from './sessionService.ts'
 
 export const authService = {
   register: async (data: registerUserDTO) => {
@@ -277,27 +279,25 @@ export const authService = {
   ) => {
     const redis = getRedis()
 
-    if (source === 'db') {
-      if (
-        !token ||
-        new Date() > token.session_expires_at ||
-        token.session_revoked_at ||
-        new Date() > token.refresh_expires_at ||
-        token.refresh_revoked
-      ) {
-        throw ApiError('Invalid or expired refresh token', 401)
-      }
-    }
+    const session: Session = await authRepo.findSessionById(token.session_id)
 
-    await authRepo.revokeRefreshTokenById(token.id)
+    if (
+      !token ||
+      new Date() > session.expires_at ||
+      session.revoked_at ||
+      new Date() > token.refresh_expires_at ||
+      token.refresh_revoked
+    ) {
+      throw ApiError('Invalid or expired refresh token', 401)
+    }
 
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
     const expiresAt =
-      token.session_type === 'normal'
+      session.type === 'normal'
         ? refreshExpiresAt
-        : new Date(token.session_expires_at)
+        : new Date(session.expires_at)
 
     await authRepo.insertRefreshToken(
       token.user_id,
@@ -316,8 +316,6 @@ export const authService = {
     )
 
     if (source === 'redis') {
-      console.log('redis')
-
       await redis.del(`refresh:${token.token}`)
     }
 
@@ -325,8 +323,10 @@ export const authService = {
       token.user_id,
       token.email,
       token.role,
-      token.session_type
+      session.type
     )
+
+    await authRepo.revokeRefreshTokenById(token.id)
 
     return {
       refreshToken: rawRefreshToken,
@@ -336,7 +336,7 @@ export const authService = {
           email: token.email,
           role: token.role,
           userId: token.user_id,
-          sessionType: token.session_type,
+          sessionType: session.type,
         },
       },
     }
@@ -349,8 +349,7 @@ export const authService = {
       throw ApiError('Invalid or expired refresh token', 401)
     }
 
-    await authRepo.revokeSession(refreshTokenResult.rows[0].session_id)
-    await authRepo.revokeRefreshTokenById(refreshTokenResult.rows[0].id)
+    await sessionService.revokeSession(refreshTokenResult.rows[0].session_id)
 
     await cacheService.invalidateByPrefix(`refresh:${clientRefreshToken}`)
 

@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express'
 import { authService } from '../../shared/services/auth/authService.ts'
 import { authProvidersService } from '../../shared/services/auth/providers/authProvidersService.ts'
 import { AuthProvider } from '../../shared/interfaces/auth/authInterfaces.ts'
+import { sessionService } from '../../shared/services/auth/sessionService.ts'
 
 export const authController = {
   register: async (req: Request, res: Response, next: NextFunction) => {
@@ -188,6 +189,14 @@ export const authController = {
     }
   },
   //shared
+  getMySessions: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await sessionService.getActiveUserSessions(req.user)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
   getAccountInviteUrl: async (
     req: Request,
     res: Response,

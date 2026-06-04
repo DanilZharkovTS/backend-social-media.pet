@@ -1,8 +1,14 @@
 import jwt from 'jsonwebtoken'
 import { IoNextFn } from '../../shared/interfaces/global/socket'
 import { Socket } from 'socket.io'
-import { TokenPayload } from '../../shared/interfaces/auth/authInterfaces'
+import {
+  revokeAllSessionsDTO,
+  SessionType,
+  TokenPayload,
+} from '../../shared/interfaces/auth/authInterfaces'
 import { ApiError } from '../../shared/lib/ApiErrors'
+import cookie from 'cookie'
+import { tokenService } from '../../shared/services/auth/tokenService'
 
 export const ioAuthMiddlewares = {
   verifyAccessToken: (socket: Socket, next: IoNextFn) => {
@@ -36,5 +42,34 @@ export const ioAuthMiddlewares = {
 
       next()
     }
+  },
+  requireSessionType: (type: SessionType) => {
+    return (socket: Socket, data: any, ctx: any, next: IoNextFn) => {
+      if (socket.user.sessionType !== type) {
+        throw ApiError('Unauthorized', 401)
+      }
+      next()
+    }
+  },
+  validateRefreshToken: (
+    socket: Socket,
+    data: any,
+    ctx: revokeAllSessionsDTO,
+    next: IoNextFn
+  ) => {
+    const cookies = cookie.parse(socket.handshake.headers.cookie || '')
+    const refreshToken = cookies.refreshToken
+
+    if (!refreshToken) {
+      throw ApiError('Unauthorized', 401)
+    }
+
+    const hashedRefreshToken = tokenService.hash(refreshToken)
+
+    ctx.validData = {
+      token: hashedRefreshToken,
+    }
+
+    next()
   },
 }
