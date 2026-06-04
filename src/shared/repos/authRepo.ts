@@ -47,6 +47,21 @@ export const authRepo = {
     )
     return result.rows
   },
+  revokeValidRefreshesByUserIdExcept: async (
+    userId: number,
+    sessionId: number
+  ) => {
+    const result = await pool.query(
+      `UPDATE refresh_tokens
+      SET revoked = true
+      WHERE user_id = $1
+      AND revoked = false
+      AND session_id != $2
+      AND expires_at > NOW()`,
+      [userId, sessionId]
+    )
+    return result.rows
+  },
   insertTrustedDevice: (user_id: number, token: string, expires_at: Date) => {
     return pool.query(
       `INSERT INTO trusted_devices (user_id, token_hash, expires_at)
@@ -163,6 +178,18 @@ export const authRepo = {
       [sessionId]
     )
     return result.rows[0]
+  },
+  revokeSessionsByUserIdExcept: async (userId: number, sessionId: number) => {
+    const result = await pool.query(
+      `UPDATE sessions
+      SET revoked_at = NOW()
+      WHERE user_id = $1
+      AND revoked_at IS NULL
+      AND id != $2
+      RETURNING *`,
+      [userId, sessionId]
+    )
+    return result.rows
   },
   updateSessionExpiry: async (sessionId: number, expiresAt: Date) => {
     const result = await pool.query(

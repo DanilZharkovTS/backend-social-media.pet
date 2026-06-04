@@ -101,6 +101,12 @@ export interface accountInviteUrlDTO {
   }
 }
 
+export interface revokeAllSessionsDTO {
+  validData: {
+    token: string
+  }
+}
+
 export type Time = 'minutes' | 'hours' | 'days'
 
 export type AuthProvider = 'google' | 'github' | 'discord'
