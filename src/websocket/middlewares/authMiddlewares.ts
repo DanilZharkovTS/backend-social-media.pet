@@ -56,7 +56,7 @@ export const ioAuthMiddlewares = {
     data: any,
     ctx: revokeAllSessionsDTO,
     next: IoNextFn
-  ) => {
+  ) => {    
     const cookies = cookie.parse(socket.handshake.headers.cookie || '')
     const refreshToken = cookies.refreshToken
 

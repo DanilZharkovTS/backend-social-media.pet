@@ -7,6 +7,8 @@ import {
 import { authRepo } from '../../repos/authRepo'
 import { userService } from '../user/userService'
 import { ApiError } from '../../lib/ApiErrors'
+import { cacheService } from '../shared/cacheService'
+import { getRedis } from '../../lib/redisClient'
 
 export const sessionService = {
   getActiveUserSessions: async ({ userId }: TokenPayload) => {
@@ -17,13 +19,24 @@ export const sessionService = {
     return { sessions }
   },
   revokeSession: async (sessionId: number) => {
+    const redis = getRedis()
+
     const session: Session = await authRepo.revokeSession(sessionId)
 
     if (!session) {
       throw ApiError('Active session was not found', 404)
     }
 
-    await authRepo.revokeValidRefreshBySessionId(sessionId)
+    const refreshTokens = await authRepo.revokeValidRefreshBySessionId(
+      sessionId
+    )
+    const pipeline = redis.pipeline()
+
+    for (const refresh of refreshTokens) {
+      pipeline.del(`refresh:${refresh.token}`)
+    }
+
+    await pipeline.exec()
 
     return { response: session }
   },
@@ -32,6 +45,8 @@ export const sessionService = {
     { userId }: TokenPayload,
     { validData: { token: hashedToken } }: revokeAllSessionsDTO
   ) => {
+    const redis = getRedis()
+
     const tokenResult = await authRepo.selectRefreshWithUserAndSessionByToken(
       hashedToken
     )
@@ -41,9 +56,19 @@ export const sessionService = {
       userId,
       token.session_id
     )
-    await authRepo.revokeValidRefreshesByUserIdExcept(userId, token.session_id)
-
     const sessionIds = sessions.map((s) => s.id)
+
+    const refreshTokens = await authRepo.revokeValidRefreshesByUserIdExcept(
+      userId,
+      token.session_id
+    )
+    const pipeline = redis.pipeline()
+
+    for (const refresh of refreshTokens) {
+      pipeline.del(`refresh:${refresh.token}`)
+    }
+
+    await pipeline.exec()
 
     return { response: sessionIds }
   },

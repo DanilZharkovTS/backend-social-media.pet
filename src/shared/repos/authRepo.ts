@@ -42,7 +42,8 @@ export const authRepo = {
       SET revoked = true
       WHERE session_id = $1
       AND revoked = false
-      AND expires_at > NOW()`,
+      AND expires_at > NOW()
+      RETURNING *`,
       [sessionId]
     )
     return result.rows
