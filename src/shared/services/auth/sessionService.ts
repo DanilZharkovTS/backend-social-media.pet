@@ -19,13 +19,24 @@ export const sessionService = {
     return { sessions }
   },
   revokeSession: async (sessionId: number) => {
+    const redis = getRedis()
+
     const session: Session = await authRepo.revokeSession(sessionId)
 
     if (!session) {
       throw ApiError('Active session was not found', 404)
     }
 
-    await authRepo.revokeValidRefreshBySessionId(sessionId)
+    const refreshTokens = await authRepo.revokeValidRefreshBySessionId(
+      sessionId
+    )
+    const pipeline = redis.pipeline()
+
+    for (const refresh of refreshTokens) {
+      pipeline.del(`refresh:${refresh.token}`)
+    }
+
+    await pipeline.exec()
 
     return { response: session }
   },
@@ -35,7 +46,7 @@ export const sessionService = {
     { validData: { token: hashedToken } }: revokeAllSessionsDTO
   ) => {
     const redis = getRedis()
-    
+
     const tokenResult = await authRepo.selectRefreshWithUserAndSessionByToken(
       hashedToken
     )
