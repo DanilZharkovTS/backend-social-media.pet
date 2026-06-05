@@ -57,6 +57,8 @@ export const authProvidersService = {
     const providerHandler = providerCallbackHandlers[provider]
 
     const userInfo = await providerHandler(code)
+    console.log(userInfo);
+    
 
     await redis.del(`auth:state:${state}`)
 
@@ -75,7 +77,10 @@ export const authProvidersService = {
         userInfo.provider,
         userInfo.provider_id
       )
-      return authService.issueTokens(user, 'normal')
+      return authService.issueTokens(user, 'normal', {
+        value: 30,
+        unit: 'days',
+      })
     }
 
     if (!existing.provider) {
@@ -87,7 +92,10 @@ export const authProvidersService = {
       await cacheService.invalidateByPrefix(`users:${existing.id}:providers`)
     }
 
-    return authService.issueTokens(existing, 'normal')
+    return authService.issueTokens(existing, 'normal', {
+      value: 30,
+      unit: 'days',
+    })
   },
   generateState: () => {
     const state = crypto.randomUUID()

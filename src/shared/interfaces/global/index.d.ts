@@ -1,6 +1,6 @@
 import 'express'
 import Stripe from 'stripe'
-import { AuthProvider } from '../auth/authInterfaces'
+import { AuthProvider, SessionType } from '../auth/authInterfaces'
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -27,6 +27,7 @@ declare module 'express-serve-static-core' {
       userId: number
       email: string
       role: string
+      sessionType: SessionType
     }
     stripeEvent?: Stripe.Event
     hashedRefreshToken?: string
