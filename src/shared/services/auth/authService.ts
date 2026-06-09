@@ -522,24 +522,13 @@ export const authService = {
     { userId }: TokenPayload,
     data: accountInviteUrlDTO
   ) => {
-    const userResult = await userRepo.findUserById(userId)
-    const dbUser = userResult.rows[0]
-
-    if (!dbUser) throw ApiError('User not found', 404)
-
-    const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
-
-    if (!isValidPassword) {
-      throw ApiError('Password is not right', 400)
-    }
-
     const token = await authRepo.findValidActionTokenByUserAndType(
       userId,
       'ACCOUNT_INVITE'
     )
 
     if (token) {
-      return { inviteUrl: token.payload.inviteUrl }
+      await authRepo.revokeActionTokenById(token.id)
     }
 
     const { payload } = await tokenService.saveActionToken(

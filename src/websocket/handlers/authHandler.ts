@@ -16,8 +16,8 @@ export const authHandler = {
       const result = await sessionService.revokeSession(validIds.sessionId)
       const { response } = result
 
-      socket.emit('session:revoked', response)
-      socket.to(`user:${response.user_id}`).emit('session:revoked', [response])
+      socket.emit('session:revoked', [response.id])
+      socket.to(`user:${response.user_id}`).emit('session:revoked', [response.id])
       console.log('was revoked')
     } catch (err) {
       next(err)
