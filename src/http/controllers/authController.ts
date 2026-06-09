@@ -77,8 +77,7 @@ export const authController = {
       })
       res.status(200).json(result.logined)
     } catch (err) {
-      console.log(err)
-
+      res.clearCookie('refreshToken')
       next(err)
     }
   },

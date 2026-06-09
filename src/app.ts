@@ -50,7 +50,7 @@ app.use(errHandler)
 
 const server = http.createServer(app)
 export const io = new Server(server, {
-  cors: { origin: process.env.FRONTEND_URL },
+  cors: { origin: process.env.FRONTEND_URL, credentials: true },
 })
 
 registerSockets(io)
