@@ -528,7 +528,7 @@ export const authService = {
     )
 
     if (token) {
-      return { inviteUrl: token.payload.inviteUrl }
+      await authRepo.revokeActionTokenById(token.id)
     }
 
     const { payload } = await tokenService.saveActionToken(
