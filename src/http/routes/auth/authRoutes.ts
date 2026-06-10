@@ -38,7 +38,7 @@ router.post(
 
 router.post(
   '/refresh',
-  rateLimiter(10, 60, 'refresh'),
+  rateLimiter(30, 60, 'refresh'),
   authMiddlewares.refresh,
   authController.refresh
 )
@@ -90,12 +90,15 @@ router.get(
 
 router.get(
   '/sessions',
+  rateLimiter(60, 60, 'get_sessions'),
   authMiddlewares.verifyAccessToken,
   authController.getMySessions
 )
 
 router.post(
   '/invites/link',
+  rateLimiter(10, 60, 'auth_invite_link'),
+  parseDevice,
   authMiddlewares.verifyAccessToken,
   authMiddlewares.validateInviteTimeInterval,
   authController.getAccountInviteUrl
@@ -103,6 +106,7 @@ router.post(
 
 router.post(
   '/invites/accept',
+  rateLimiter(5, 60, 'accept_auth_invite'),
   parseDevice,
   authMiddlewares.validateToken,
   authController.acceptAccountInvite
@@ -110,6 +114,8 @@ router.post(
 
 router.get(
   '/invites/resolve',
+  rateLimiter(30, 60, 'resolve_auth_invite'),
+  parseDevice,
   authMiddlewares.validateToken,
   authController.resolveInvite
 )
@@ -118,12 +124,15 @@ router.get(
 
 router.get(
   '/:provider',
+  rateLimiter(20, 60, 'get_provider_url'),
+  parseDevice,
   authMiddlewares.checkProviderParam,
   authController.getAuthProviderUrl
 )
 
 router.get(
   '/:provider/callback',
+  rateLimiter(20, 60, 'oauth_callback'),
   parseDevice,
   authMiddlewares.checkProviderParam,
   authController.authProviderCallback

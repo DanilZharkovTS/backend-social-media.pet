@@ -17,6 +17,7 @@ export const tokenService = {
     userId: number,
     email: string,
     role: string,
+    sessionId: number,
     sessionType: SessionType
   ) => {
     const accessToken = jwt.sign(
@@ -48,7 +49,7 @@ export const tokenService = {
 
     const handler = actionTokenConfig[type]
     if (!handler) throw ApiError(`Unknown token type: ${type}`, 400)
-    
+
     const tokenPayload = { ...handler(rawActionToken), ...payload }
 
     await authRepo.insertActionToken(

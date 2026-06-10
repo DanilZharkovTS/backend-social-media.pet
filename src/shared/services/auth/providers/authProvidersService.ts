@@ -15,6 +15,7 @@ import { discordProvider } from './discordProvider'
 import { getRedis } from '../../../lib/redisClient'
 import { cacheService } from '../../shared/cacheService'
 import { authService } from '../authService'
+import { sessionService } from '../sessionService'
 
 const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
   google: googleProvider.getGoogleAuthUrl,
@@ -34,7 +35,7 @@ export const authProvidersService = {
     const state = authProvidersService.generateState()
 
     const providerUrlHandler = providerUrlHandlers[provider]
-    redis.set(`auth:state:${state}`, state, 'EX', 15)
+    redis.set(`auth:state:${state}`, state, 'EX', 10 * 60)
 
     return {
       response: {
@@ -46,7 +47,8 @@ export const authProvidersService = {
     provider: AuthProvider,
     code: string,
     state: string,
-    deviceName: string
+    deviceName: string,
+    refreshToken: string
   ) => {
     const redis = getRedis()
     const redisResult = await redis.get(`auth:state:${state}`)
@@ -62,8 +64,13 @@ export const authProvidersService = {
 
     await redis.del(`auth:state:${state}`)
 
+    if (refreshToken) {
+      await sessionService.revokeSessionByRefresh(refreshToken)
+    }
+    
     return authProvidersService.authenticateProviderUser(userInfo, deviceName)
   },
+
   authenticateProviderUser: async (
     userInfo: providerUserDTO,
     deviceName: string
@@ -80,6 +87,7 @@ export const authProvidersService = {
         userInfo.provider,
         userInfo.provider_id
       )
+
       return authService.issueTokens(user, deviceName, 'normal', {
         value: 30,
         unit: 'days',

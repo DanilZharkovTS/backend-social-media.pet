@@ -7,8 +7,8 @@ import {
 import { authRepo } from '../../repos/authRepo'
 import { userService } from '../user/userService'
 import { ApiError } from '../../lib/ApiErrors'
-import { cacheService } from '../shared/cacheService'
 import { getRedis } from '../../lib/redisClient'
+import { tokenService } from './tokenService'
 
 export const sessionService = {
   getActiveUserSessions: async ({ userId }: TokenPayload) => {
@@ -71,5 +71,32 @@ export const sessionService = {
     await pipeline.exec()
 
     return { response: sessionIds }
+  },
+  revokeSessionByRefresh: async (token: string) => {
+    const redis = getRedis()
+    console.log(token)
+
+    const hashed = tokenService.hash(token)
+
+    const session = await authRepo.revokeSessionByToken(hashed)
+
+    if (!session) {
+      throw ApiError(
+        'Active session connected to your token was not found, try reloading the the page',
+        404
+      )
+    }
+
+    const tokens = await authRepo.revokeValidRefreshesBySessionId(session.id)
+
+    const pipeline = redis.pipeline()
+
+    for (const refresh of tokens) {
+      pipeline.del(`refresh:${refresh.token}`)
+    }
+
+    await pipeline.exec()
+
+    return session
   },
 }

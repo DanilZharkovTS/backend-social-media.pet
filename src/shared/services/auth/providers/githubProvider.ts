@@ -1,6 +1,9 @@
 import axios from 'axios'
 import { ApiError } from '../../../lib/ApiErrors'
-import { AuthProvider, UserPrimaryProvider } from '../../../interfaces/auth/authInterfaces'
+import {
+  AuthProvider,
+  UserPrimaryProvider,
+} from '../../../interfaces/auth/authInterfaces'
 
 export const githubProvider = {
   getGithubAuthUrl: (state: string) => {
@@ -30,6 +33,7 @@ export const githubProvider = {
     return data
   },
   fetchGithubUser: async (token: string) => {
+    console.log('ACCESS TOKEN', token)
     const { data } = await axios.get('https://api.github.com/user', {
       headers: { Authorization: `Bearer ${token}` },
     })

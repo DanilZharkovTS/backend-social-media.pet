@@ -28,7 +28,8 @@ export const authController = {
       const result = await authService.login(
         req.body,
         req.hashedTrustedDeviceToken,
-        req.device
+        req.device,
+        req.cookies.refreshToken
       )
       if (result.refreshToken) {
         res.cookie('refreshToken', result.refreshToken, {
@@ -50,7 +51,11 @@ export const authController = {
     next: NextFunction
   ) => {
     try {
-      const result = await authService.loginEmailConfirm(req.body, req.device)
+      const result = await authService.loginEmailConfirm(
+        req.body,
+        req.device,
+        req.cookies.refreshToken
+      )
       res.cookie('trustedDeviceToken', result.trustedDeviceToken, {
         httpOnly: true,
         sameSite: 'none',
@@ -171,7 +176,8 @@ export const authController = {
         req.paramsMap.provider as AuthProvider,
         req.query.code as string,
         req.query.state as string,
-        req.device
+        req.device,
+        req.cookies.refreshToken
       )
 
       if (result) {
@@ -181,12 +187,10 @@ export const authController = {
           sameSite: 'none',
           secure: true,
         })
+        res.redirect(`${process.env.FRONTEND_URL}/posts`)
       }
-
-      res.redirect(`${process.env.FRONTEND_URL}/posts`)
     } catch (err) {
-      res.redirect(`${process.env.FRONTEND_URL}/auth/login`)
-      next(err)
+      return res.redirect(`${process.env.FRONTEND_URL}/auth/login`)
     }
   },
   //shared
@@ -221,7 +225,8 @@ export const authController = {
     try {
       const result = await authService.acceptAccountInvite(
         req.queryMap.token,
-        req.device
+        req.device,
+        req.cookies.refreshToken
       )
       const { response, tokens } = result
 
