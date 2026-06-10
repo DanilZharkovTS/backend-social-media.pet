@@ -140,12 +140,17 @@ export const authRepo = {
       [userId, token, expiresAt, JSON.stringify({ targetUserId }), type]
     )
   },
-  insertSession: async (userId: number, type: SessionType, expiresAt: Date) => {
+  insertSession: async (
+    userId: number,
+    type: SessionType,
+    name: string,
+    expiresAt: Date
+  ) => {
     const result = await pool.query(
-      `INSERT INTO sessions (user_id, type, expires_at)
-      VALUES ($1, $2, $3)
+      `INSERT INTO sessions (user_id, type, name, expires_at)
+      VALUES ($1, $2, $3, $4)
       RETURNING *`,
-      [userId, type, expiresAt]
+      [userId, type, name, expiresAt]
     )
     return result.rows[0]
   },

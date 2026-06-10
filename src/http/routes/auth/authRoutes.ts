@@ -23,6 +23,7 @@ router.get(
 router.post(
   '/login',
   rateLimiter(10, 60, 'login'),
+  parseDevice,
   authMiddlewares.login,
   authController.login
 )
@@ -30,6 +31,7 @@ router.post(
 router.post(
   '/login/email-confirm',
   rateLimiter(5, 60, 'emailConfirm'),
+  parseDevice,
   authMiddlewares.loginEmailConfirm,
   authController.loginEmailConfirm
 )
@@ -101,6 +103,7 @@ router.post(
 
 router.post(
   '/invites/accept',
+  parseDevice,
   authMiddlewares.validateToken,
   authController.acceptAccountInvite
 )
