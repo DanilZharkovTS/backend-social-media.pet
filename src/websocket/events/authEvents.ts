@@ -10,8 +10,8 @@ export const registerAuthEvents = (socket: Socket) => {
     withMiddlewares(
       socket,
       [
-        resolveIds(['sessionId']),
         ioAuthMiddlewares.requireSessionType('normal'),
+        resolveIds(['sessionId']),
       ],
       authHandler.revokeUserSession
     )
