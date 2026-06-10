@@ -151,6 +151,10 @@ export const authService = {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
+    if (refreshToken) {
+      await sessionService.revokeSessionByRefresh(refreshToken)
+    }
+
     const session: Session = await authRepo.insertSession(
       dbUser.id,
       'normal',
@@ -173,10 +177,6 @@ export const authService = {
       'normal'
     )
 
-    if (refreshToken) {
-      await sessionService.revokeSessionByRefresh(refreshToken)
-    }
-
     return {
       refreshToken: rawRefreshToken,
       logined: {
@@ -185,6 +185,7 @@ export const authService = {
           email: dbUser.email,
           role: dbUser.role,
           userId: dbUser.id,
+          sessionId: session.id,
           sessionType: 'normal',
         },
       },
@@ -216,7 +217,10 @@ export const authService = {
 
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
-    console.log(rawRefreshToken)
+
+    if (refreshToken) {
+      await sessionService.revokeSessionByRefresh(refreshToken)
+    }
 
     const session: Session = await authRepo.insertSession(
       dbUser.id,
@@ -241,10 +245,6 @@ export const authService = {
     )
 
     await authRepo.revokeActionTokenById(dbToken.id)
-
-    if (refreshToken) {
-      await sessionService.revokeSessionByRefresh(refreshToken)
-    }
 
     const {
       rawTrustedDeviceToken,
@@ -590,6 +590,10 @@ export const authService = {
       payload: { interval },
     } = token
 
+    if (refreshToken) {
+      await sessionService.revokeSessionByRefresh(refreshToken)
+    }
+
     const {
       tokens: { rawRefreshToken, accessToken },
       sessionId,
@@ -601,10 +605,6 @@ export const authService = {
     )
 
     await authRepo.revokeActionTokenById(token.id)
-
-    if (refreshToken) {
-      await sessionService.revokeSessionByRefresh(refreshToken)
-    }
 
     return {
       tokens: {

@@ -64,16 +64,11 @@ export const authProvidersService = {
 
     await redis.del(`auth:state:${state}`)
 
-    const result = authProvidersService.authenticateProviderUser(
-      userInfo,
-      deviceName
-    )
-
     if (refreshToken) {
       await sessionService.revokeSessionByRefresh(refreshToken)
     }
-
-    return result
+    
+    return authProvidersService.authenticateProviderUser(userInfo, deviceName)
   },
 
   authenticateProviderUser: async (

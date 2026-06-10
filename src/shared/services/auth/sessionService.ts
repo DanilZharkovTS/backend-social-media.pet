@@ -74,12 +74,19 @@ export const sessionService = {
   },
   revokeSessionByRefresh: async (token: string) => {
     const redis = getRedis()
-    console.log(token);
-    
+    console.log(token)
 
     const hashed = tokenService.hash(token)
 
     const session = await authRepo.revokeSessionByToken(hashed)
+
+    if (!session) {
+      throw ApiError(
+        'Active session connected to your token was not found, try reloading the the page',
+        404
+      )
+    }
+
     const tokens = await authRepo.revokeValidRefreshesBySessionId(session.id)
 
     const pipeline = redis.pipeline()
