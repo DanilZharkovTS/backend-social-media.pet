@@ -555,7 +555,10 @@ export const authService = {
     }
   },
 
-  acceptAccountInvite: async (hashedToken: string, deviceName) => {
+  acceptAccountInvite: async (
+    hashedToken: string,
+    deviceName: string,
+  ) => {
     const token = await authRepo.findActionTokenWithUserByToken(hashedToken)
 
     if (!token || new Date() > token.expires_at || token.used_at) {
@@ -577,6 +580,7 @@ export const authService = {
 
     await authRepo.revokeActionTokenById(token.id)
 
+    
     return {
       tokens: {
         rawRefreshToken,

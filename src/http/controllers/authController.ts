@@ -221,7 +221,7 @@ export const authController = {
     try {
       const result = await authService.acceptAccountInvite(
         req.queryMap.token,
-        req.device
+        req.device,
       )
       const { response, tokens } = result
 
@@ -232,7 +232,7 @@ export const authController = {
       })
 
       res.status(200).json(response)
-    } catch (err) {
+    } catch (err) {      
       next(err)
     }
   },
