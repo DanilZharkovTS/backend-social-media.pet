@@ -35,6 +35,7 @@ router.delete(
   '/:chatId',
   rateLimiter(5, 60, 'deleteChat'),
   authMiddlewares.verifyAccessToken,
+  authMiddlewares.requireSessionType('normal'),
   setParamsId(['chatId']),
   chatController.deleteChat
 )

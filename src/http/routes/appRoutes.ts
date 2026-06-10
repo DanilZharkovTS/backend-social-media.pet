@@ -17,6 +17,7 @@ router.use(
   '/admin',
   authMiddlewares.verifyAccessToken,
   requiresRole('admin'),
+  authMiddlewares.requireSessionType('normal'),
   adminRoutes
 )
 

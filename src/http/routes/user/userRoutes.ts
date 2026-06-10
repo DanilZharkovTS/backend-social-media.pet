@@ -34,6 +34,7 @@ router.get(
   '/me/providers',
   rateLimiter(60, 60, 'me_providers'),
   authMiddlewares.verifyAccessToken,
+  authMiddlewares.requireSessionType('normal'),
   userController.getMyProviders
 )
 
@@ -41,6 +42,7 @@ router.patch(
   '/me/email',
   rateLimiter(5, 60, 'myEmail'),
   authMiddlewares.verifyAccessToken,
+  authMiddlewares.requireSessionType('normal'),
   userMiddlewares.updateMyEmail,
   userController.updateMyEmail
 )
@@ -49,6 +51,7 @@ router.patch(
   '/me/password',
   rateLimiter(5, 60, 'myPassword'),
   authMiddlewares.verifyAccessToken,
+  authMiddlewares.requireSessionType('normal'),
   userMiddlewares.updateMyPassword,
   userController.updateMyPassword
 )

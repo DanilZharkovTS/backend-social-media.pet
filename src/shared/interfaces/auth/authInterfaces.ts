@@ -11,6 +11,7 @@ export interface TokenPayload {
   userId: number
   email: string
   role: string
+  sessionId: number
   sessionType: SessionType
 }
 
