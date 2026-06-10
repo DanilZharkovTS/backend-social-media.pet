@@ -151,7 +151,7 @@ export const authService = {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken()
 
-    const session = await authRepo.insertSession(
+    const session: Session = await authRepo.insertSession(
       dbUser.id,
       'normal',
       deviceName,
@@ -169,6 +169,7 @@ export const authService = {
       user.rows[0].id,
       user.rows[0].email,
       user.rows[0].role,
+      session.id,
       'normal'
     )
 
@@ -189,7 +190,11 @@ export const authService = {
       },
     }
   },
-  loginEmailConfirm: async (data: loginEmailConfirmDTO, deviceName: string, refreshToken: string) => {
+  loginEmailConfirm: async (
+    data: loginEmailConfirmDTO,
+    deviceName: string,
+    refreshToken: string
+  ) => {
     const tokenResult = await authRepo.selectActionTokenByToken(
       data.hashedToken
     )
@@ -213,7 +218,7 @@ export const authService = {
       generateRefreshToken()
     console.log(rawRefreshToken)
 
-    const session = await authRepo.insertSession(
+    const session: Session = await authRepo.insertSession(
       dbUser.id,
       'normal',
       deviceName,
@@ -231,11 +236,12 @@ export const authService = {
       dbUser.id,
       dbUser.email,
       dbUser.role,
+      session.id,
       'normal'
     )
 
     await authRepo.revokeActionTokenById(dbToken.id)
-    
+
     if (refreshToken) {
       await sessionService.revokeSessionByRefresh(refreshToken)
     }
@@ -246,7 +252,7 @@ export const authService = {
       trustedDeviceExpiresAt,
     } = generateTrustedDeviceToken()
 
-    const trustedDeviceResult = await authRepo.insertTrustedDevice(
+    await authRepo.insertTrustedDevice(
       dbUser.id,
       hashedTrustedDeviceToken,
       trustedDeviceExpiresAt
@@ -261,6 +267,7 @@ export const authService = {
           email: dbUser.email,
           role: dbUser.role,
           userId: dbUser.id,
+          sessionId: session.id,
           sessionType: 'normal',
         },
       },
@@ -338,6 +345,7 @@ export const authService = {
       token.user_id,
       token.email,
       token.role,
+      session.id,
       session.type
     )
 
@@ -351,6 +359,7 @@ export const authService = {
           email: token.email,
           role: token.role,
           userId: token.user_id,
+          sessionId: token.session_id,
           sessionType: session.type,
         },
       },
@@ -506,7 +515,7 @@ export const authService = {
     const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
       generateRefreshToken(interval.unit, interval.value)
 
-    const session = await authRepo.insertSession(
+    const session: Session = await authRepo.insertSession(
       userId,
       sessionType,
       name,
@@ -524,6 +533,7 @@ export const authService = {
       userId,
       email,
       role,
+      session.id,
       sessionType
     )
 
@@ -533,6 +543,7 @@ export const authService = {
         hashedRefreshToken,
         accessToken,
       },
+      sessionId: session.id,
     }
   },
   createAccountInviteUrl: async (
@@ -581,6 +592,7 @@ export const authService = {
 
     const {
       tokens: { rawRefreshToken, accessToken },
+      sessionId,
     } = await authService.issueTokens(
       { id: token.user_id, email: token.email, role: token.role },
       deviceName,
@@ -604,6 +616,7 @@ export const authService = {
           id: token.user_id,
           email: token.email,
           role: token.role,
+          sessionId,
           sessionType: 'shared',
         },
       },

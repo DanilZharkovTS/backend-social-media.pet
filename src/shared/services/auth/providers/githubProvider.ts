@@ -26,9 +26,6 @@ export const githubProvider = {
       }
     )
 
-    console.log('TOKEN DATA')
-    console.dir(data, { depth: null })
-
     if (!data.access_token) {
       throw ApiError('Github access token was not received', 401)
     }
@@ -37,20 +34,10 @@ export const githubProvider = {
   },
   fetchGithubUser: async (token: string) => {
     console.log('ACCESS TOKEN', token)
-    try {
-      const { data } = await axios.get('https://api.github.com/user', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      return data
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        console.log('GITHUB ERROR')
-        console.log(err.response?.status)
-        console.dir(err.response?.data, { depth: null })
-      }
-
-      throw err
-    }
+    const { data } = await axios.get('https://api.github.com/user', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return data
   },
   getGithubUser: async (code: string) => {
     const { access_token } = await githubProvider.fetchGithubTokens(code)

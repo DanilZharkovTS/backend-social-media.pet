@@ -50,19 +50,12 @@ export const authProvidersService = {
     deviceName: string,
     refreshToken: string
   ) => {
-    console.log('CALLBACK', {
-  code,
-  state,
-  time: new Date().toISOString(),
-})
     const redis = getRedis()
     const redisResult = await redis.get(`auth:state:${state}`)
 
     if (!redisResult) {
       throw ApiError('Invalid state', 401)
     }
-
-    console.log('STATE FOUND', redisResult)
 
     const providerHandler = providerCallbackHandlers[provider]
 

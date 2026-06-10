@@ -17,6 +17,7 @@ export const tokenService = {
     userId: number,
     email: string,
     role: string,
+    sessionId: number,
     sessionType: SessionType
   ) => {
     const accessToken = jwt.sign(
