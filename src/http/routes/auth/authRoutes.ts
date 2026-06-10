@@ -2,6 +2,7 @@ import { authController } from '../../controllers/authController.ts'
 import { Router } from 'express'
 import { authMiddlewares } from '../../middlewares/auth/authMiddlewares.ts'
 import { rateLimiter } from '../../middlewares/helpers/rateLimiter.ts'
+import { parseDevice } from '../../middlewares/helpers/parseDevice.ts'
 
 const router = Router()
 
@@ -120,6 +121,7 @@ router.get(
 
 router.get(
   '/:provider/callback',
+  parseDevice,
   authMiddlewares.checkProviderParam,
   authController.authProviderCallback
 )
