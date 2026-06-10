@@ -2,6 +2,7 @@ import { authController } from '../../controllers/authController.ts'
 import { Router } from 'express'
 import { authMiddlewares } from '../../middlewares/auth/authMiddlewares.ts'
 import { rateLimiter } from '../../middlewares/helpers/rateLimiter.ts'
+import { parseDevice } from '../../middlewares/helpers/parseDevice.ts'
 
 const router = Router()
 
@@ -22,6 +23,7 @@ router.get(
 router.post(
   '/login',
   rateLimiter(10, 60, 'login'),
+  parseDevice,
   authMiddlewares.login,
   authController.login
 )
@@ -29,6 +31,7 @@ router.post(
 router.post(
   '/login/email-confirm',
   rateLimiter(5, 60, 'emailConfirm'),
+  parseDevice,
   authMiddlewares.loginEmailConfirm,
   authController.loginEmailConfirm
 )
@@ -100,6 +103,7 @@ router.post(
 
 router.post(
   '/invites/accept',
+  parseDevice,
   authMiddlewares.validateToken,
   authController.acceptAccountInvite
 )
@@ -120,6 +124,7 @@ router.get(
 
 router.get(
   '/:provider/callback',
+  parseDevice,
   authMiddlewares.checkProviderParam,
   authController.authProviderCallback
 )

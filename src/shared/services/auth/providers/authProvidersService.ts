@@ -45,7 +45,8 @@ export const authProvidersService = {
   providerCallback: async (
     provider: AuthProvider,
     code: string,
-    state: string
+    state: string,
+    deviceName: string
   ) => {
     const redis = getRedis()
     const redisResult = await redis.get(`auth:state:${state}`)
@@ -57,14 +58,16 @@ export const authProvidersService = {
     const providerHandler = providerCallbackHandlers[provider]
 
     const userInfo = await providerHandler(code)
-    console.log(userInfo);
-    
+    console.log(userInfo)
 
     await redis.del(`auth:state:${state}`)
 
-    return authProvidersService.authenticateProviderUser(userInfo)
+    return authProvidersService.authenticateProviderUser(userInfo, deviceName)
   },
-  authenticateProviderUser: async (userInfo: providerUserDTO) => {
+  authenticateProviderUser: async (
+    userInfo: providerUserDTO,
+    deviceName: string
+  ) => {
     const existing = await userRepo.findByEmailWithProvider(
       userInfo.email,
       userInfo.provider
@@ -77,7 +80,7 @@ export const authProvidersService = {
         userInfo.provider,
         userInfo.provider_id
       )
-      return authService.issueTokens(user, 'normal', {
+      return authService.issueTokens(user, deviceName, 'normal', {
         value: 30,
         unit: 'days',
       })
@@ -92,7 +95,7 @@ export const authProvidersService = {
       await cacheService.invalidateByPrefix(`users:${existing.id}:providers`)
     }
 
-    return authService.issueTokens(existing, 'normal', {
+    return authService.issueTokens(existing, deviceName, 'normal', {
       value: 30,
       unit: 'days',
     })

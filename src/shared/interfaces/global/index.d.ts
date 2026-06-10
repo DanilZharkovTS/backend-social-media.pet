@@ -4,6 +4,7 @@ import { AuthProvider, SessionType } from '../auth/authInterfaces'
 
 declare module 'express-serve-static-core' {
   interface Request {
+    device?: string
     pagination?: {
       page?: number
       offset?: number

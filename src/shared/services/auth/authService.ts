@@ -94,7 +94,11 @@ export const authService = {
 
     return { emailIsVerified: true }
   },
-  login: async (data: loginUserDTO, trustedDeviceToken: string) => {
+  login: async (
+    data: loginUserDTO,
+    trustedDeviceToken: string,
+    deviceName: string
+  ) => {
     const user = await userRepo.findByEmail(data.email)
     if (user.rows.length == 0) {
       throw ApiError('Email or password is not right', 400)
@@ -149,6 +153,7 @@ export const authService = {
     const session = await authRepo.insertSession(
       dbUser.id,
       'normal',
+      deviceName,
       refreshExpiresAt
     )
 
@@ -179,7 +184,7 @@ export const authService = {
       },
     }
   },
-  loginEmailConfirm: async (data: loginEmailConfirmDTO) => {
+  loginEmailConfirm: async (data: loginEmailConfirmDTO, deviceName: string) => {
     const tokenResult = await authRepo.selectActionTokenByToken(
       data.hashedToken
     )
@@ -206,6 +211,7 @@ export const authService = {
     const session = await authRepo.insertSession(
       dbUser.id,
       'normal',
+      deviceName,
       refreshExpiresAt
     )
 
@@ -481,6 +487,7 @@ export const authService = {
   },
   issueTokens: async (
     { id: userId, email, role },
+    name: string,
     sessionType: SessionType,
     interval: {
       value: number
@@ -493,6 +500,7 @@ export const authService = {
     const session = await authRepo.insertSession(
       userId,
       sessionType,
+      name,
       refreshExpiresAt
     )
 
@@ -547,7 +555,7 @@ export const authService = {
     }
   },
 
-  acceptAccountInvite: async (hashedToken: string) => {
+  acceptAccountInvite: async (hashedToken: string, deviceName) => {
     const token = await authRepo.findActionTokenWithUserByToken(hashedToken)
 
     if (!token || new Date() > token.expires_at || token.used_at) {
@@ -562,6 +570,7 @@ export const authService = {
       tokens: { rawRefreshToken, accessToken },
     } = await authService.issueTokens(
       { id: token.user_id, email: token.email, role: token.role },
+      deviceName,
       'shared',
       { unit: interval.unit, value: interval.value }
     )

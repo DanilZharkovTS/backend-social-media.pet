@@ -27,7 +27,8 @@ export const authController = {
     try {
       const result = await authService.login(
         req.body,
-        req.hashedTrustedDeviceToken
+        req.hashedTrustedDeviceToken,
+        req.device
       )
       if (result.refreshToken) {
         res.cookie('refreshToken', result.refreshToken, {
@@ -49,7 +50,7 @@ export const authController = {
     next: NextFunction
   ) => {
     try {
-      const result = await authService.loginEmailConfirm(req.body)
+      const result = await authService.loginEmailConfirm(req.body, req.device)
       res.cookie('trustedDeviceToken', result.trustedDeviceToken, {
         httpOnly: true,
         sameSite: 'none',
@@ -169,7 +170,8 @@ export const authController = {
       const result = await authProvidersService.providerCallback(
         req.paramsMap.provider as AuthProvider,
         req.query.code as string,
-        req.query.state as string
+        req.query.state as string,
+        req.device
       )
 
       if (result) {
@@ -217,7 +219,10 @@ export const authController = {
     next: NextFunction
   ) => {
     try {
-      const result = await authService.acceptAccountInvite(req.queryMap.token)
+      const result = await authService.acceptAccountInvite(
+        req.queryMap.token,
+        req.device
+      )
       const { response, tokens } = result
 
       res.cookie('refreshToken', tokens.rawRefreshToken, {
