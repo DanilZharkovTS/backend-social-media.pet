@@ -1,6 +1,9 @@
 import axios from 'axios'
 import { ApiError } from '../../../lib/ApiErrors'
-import { AuthProvider, UserPrimaryProvider } from '../../../interfaces/auth/authInterfaces'
+import {
+  AuthProvider,
+  UserPrimaryProvider,
+} from '../../../interfaces/auth/authInterfaces'
 
 export const githubProvider = {
   getGithubAuthUrl: (state: string) => {
@@ -23,6 +26,9 @@ export const githubProvider = {
       }
     )
 
+    console.log('TOKEN DATA')
+    console.dir(data, { depth: null })
+
     if (!data.access_token) {
       throw ApiError('Github access token was not received', 401)
     }
@@ -30,10 +36,21 @@ export const githubProvider = {
     return data
   },
   fetchGithubUser: async (token: string) => {
-    const { data } = await axios.get('https://api.github.com/user', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    return data
+    console.log('ACCESS TOKEN', token)
+    try {
+      const { data } = await axios.get('https://api.github.com/user', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      return data
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        console.log('GITHUB ERROR')
+        console.log(err.response?.status)
+        console.dir(err.response?.data, { depth: null })
+      }
+
+      throw err
+    }
   },
   getGithubUser: async (code: string) => {
     const { access_token } = await githubProvider.fetchGithubTokens(code)

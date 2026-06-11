@@ -97,7 +97,8 @@ export const authService = {
   login: async (
     data: loginUserDTO,
     trustedDeviceToken: string,
-    deviceName: string
+    deviceName: string,
+    refreshToken: string
   ) => {
     const user = await userRepo.findByEmail(data.email)
     if (user.rows.length == 0) {
@@ -171,6 +172,10 @@ export const authService = {
       'normal'
     )
 
+    if (refreshToken) {
+      await sessionService.revokeSessionByRefresh(refreshToken)
+    }
+
     return {
       refreshToken: rawRefreshToken,
       logined: {
@@ -184,7 +189,7 @@ export const authService = {
       },
     }
   },
-  loginEmailConfirm: async (data: loginEmailConfirmDTO, deviceName: string) => {
+  loginEmailConfirm: async (data: loginEmailConfirmDTO, deviceName: string, refreshToken: string) => {
     const tokenResult = await authRepo.selectActionTokenByToken(
       data.hashedToken
     )
@@ -230,6 +235,10 @@ export const authService = {
     )
 
     await authRepo.revokeActionTokenById(dbToken.id)
+    
+    if (refreshToken) {
+      await sessionService.revokeSessionByRefresh(refreshToken)
+    }
 
     const {
       rawTrustedDeviceToken,
@@ -558,6 +567,7 @@ export const authService = {
   acceptAccountInvite: async (
     hashedToken: string,
     deviceName: string,
+    refreshToken: string | null
   ) => {
     const token = await authRepo.findActionTokenWithUserByToken(hashedToken)
 
@@ -580,7 +590,10 @@ export const authService = {
 
     await authRepo.revokeActionTokenById(token.id)
 
-    
+    if (refreshToken) {
+      await sessionService.revokeSessionByRefresh(refreshToken)
+    }
+
     return {
       tokens: {
         rawRefreshToken,
