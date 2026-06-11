@@ -46,7 +46,7 @@ export const ioAuthMiddlewares = {
   requireSessionType: (type: SessionType) => {
     return (socket: Socket, data: any, ctx: any, next: IoNextFn) => {
       if (socket.user.sessionType !== type) {
-        throw ApiError('Unauthorized', 401)
+        throw ApiError('Forbidden', 403)
       }
       next()
     }

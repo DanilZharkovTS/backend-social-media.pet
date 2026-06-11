@@ -17,6 +17,7 @@ router.post(
   '/add',
   rateLimiter(10, 60, 'addPost'),
   authMiddlewares.verifyAccessToken,
+  authMiddlewares.requireSessionType('normal'),
   postMiddlewares.add,
   postController.add
 )

@@ -47,6 +47,7 @@ router.post(
   '/request-change-email',
   rateLimiter(5, 60, 'requestChangeEmail'),
   authMiddlewares.verifyAccessToken,
+  authMiddlewares.requireSessionType('normal'),
   authMiddlewares.requestChangeEmail,
   authController.requestChangeEmail
 )
@@ -69,6 +70,7 @@ router.get(
   '/change-password-email',
   rateLimiter(5, 60, 'changePasswordEmail'),
   authMiddlewares.verifyAccessToken,
+  authMiddlewares.requireSessionType('normal'),
   authController.requestPasswordResetEmail
 )
 
@@ -92,6 +94,7 @@ router.get(
   '/sessions',
   rateLimiter(60, 60, 'get_sessions'),
   authMiddlewares.verifyAccessToken,
+  authMiddlewares.requireSessionType('normal'),
   authController.getMySessions
 )
 
@@ -100,6 +103,7 @@ router.post(
   rateLimiter(10, 60, 'auth_invite_link'),
   parseDevice,
   authMiddlewares.verifyAccessToken,
+  authMiddlewares.requireSessionType('normal'),
   authMiddlewares.validateInviteTimeInterval,
   authController.getAccountInviteUrl
 )

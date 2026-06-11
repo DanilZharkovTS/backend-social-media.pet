@@ -1,7 +1,10 @@
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import type { NextFunction, Request, Response } from 'express'
-import type { TokenPayload } from '../../../shared/interfaces/auth/authInterfaces.ts'
+import type {
+  SessionType,
+  TokenPayload,
+} from '../../../shared/interfaces/auth/authInterfaces.ts'
 import { ApiError } from '../../../shared/lib/ApiErrors.ts'
 import {
   validateChangeEmail,
@@ -249,11 +252,20 @@ export const authMiddlewares = {
       ))
 
       req.validBody = {
-        ...req.validBody, interval: validData
+        ...req.validBody,
+        interval: validData,
       }
       next()
     } catch (err) {
       next(err)
+    }
+  },
+  requireSessionType: (type: SessionType) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+      if (req.user.sessionType !== type) {
+        throw ApiError('Forbidden', 403)
+      }
+      next()
     }
   },
 }

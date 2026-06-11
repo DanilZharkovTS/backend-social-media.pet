@@ -10,6 +10,7 @@ router.post(
   '/checkout',
   rateLimiter(5, 60, 'checkout'),
   authMiddlewares.verifyAccessToken,
+  authMiddlewares.requireSessionType('normal'),
   billingMiddlewares.validateCheckout,
   billingController.startCheckout
 )
