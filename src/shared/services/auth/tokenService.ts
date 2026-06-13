@@ -2,11 +2,13 @@ import crypto from 'crypto'
 import {
   actionTokenType,
   SessionType,
+  Time,
 } from '../../interfaces/auth/authInterfaces'
 import { authRepo } from '../../repos/authRepo'
 import { urlBuilder } from '../shared/urlBuilder'
 import { ApiError } from '../../lib/ApiErrors'
 import jwt from 'jsonwebtoken'
+import { authHelpers } from '../../utils/helpers/auth/authHelpers'
 
 const actionTokenConfig = {
   ACCOUNT_INVITE: urlBuilder.accountInviteUrl,
@@ -68,4 +70,18 @@ export const tokenService = {
   hash: (token: string) => {
     return crypto.createHash('sha256').update(token).digest('hex')
   },
+    issueTokens: async (
+      { id: userId, email, role }: { id: number; email: string; role: string },
+      name: string,
+      sessionType: SessionType,
+      interval: { value: number; unit: Time }
+    ) => {
+      const { rawRefreshToken, hashedRefreshToken, accessToken, session } =
+        await authHelpers.issueSessionTokens(userId, email, role, sessionType, name, interval)
+  
+      return {
+        tokens: { rawRefreshToken, hashedRefreshToken, accessToken },
+        sessionId: session.id,
+      }
+    },
 }

@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt'
 import type {
   loginUserDTO,
   registerUserDTO,
@@ -17,22 +16,29 @@ import { ApiError } from '../../lib/ApiErrors.ts'
 import { emailService } from '../email/emailService.ts'
 import { userRepo } from '../../repos/userRepo.ts'
 import { authRepo } from '../../repos/authRepo.ts'
-import { generateRefreshToken } from '../../utils/helpers/auth/refreshToken.ts'
-import { generateAccessToken } from '../../utils/helpers/auth/accessToken.ts'
 import { generateEmailVerificationToken } from '../../utils/helpers/auth/emailVerificationToken.ts'
 import { generateLoginEmailConfirmToken } from '../../utils/helpers/auth/loginEmailConfirmToken.ts'
 import { generateResetPasswordToken } from '../../utils/helpers/auth/resetPasswordToken.ts'
 import { generateTrustedDeviceToken } from '../../utils/helpers/auth/trustedDeviceToken.ts'
 import { generateEmailChangeToken } from '../../utils/helpers/auth/emailChangeToken.ts'
+import { generateRefreshToken } from '../../utils/helpers/auth/refreshToken.ts'
 import { getRedis } from '../../lib/redisClient.ts'
 import { cacheService } from '../shared/cacheService.ts'
 import { tokenService } from './tokenService.ts'
 import { sessionService } from './sessionService.ts'
+import { authHelpers } from '../../utils/helpers/auth/authHelpers.ts'
+
+const {
+  hashPassword,
+  verifyPassword,
+  isExpired,
+  issueSessionTokens,
+  rotateSession,
+  buildLoginedPayload,
+} = authHelpers
 
 export const authService = {
   register: async (data: registerUserDTO) => {
-    const saltRounds = 10
-
     const existingUserResult = await userRepo.findByEmail(data.email)
     const existingUser = existingUserResult.rows[0]
 
@@ -44,7 +50,7 @@ export const authService = {
       throw ApiError('This email is already being used', 409)
     }
 
-    const hashedPassword = await bcrypt.hash(data.password, saltRounds)
+    const hashedPassword = await hashPassword(data.password)
 
     const createdUserResult = await userRepo.createUser({
       email: data.email,
@@ -69,6 +75,7 @@ export const authService = {
       user: createdUser,
     }
   },
+
   verifyEmail: async (token: string) => {
     const tokenResult = await authRepo.selectActionTokenByToken(token)
 
@@ -84,7 +91,7 @@ export const authService = {
       return { emailIsVerified: true }
     }
 
-    if (new Date() > dbToken.expires_at) {
+    if (isExpired(dbToken.expires_at)) {
       throw ApiError('Verification token is expired', 410)
     }
 
@@ -94,6 +101,7 @@ export const authService = {
 
     return { emailIsVerified: true }
   },
+
   login: async (
     data: loginUserDTO,
     trustedDeviceToken: string,
@@ -115,7 +123,7 @@ export const authService = {
       )
     }
 
-    const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
+    const isValidPassword = await verifyPassword(data.password, dbUser.password)
     if (!isValidPassword) throw ApiError('Email or password is not right', 400)
 
     const trustedDevice = await authRepo.selectTrustedDeviceByToken(
@@ -148,49 +156,21 @@ export const authService = {
       }
     }
 
-    const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
-      generateRefreshToken()
-
-    if (refreshToken) {
-      await sessionService.revokeSessionByRefresh(refreshToken)
-    }
-
-    const session: Session = await authRepo.insertSession(
+    const { rawRefreshToken, accessToken, session } = await rotateSession(
+      refreshToken,
       dbUser.id,
+      dbUser.email,
+      dbUser.role,
       'normal',
-      deviceName,
-      refreshExpiresAt
-    )
-
-    await authRepo.insertRefreshToken(
-      user.rows[0].id,
-      session.id,
-      hashedRefreshToken,
-      refreshExpiresAt
-    )
-
-    const accessToken = tokenService.generateAccessToken(
-      user.rows[0].id,
-      user.rows[0].email,
-      user.rows[0].role,
-      session.id,
-      'normal'
+      deviceName
     )
 
     return {
       refreshToken: rawRefreshToken,
-      logined: {
-        accessToken,
-        user: {
-          email: dbUser.email,
-          role: dbUser.role,
-          userId: dbUser.id,
-          sessionId: session.id,
-          sessionType: 'normal',
-        },
-      },
+      logined: buildLoginedPayload(dbUser, session, accessToken),
     }
   },
+
   loginEmailConfirm: async (
     data: loginEmailConfirmDTO,
     deviceName: string,
@@ -215,33 +195,13 @@ export const authService = {
     const userResult = await userRepo.findUserById(dbToken.user_id)
     const dbUser = userResult.rows[0]
 
-    const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
-      generateRefreshToken()
-
-    if (refreshToken) {
-      await sessionService.revokeSessionByRefresh(refreshToken)
-    }
-
-    const session: Session = await authRepo.insertSession(
-      dbUser.id,
-      'normal',
-      deviceName,
-      refreshExpiresAt
-    )
-
-    await authRepo.insertRefreshToken(
-      dbUser.id,
-      session.id,
-      hashedRefreshToken,
-      refreshExpiresAt
-    )
-
-    const accessToken = tokenService.generateAccessToken(
+    const { rawRefreshToken, accessToken, session } = await rotateSession(
+      refreshToken,
       dbUser.id,
       dbUser.email,
       dbUser.role,
-      session.id,
-      'normal'
+      'normal',
+      deviceName
     )
 
     await authRepo.revokeActionTokenById(dbToken.id)
@@ -261,18 +221,10 @@ export const authService = {
     return {
       trustedDeviceToken: rawTrustedDeviceToken,
       refreshToken: rawRefreshToken,
-      logined: {
-        accessToken,
-        user: {
-          email: dbUser.email,
-          role: dbUser.role,
-          userId: dbUser.id,
-          sessionId: session.id,
-          sessionType: 'normal',
-        },
-      },
+      logined: buildLoginedPayload(dbUser, session, accessToken),
     }
   },
+
   refresh: async (clientRefreshToken: string) => {
     const redis = getRedis()
 
@@ -379,6 +331,7 @@ export const authService = {
 
     return { auth: false }
   },
+
   requestPasswordResetEmail: async (user: TokenPayload) => {
     const userResult = await userRepo.findUserById(user.userId)
     if (userResult.rows.length === 0) throw ApiError('User is not found', 404)
@@ -398,6 +351,62 @@ export const authService = {
 
     return { passwordResetIsSent: true }
   },
+
+  forgotPassword: async (data: forgotPasswordDTO) => {
+    const message =
+      'If an account with this email exists, a reset link has been sent'
+
+    const userResult = await userRepo.findByEmail(data.email)
+    const dbUser = userResult.rows[0]
+
+    if (!dbUser || !dbUser.email_is_verified) {
+      return { message }
+    }
+
+    const tokenData = generateResetPasswordToken()
+
+    await authRepo.insertActionToken(
+      dbUser.id,
+      tokenData.hashedResetPasswordToken,
+      tokenData.expiresAt,
+      'PASSWORD_RESET'
+    )
+
+    await emailService.sendPasswordResetEmail(data.email, tokenData)
+
+    return { message }
+  },
+
+  resetPassword: async (token: string, data: resetPasswordDTO) => {
+    const tokenResult = await authRepo.selectActionTokenByToken(token)
+    const dbToken = tokenResult.rows[0]
+
+    if (!dbToken || dbToken.used_at || new Date() > dbToken.expires_at) {
+      throw ApiError('Reset password token is invalid or expired', 400)
+    }
+
+    const userResult = await userRepo.findUserById(dbToken.user_id)
+    const dbUser = userResult.rows[0]
+
+    const isSamePassword = await verifyPassword(
+      data.newPassword,
+      dbUser.password
+    )
+    if (isSamePassword) {
+      throw ApiError(
+        'New password must be different from the current password',
+        400
+      )
+    }
+
+    const hashedPassword = await hashPassword(data.newPassword)
+
+    await userRepo.updateMyPasswordById(dbToken.user_id, hashedPassword)
+
+    await authRepo.revokeActionTokenById(dbToken.id)
+
+    return { passwordIsChanged: true }
+  },
   requestChangeEmail: async (
     user: TokenPayload,
     data: requestChangeEmailDTO
@@ -405,7 +414,7 @@ export const authService = {
     const userResult = await userRepo.findUserById(user.userId)
     const dbUser = userResult.rows[0]
 
-    const isValidPassword = await bcrypt.compare(data.password, dbUser.password)
+    const isValidPassword = await verifyPassword(data.password, dbUser.password)
     if (!isValidPassword) {
       throw ApiError('Password is not right', 400)
     }
@@ -431,6 +440,7 @@ export const authService = {
 
     return { emailWasSent: true }
   },
+
   changeEmailConfirm: async (token: string) => {
     const tokenResult = await authRepo.selectActionTokenByToken(token)
     const dbToken = tokenResult.rows[0]
@@ -445,107 +455,7 @@ export const authService = {
 
     return { emailIsChanged: true }
   },
-  forgotPassword: async (data: forgotPasswordDTO) => {
-    const message =
-      'If an account with this email exists, a reset link has been sent'
 
-    const userResult = await userRepo.findByEmail(data.email)
-    const dbUser = userResult.rows[0]
-
-    if (!dbUser || !dbUser.email_is_verified) {
-      return {
-        message,
-      }
-    }
-
-    const tokenData = generateResetPasswordToken()
-
-    await authRepo.insertActionToken(
-      dbUser.id,
-      tokenData.hashedResetPasswordToken,
-      tokenData.expiresAt,
-      'PASSWORD_RESET'
-    )
-
-    await emailService.sendPasswordResetEmail(data.email, tokenData)
-
-    return { message }
-  },
-  resetPassword: async (token: string, data: resetPasswordDTO) => {
-    const saltRounds = 10
-
-    const tokenResult = await authRepo.selectActionTokenByToken(token)
-    const dbToken = tokenResult.rows[0]
-
-    if (!dbToken || dbToken.used_at || new Date() > dbToken.expires_at) {
-      throw ApiError('Reset password token is invalid or expired', 400)
-    }
-
-    const userResult = await userRepo.findUserById(dbToken.user_id)
-    const dbUser = userResult.rows[0]
-
-    const isSamePassword = await bcrypt.compare(
-      data.newPassword,
-      dbUser.password
-    )
-    if (isSamePassword) {
-      throw ApiError(
-        'New password must be different from the current password',
-        400
-      )
-    }
-
-    const hashedPassword = await bcrypt.hash(data.newPassword, saltRounds)
-
-    await userRepo.updateMyPasswordById(dbToken.user_id, hashedPassword)
-
-    await authRepo.revokeActionTokenById(dbToken.id)
-
-    return { passwordIsChanged: true }
-  },
-  issueTokens: async (
-    { id: userId, email, role },
-    name: string,
-    sessionType: SessionType,
-    interval: {
-      value: number
-      unit: Time
-    }
-  ) => {
-    const { rawRefreshToken, hashedRefreshToken, refreshExpiresAt } =
-      generateRefreshToken(interval.unit, interval.value)
-
-    const session: Session = await authRepo.insertSession(
-      userId,
-      sessionType,
-      name,
-      refreshExpiresAt
-    )
-
-    await authRepo.insertRefreshToken(
-      userId,
-      session.id,
-      hashedRefreshToken,
-      refreshExpiresAt
-    )
-
-    const accessToken = tokenService.generateAccessToken(
-      userId,
-      email,
-      role,
-      session.id,
-      sessionType
-    )
-
-    return {
-      tokens: {
-        rawRefreshToken,
-        hashedRefreshToken,
-        accessToken,
-      },
-      sessionId: session.id,
-    }
-  },
   createAccountInviteUrl: async (
     { userId }: TokenPayload,
     data: accountInviteUrlDTO
@@ -570,9 +480,7 @@ export const authService = {
       }
     )
 
-    return {
-      inviteUrl: payload.inviteUrl,
-    }
+    return { inviteUrl: payload.inviteUrl }
   },
 
   acceptAccountInvite: async (
@@ -590,38 +498,33 @@ export const authService = {
       payload: { interval },
     } = token
 
-    if (refreshToken) {
-      await sessionService.revokeSessionByRefresh(refreshToken)
-    }
-
-    const {
-      tokens: { rawRefreshToken, accessToken },
-      sessionId,
-    } = await authService.issueTokens(
-      { id: token.user_id, email: token.email, role: token.role },
-      deviceName,
+    const { rawRefreshToken, accessToken, session } = await rotateSession(
+      refreshToken,
+      token.user_id,
+      token.email,
+      token.role,
       'shared',
-      { unit: interval.unit, value: interval.value }
+      deviceName,
+      interval
     )
 
     await authRepo.revokeActionTokenById(token.id)
 
     return {
-      tokens: {
-        rawRefreshToken,
-      },
+      tokens: { rawRefreshToken },
       response: {
         accessToken,
         user: {
           id: token.user_id,
           email: token.email,
           role: token.role,
-          sessionId,
+          sessionId: session.id,
           sessionType: 'shared',
         },
       },
     }
   },
+
   resolveInvite: async (hashedToken: string) => {
     const {
       user_id,
@@ -630,6 +533,7 @@ export const authService = {
       avatar_url,
       payload: { interval },
     } = await authRepo.findActionTokenWithUserByToken(hashedToken)
+
     return {
       info: {
         id: user_id,
