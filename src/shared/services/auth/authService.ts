@@ -352,55 +352,6 @@ export const authService = {
     return { passwordResetIsSent: true }
   },
 
-  requestChangeEmail: async (
-    user: TokenPayload,
-    data: requestChangeEmailDTO
-  ) => {
-    const userResult = await userRepo.findUserById(user.userId)
-    const dbUser = userResult.rows[0]
-
-    const isValidPassword = await verifyPassword(data.password, dbUser.password)
-    if (!isValidPassword) {
-      throw ApiError('Password is not right', 400)
-    }
-
-    const existingUserResult = await userRepo.findByEmail(data.newEmail)
-    const dbExistingUser = existingUserResult.rows[0]
-
-    if (dbExistingUser && dbExistingUser.email_is_verified) {
-      throw ApiError('This email is already being used', 409)
-    }
-
-    const tokenData = generateEmailChangeToken()
-
-    await authRepo.insertEmailChangeToken(
-      user.userId,
-      tokenData.hashedEmailChangeToken,
-      tokenData.expiresAt,
-      data.newEmail,
-      'EMAIL_CHANGE'
-    )
-
-    await emailService.sendEmailChangeEmail(data.newEmail, tokenData)
-
-    return { emailWasSent: true }
-  },
-
-  changeEmailConfirm: async (token: string) => {
-    const tokenResult = await authRepo.selectActionTokenByToken(token)
-    const dbToken = tokenResult.rows[0]
-
-    if (!dbToken || new Date() > dbToken.expires_at || dbToken.used_at) {
-      throw ApiError('Email change token is invalid or expired', 400)
-    }
-
-    await userRepo.updateMyEmailById(dbToken.user_id, dbToken.payload.newEmail)
-
-    await authRepo.revokeActionTokenById(dbToken.id)
-
-    return { emailIsChanged: true }
-  },
-
   forgotPassword: async (data: forgotPasswordDTO) => {
     const message =
       'If an account with this email exists, a reset link has been sent'
@@ -455,6 +406,54 @@ export const authService = {
     await authRepo.revokeActionTokenById(dbToken.id)
 
     return { passwordIsChanged: true }
+  },
+  requestChangeEmail: async (
+    user: TokenPayload,
+    data: requestChangeEmailDTO
+  ) => {
+    const userResult = await userRepo.findUserById(user.userId)
+    const dbUser = userResult.rows[0]
+
+    const isValidPassword = await verifyPassword(data.password, dbUser.password)
+    if (!isValidPassword) {
+      throw ApiError('Password is not right', 400)
+    }
+
+    const existingUserResult = await userRepo.findByEmail(data.newEmail)
+    const dbExistingUser = existingUserResult.rows[0]
+
+    if (dbExistingUser && dbExistingUser.email_is_verified) {
+      throw ApiError('This email is already being used', 409)
+    }
+
+    const tokenData = generateEmailChangeToken()
+
+    await authRepo.insertEmailChangeToken(
+      user.userId,
+      tokenData.hashedEmailChangeToken,
+      tokenData.expiresAt,
+      data.newEmail,
+      'EMAIL_CHANGE'
+    )
+
+    await emailService.sendEmailChangeEmail(data.newEmail, tokenData)
+
+    return { emailWasSent: true }
+  },
+
+  changeEmailConfirm: async (token: string) => {
+    const tokenResult = await authRepo.selectActionTokenByToken(token)
+    const dbToken = tokenResult.rows[0]
+
+    if (!dbToken || new Date() > dbToken.expires_at || dbToken.used_at) {
+      throw ApiError('Email change token is invalid or expired', 400)
+    }
+
+    await userRepo.updateMyEmailById(dbToken.user_id, dbToken.payload.newEmail)
+
+    await authRepo.revokeActionTokenById(dbToken.id)
+
+    return { emailIsChanged: true }
   },
 
   createAccountInviteUrl: async (

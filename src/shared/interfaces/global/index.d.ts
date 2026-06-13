@@ -29,6 +29,7 @@ declare module 'express-serve-static-core' {
       email: string
       role: string
       sessionType: SessionType
+      sessionId: number
     }
     stripeEvent?: Stripe.Event
     hashedRefreshToken?: string
