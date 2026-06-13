@@ -5,12 +5,12 @@ import type {
 } from '../interfaces/auth/authInterfaces.ts'
 
 export const authRepo = {
-  insertRefreshToken: (
-    userId: number,
-    sessionId: number,
-    token: string,
-    expiresAt: Date
-  ) => {
+
+  // ---------------------------------------------------------------------------
+  // Refresh tokens
+  // ---------------------------------------------------------------------------
+
+  insertRefreshToken: (userId: number, sessionId: number, token: string, expiresAt: Date) => {
     return pool.query(
       `INSERT INTO refresh_tokens (user_id, session_id, token, expires_at)
       VALUES ($1, $2, $3, $4)
@@ -18,9 +18,12 @@ export const authRepo = {
       [userId, sessionId, token, expiresAt]
     )
   },
+
   selectRefreshWithUserAndSessionByToken: (token: string) => {
     return pool.query(
-      `SELECT rf.user_id, rf.session_id, rf.expires_at AS refresh_expires_at, rf.id, rf.revoked AS refresh_revoked, s.expires_at AS session_expires_at, s.revoked_at AS session_revoked_at, s.type AS session_type, rf.token, u.email, u.role
+      `SELECT rf.user_id, rf.session_id, rf.expires_at AS refresh_expires_at, rf.id, rf.revoked AS refresh_revoked,
+              s.expires_at AS session_expires_at, s.revoked_at AS session_revoked_at, s.type AS session_type,
+              rf.token, u.email, u.role
        FROM refresh_tokens rf
        JOIN sessions s ON rf.session_id = s.id
        JOIN users u ON rf.user_id = u.id
@@ -28,135 +31,50 @@ export const authRepo = {
       [token]
     )
   },
+
   revokeRefreshTokenById: (tokenId: number) => {
     return pool.query(
-      `UPDATE refresh_tokens
-      SET revoked = true
-      WHERE id = $1`,
+      `UPDATE refresh_tokens SET revoked = true WHERE id = $1`,
       [tokenId]
     )
   },
+
   revokeValidRefreshBySessionId: async (sessionId: number) => {
     const result = await pool.query(
       `UPDATE refresh_tokens
       SET revoked = true
-      WHERE session_id = $1
-      AND revoked = false
-      AND expires_at > NOW()
+      WHERE session_id = $1 AND revoked = false AND expires_at > NOW()
       RETURNING *`,
       [sessionId]
     )
     return result.rows
   },
-  revokeValidRefreshesByUserIdExcept: async (
-    userId: number,
-    sessionId: number
-  ) => {
-    const result = await pool.query(
-      `UPDATE refresh_tokens
-      SET revoked = true
-      WHERE user_id = $1
-      AND revoked = false
-      AND session_id != $2
-      AND expires_at > NOW()`,
-      [userId, sessionId]
-    )
-    return result.rows
-  },
+
   revokeValidRefreshesBySessionId: async (sessionId: number) => {
     const result = await pool.query(
       `UPDATE refresh_tokens
       SET revoked = true
-      WHERE session_id = $1
-      AND revoked = false
-      AND expires_at > NOW()`,
+      WHERE session_id = $1 AND revoked = false AND expires_at > NOW()`,
       [sessionId]
     )
     return result.rows
   },
-  insertTrustedDevice: (user_id: number, token: string, expires_at: Date) => {
-    return pool.query(
-      `INSERT INTO trusted_devices (user_id, token_hash, expires_at)
-      VALUES ($1, $2, $3)
-      RETURNING *`,
-      [user_id, token, expires_at]
+
+  revokeValidRefreshesByUserIdExcept: async (userId: number, sessionId: number) => {
+    const result = await pool.query(
+      `UPDATE refresh_tokens
+      SET revoked = true
+      WHERE user_id = $1 AND revoked = false AND session_id != $2 AND expires_at > NOW()`,
+      [userId, sessionId]
     )
+    return result.rows
   },
-  selectTrustedDeviceByToken: (token: string) => {
-    return pool.query(
-      `SELECT * FROM trusted_devices
-      WHERE token_hash = $1`,
-      [token]
-    )
-  },
-  insertActionToken: (
-    userId: number,
-    tokenHash: string,
-    expiresAt: Date,
-    type: actionTokenType,
-    payload?: any
-  ) => {
-    return pool.query(
-      `INSERT INTO action_tokens (user_id, token_hash, expires_at, type, payload)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *`,
-      [userId, tokenHash, expiresAt, type, JSON.stringify(payload) || null]
-    )
-  },
-  insertLoginEmailConfirmToken: (
-    userId: number,
-    token_hash: string,
-    expires_at: Date,
-    code_hash: string,
-    type: actionTokenType
-  ) => {
-    return pool.query(
-      `INSERT INTO action_tokens (user_id, token_hash, expires_at, payload, type)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *`,
-      [
-        userId,
-        token_hash,
-        expires_at,
-        JSON.stringify({ code: code_hash }),
-        type,
-      ]
-    )
-  },
-  insertEmailChangeToken: (
-    userId: number,
-    tokenHash: string,
-    expiresAt: Date,
-    newEmail: string,
-    type: actionTokenType
-  ) => {
-    return pool.query(
-      `INSERT INTO action_tokens (user_id, token_hash, expires_at, payload, type)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *`,
-      [userId, tokenHash, expiresAt, JSON.stringify({ newEmail }), type]
-    )
-  },
-  insertAdminDeleteUserToken: (
-    userId: number,
-    token: string,
-    expiresAt: Date,
-    targetUserId: number,
-    type: actionTokenType
-  ) => {
-    return pool.query(
-      `INSERT INTO action_tokens (user_id, token_hash, expires_at, payload, type)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *`,
-      [userId, token, expiresAt, JSON.stringify({ targetUserId }), type]
-    )
-  },
-  insertSession: async (
-    userId: number,
-    type: SessionType,
-    deviceName: string,
-    expiresAt: Date
-  ) => {
+
+  // ---------------------------------------------------------------------------
+  // Sessions
+  // ---------------------------------------------------------------------------
+
+  insertSession: async (userId: number, type: SessionType, deviceName: string, expiresAt: Date) => {
     const result = await pool.query(
       `INSERT INTO sessions (user_id, type, device_name, expires_at)
       VALUES ($1, $2, $3, $4)
@@ -165,116 +83,163 @@ export const authRepo = {
     )
     return result.rows[0]
   },
-  findActiveSessionsByUserId: async (userId: number) => {
-    const result = await pool.query(
-      `SELECT * FROM sessions
-      WHERE user_id = $1
-      AND revoked_at IS NULL
-      AND expires_at > NOW()
-      LIMIT 100`,
-      [userId]
-    )
-    return result.rows
-  },
+
   findSessionById: async (sessionId: number) => {
     const result = await pool.query(
-      `SELECT * FROM sessions
-      WHERE id = $1`,
+      `SELECT * FROM sessions WHERE id = $1`,
       [sessionId]
     )
     return result.rows[0]
   },
 
+  findActiveSessionsByUserId: async (userId: number) => {
+    const result = await pool.query(
+      `SELECT * FROM sessions
+      WHERE user_id = $1 AND revoked_at IS NULL AND expires_at > NOW()
+      LIMIT 100`,
+      [userId]
+    )
+    return result.rows
+  },
+
   revokeSession: async (sessionId: number) => {
     const result = await pool.query(
-      `UPDATE sessions
-      SET revoked_at = NOW()
-      WHERE id = $1
-      AND revoked_at IS NULL
-      RETURNING *`,
+      `UPDATE sessions SET revoked_at = NOW() WHERE id = $1 AND revoked_at IS NULL RETURNING *`,
       [sessionId]
     )
     return result.rows[0]
   },
+
   revokeSessionsByUserIdExcept: async (userId: number, sessionId: number) => {
     const result = await pool.query(
       `UPDATE sessions
       SET revoked_at = NOW()
-      WHERE user_id = $1
-      AND revoked_at IS NULL
-      AND id != $2
+      WHERE user_id = $1 AND revoked_at IS NULL AND id != $2
       RETURNING *`,
       [userId, sessionId]
     )
     return result.rows
   },
+
   revokeSessionByToken: async (token: string) => {
     const result = await pool.query(
       `UPDATE sessions s
        SET revoked_at = NOW()
        FROM refresh_tokens rf
-       WHERE s.id = rf.session_id
-        AND rf.token = $1
-        AND s.revoked_at IS NULL
+       WHERE s.id = rf.session_id AND rf.token = $1 AND s.revoked_at IS NULL
        RETURNING s.*`,
       [token]
     )
     return result.rows[0]
   },
+
   updateSessionExpiry: async (sessionId: number, expiresAt: Date) => {
     const result = await pool.query(
-      `UPDATE sessions
-      SET expires_at = $1
-      WHERE id = $2
-      RETURNING *`,
+      `UPDATE sessions SET expires_at = $1 WHERE id = $2 RETURNING *`,
       [expiresAt, sessionId]
     )
     return result.rows[0]
   },
+
+  // ---------------------------------------------------------------------------
+  // Action tokens
+  // ---------------------------------------------------------------------------
+
+  insertActionToken: (userId: number, tokenHash: string, expiresAt: Date, type: actionTokenType, payload?: any) => {
+    return pool.query(
+      `INSERT INTO action_tokens (user_id, token_hash, expires_at, type, payload)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [userId, tokenHash, expiresAt, type, JSON.stringify(payload) || null]
+    )
+  },
+
+  insertLoginEmailConfirmToken: (userId: number, token_hash: string, expires_at: Date, code_hash: string, type: actionTokenType) => {
+    return pool.query(
+      `INSERT INTO action_tokens (user_id, token_hash, expires_at, payload, type)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [userId, token_hash, expires_at, JSON.stringify({ code: code_hash }), type]
+    )
+  },
+
+  insertEmailChangeToken: (userId: number, tokenHash: string, expiresAt: Date, newEmail: string, type: actionTokenType) => {
+    return pool.query(
+      `INSERT INTO action_tokens (user_id, token_hash, expires_at, payload, type)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [userId, tokenHash, expiresAt, JSON.stringify({ newEmail }), type]
+    )
+  },
+
+  insertAdminDeleteUserToken: (userId: number, token: string, expiresAt: Date, targetUserId: number, type: actionTokenType) => {
+    return pool.query(
+      `INSERT INTO action_tokens (user_id, token_hash, expires_at, payload, type)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [userId, token, expiresAt, JSON.stringify({ targetUserId }), type]
+    )
+  },
+
   selectActionTokenByToken: (token: string) => {
     return pool.query(
-      `SELECT * FROM action_tokens
-      WHERE token_hash = $1`,
+      `SELECT * FROM action_tokens WHERE token_hash = $1`,
       [token]
     )
   },
+
   findActionTokenWithUserByToken: async (token: string) => {
     const result = await pool.query(
-      `SELECT at.*, u.email, u.role, u.name, u.avatar_url FROM action_tokens at
-      JOIN users u ON at.user_id = u.id
-      WHERE at.token_hash = $1`,
+      `SELECT at.*, u.email, u.role, u.name, u.avatar_url
+       FROM action_tokens at
+       JOIN users u ON at.user_id = u.id
+       WHERE at.token_hash = $1`,
       [token]
     )
     return result.rows[0]
   },
-  findValidActionTokenByUserAndType: async (
-    userId: number,
-    type: actionTokenType
-  ) => {
+
+  findValidActionTokenByUserAndType: async (userId: number, type: actionTokenType) => {
     const result = await pool.query(
       `SELECT * FROM action_tokens
-      WHERE user_id = $1
-      AND type = $2
-      AND used_at IS NULL
-      AND expires_at > NOW()`,
+      WHERE user_id = $1 AND type = $2 AND used_at IS NULL AND expires_at > NOW()`,
       [userId, type]
     )
     return result.rows[0]
   },
+
   revokeActionTokenById: (tokenId: number) => {
     return pool.query(
-      `UPDATE action_tokens 
-      SET used_at = NOW()
-      WHERE id = $1
-      RETURNING *`,
+      `UPDATE action_tokens SET used_at = NOW() WHERE id = $1 RETURNING *`,
       [tokenId]
     )
   },
-  insertUserProvider: async (
-    userId: number,
-    provider: string,
-    providerId: string
-  ) => {
+
+  // ---------------------------------------------------------------------------
+  // Trusted devices
+  // ---------------------------------------------------------------------------
+
+  insertTrustedDevice: (user_id: number, token: string, expires_at: Date) => {
+    return pool.query(
+      `INSERT INTO trusted_devices (user_id, token_hash, expires_at)
+      VALUES ($1, $2, $3)
+      RETURNING *`,
+      [user_id, token, expires_at]
+    )
+  },
+
+  selectTrustedDeviceByToken: (token: string) => {
+    return pool.query(
+      `SELECT * FROM trusted_devices WHERE token_hash = $1`,
+      [token]
+    )
+  },
+
+  // ---------------------------------------------------------------------------
+  // User providers (OAuth)
+  // ---------------------------------------------------------------------------
+
+  insertUserProvider: async (userId: number, provider: string, providerId: string) => {
     return pool.query(
       `INSERT INTO user_providers (user_id, provider, provider_user_id)
       VALUES ($1, $2, $3)
@@ -282,18 +247,18 @@ export const authRepo = {
       [userId, provider, providerId]
     )
   },
+
   findProviderByProviderId: async (provider: string, providerId: string) => {
     const result = await pool.query(
-      `SELECT * FROM user_providers
-      WHERE provider = $1 AND provider_user_id = $2`,
+      `SELECT * FROM user_providers WHERE provider = $1 AND provider_user_id = $2`,
       [provider, providerId]
     )
     return result.rows[0]
   },
+
   findProvidersByUserId: async (userId: number) => {
     const result = await pool.query(
-      `SELECT * FROM user_providers
-      WHERE user_id = $1`,
+      `SELECT * FROM user_providers WHERE user_id = $1`,
       [userId]
     )
     return result.rows
