@@ -16,6 +16,7 @@ import { getRedis } from '../../../lib/redisClient'
 import { cacheService } from '../../shared/cacheService'
 import { authService } from '../authService'
 import { sessionService } from '../sessionService'
+import { tokenService } from '../tokenService'
 
 const providerUrlHandlers: Record<AuthProvider, ProviderUrlHandler> = {
   google: googleProvider.getGoogleAuthUrl,
@@ -88,7 +89,7 @@ export const authProvidersService = {
         userInfo.provider_id
       )
 
-      return authService.issueTokens(user, deviceName, 'normal', {
+      return tokenService.issueTokens(user, deviceName, 'normal', {
         value: 30,
         unit: 'days',
       })
@@ -103,7 +104,7 @@ export const authProvidersService = {
       await cacheService.invalidateByPrefix(`users:${existing.id}:providers`)
     }
 
-    return authService.issueTokens(existing, deviceName, 'normal', {
+    return tokenService.issueTokens(existing, deviceName, 'normal', {
       value: 30,
       unit: 'days',
     })
