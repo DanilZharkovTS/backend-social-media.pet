@@ -78,7 +78,7 @@ export const userController = {
   //users
   readUserInfo: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await userService.getUserInfo(req.paramsMap.userId)
+      const result = await userService.getUserInfo(req.paramsMap.userId as number)
       res.status(200).json(result)
     } catch (err) {
       next(err)
@@ -86,9 +86,10 @@ export const userController = {
   },
   getUserPosts: async (req: Request, res: Response, next: NextFunction) => {
     try {
+      
       const result = await userService.getUserPosts(
         req.user,
-        req.paramsMap.userId,
+        req.paramsMap.userId as number,
         req.pagination
       )
       res.status(200).json(result)
@@ -101,7 +102,7 @@ export const userController = {
     try {
       const result = await userService.getLikedPosts(
         req.user,
-        req.paramsMap.userId,
+        req.paramsMap.userId as number,
         req.pagination
       )
       res.status(200).json(result)

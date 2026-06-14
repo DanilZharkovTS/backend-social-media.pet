@@ -25,7 +25,7 @@ router.patch(
 router.get(
   '/me/favorite-posts',
   rateLimiter(60, 60, 'me_liked_posts'),
-  paginate,
+  paginate('offset'),
   authMiddlewares.verifyAccessToken,
   userController.getFavoritePosts
 )
@@ -86,7 +86,7 @@ router.get(
   '/:userId/posts',
   rateLimiter(60, 60, 'user_posts'),
   authMiddlewares.verifyAccessToken,
-  paginate,
+  paginate('offset'),
   setParamsId(['userId']),
   userController.getUserPosts
 )
@@ -95,7 +95,7 @@ router.get(
   '/:userId/liked-posts',
   rateLimiter(60, 60, 'liked_posts'),
   authMiddlewares.verifyAccessToken,
-  paginate,
+  paginate('offset'),
   setParamsId(['userId']),
   userController.getLikedPosts
 )

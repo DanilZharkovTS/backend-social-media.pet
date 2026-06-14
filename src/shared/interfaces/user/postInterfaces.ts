@@ -25,11 +25,12 @@ export interface addPostInterface {
 }
 
 export interface paginationDTO {
-  page: number
-  limit: number
-  offset: number
-  start: number
-  end: number
+  page?: number
+  offset?: number
+  limit?: number
+  start?: number
+  end?: number
+  cursor?: number | null
 }
 
 export interface updatePostDTO {
