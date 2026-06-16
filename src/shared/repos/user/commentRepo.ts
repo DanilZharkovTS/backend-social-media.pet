@@ -13,10 +13,10 @@ export const commentRepo = {
   },
   selectAll: (postId: number, pagination: paginationDTO) => {
     return pool.query(
-      `SELECT comments.id, comments.post_id, comments.user_id, comments.content,  users.name  
-        FROM comments
-        JOIN users ON comments.user_id = users.id
-        WHERE comments.post_id = $1
+      `SELECT c.id, c.post_id, c.user_id, c.content, u.name, u.avatar_url, u.has_checkmark  
+        FROM comments c
+        JOIN users u ON c.user_id = u.id
+        WHERE c.post_id = $1
         LIMIT $2 OFFSET $3`,
       [postId, pagination.limit, pagination.offset]
     )
