@@ -4,6 +4,8 @@ import { postService } from '../../../shared/services/user/postService.ts'
 export const postController = {
   add: async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log(req.files);
+      
       const result = await postService.add(req.body, req.user)
       return res.status(201).json(result)
     } catch (err) {

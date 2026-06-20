@@ -8,6 +8,7 @@ import { commentController } from '../../controllers/user/commentController.ts'
 import { authMiddlewares } from '../../middlewares/auth/authMiddlewares.ts'
 import { requiresRole } from '../../middlewares/helpers/role.ts'
 import { rateLimiter } from '../../middlewares/helpers/rateLimiter.ts'
+import { upload } from '../../../shared/lib/uploadMiddleware.ts'
 
 const router = Router()
 
@@ -18,6 +19,7 @@ router.post(
   rateLimiter(10, 60, 'addPost'),
   authMiddlewares.verifyAccessToken,
   authMiddlewares.requireSessionType('normal'),
+  upload.array('media', 10),
   postMiddlewares.add,
   postController.add
 )
