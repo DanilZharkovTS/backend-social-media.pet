@@ -32,6 +32,16 @@ export const postRepo = {
       [id, ...data.values]
     )
   },
+  updateCoverUrl: async (id: number, coverImageUrl: string) => {
+    const result = await pool.query(
+      `UPDATE posts
+       SET cover_image_url = $1
+       WHERE id = $2
+       RETURNING *`,
+      [coverImageUrl, id]
+    )
+    return result.rows[0]
+  },
   findById: (id: number) => {
     return pool.query(
       `SELECT posts.id, posts.user_id, posts.description, posts.likes_count,  posts.created_at, users.name, users.avatar_url
@@ -69,7 +79,7 @@ export const postRepo = {
   },
   selectBySearch: (query: findPostDTO, pagination: paginationDTO) => {
     return pool.query(
-      `SELECT posts.id, posts.user_id, posts.description, posts.created_at, users.name, users.avatar_url, posts.likes_count FROM posts
+      `SELECT posts.id, posts.user_id, posts.description, posts.cover_image_url, posts.created_at, users.name, users.avatar_url, posts.likes_count FROM posts
        JOIN users ON posts.user_id = users.id
        WHERE ($1::text IS NULL OR
        LOWER(description) LIKE LOWER($1))

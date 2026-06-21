@@ -42,3 +42,15 @@ export interface updatePostDTO {
 export interface findPostDTO {
   search?: string
 }
+
+export type postMediaType = 'video' | 'image'
+
+export interface PostMedia {
+  id: number
+  post_id: number
+  type: postMediaType
+  url: string
+  position: number
+  created_at: Date
+  user_id?: number
+}

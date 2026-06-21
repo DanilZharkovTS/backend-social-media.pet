@@ -5,24 +5,72 @@ import type {
   paginationDTO,
   Post,
   PostFavorite,
+  PostMedia,
   updatePostDTO,
 } from '../../interfaces/user/postInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { getRedis } from '../../lib/redisClient.ts'
+import { getSupabaseClient } from '../../lib/supabaseClient.ts'
 import { postFavoritiesRepo } from '../../repos/user/postFavoritiesRepo.ts'
 import { postLikesRepo } from '../../repos/user/postLikesRepo.ts'
+import { postMediaRepo } from '../../repos/user/postMediaRepo.ts'
 import { postRepo } from '../../repos/user/postRepo.ts'
 import { cacheService } from '../shared/cacheService.ts'
 
 export const postService = {
   //me
-  add: async (data: addPostInterface, user: TokenPayload) => {
-    const result = await postRepo.insert(user.userId, data.description)
+  add: async (data: addPostInterface, user: TokenPayload, files) => {
+    const postResult = await postRepo.insert(user.userId, data.description)
+    let dbPost = postResult.rows[0]
+
+    if (files.length > 0) {
+      dbPost = await postService.uploadAndAttachPostMedia(
+        user.userId,
+        dbPost,
+        files
+      )
+    }
 
     await cacheService.invalidateByPrefix('posts:*')
     await cacheService.invalidateByPrefix('users:*')
 
-    return { created: result.rows[0] }
+    return { created: dbPost }
+  },
+  uploadAndAttachPostMedia: async (userId: number, post: Post, files) => {
+    const supabase = getSupabaseClient()
+    let updatedPost = post
+
+    for (const [index, file] of files.entries()) {
+      const fileName = `${userId}-${Date.now()}-${file.originalname
+        .split('.')
+        .pop()}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('posts_media')
+        .upload(fileName, file.buffer, {
+          contentType: file.mimetype,
+          upsert: false,
+        })
+
+      if (uploadError) {
+        throw new Error(uploadError.message)
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('posts_media')
+        .getPublicUrl(fileName)
+
+      await postMediaRepo.addMediaToPost(
+        post.id,
+        'image',
+        urlData.publicUrl,
+        index
+      )
+      if (index === 0) {
+        updatedPost = await postRepo.updateCoverUrl(post.id, urlData.publicUrl)
+      }
+    }
+    return updatedPost
   },
   getAll: async (pagination: paginationDTO) => {
     const redis = getRedis()
@@ -58,6 +106,7 @@ export const postService = {
         user,
         postWithLike
       )
+
       const post = postWithFavorite[0]
 
       return { post }
@@ -71,7 +120,11 @@ export const postService = {
       throw ApiError('Post not found', 404)
     }
 
-    await redis.set(redisKey, JSON.stringify(dbPost), 'EX', 60)
+    const media = await postMediaRepo.findByPostId(postId)
+
+    const postWithMedia = { ...dbPost, media }
+
+    await redis.set(redisKey, JSON.stringify(postWithMedia), 'EX', 60)
 
     const postWithLike = await postService.attachUserLikes(user, [dbPost])
     const postWithFavorite = await postService.attachUserFavorities(
@@ -99,6 +152,23 @@ export const postService = {
     return {
       updated: result.rows[0],
     }
+  },
+  updateCoverUrl: async ({ userId }: TokenPayload, mediaId: number) => {
+    const media: PostMedia = await postMediaRepo.findWithPostById(mediaId)
+
+    if (!media) {
+      throw ApiError('Post not found', 404)
+    }
+
+    if (media.user_id !== userId) {
+      throw ApiError('You are not allowed to modify this post', 403)
+    }
+
+    await cacheService.invalidateByPrefix('posts:*')
+    await cacheService.invalidateByPrefix('users:*')
+
+    const post = await postRepo.updateCoverUrl(media.post_id, media.url)
+    return { post }
   },
   delete: async (id: number, user: TokenPayload) => {
     const post = await postRepo.findById(id)

@@ -19,3 +19,7 @@ export const validateUpdatePost = z.object({
 export const validateFindPost = z.object({
   search: z.string('Search needs to be a string').optional(),
 })
+
+export const validateMediaIdBody = z.object({
+  mediaId: z.number('Media id needs to be a number').min(1, 'Valid media id is required'),
+})
