@@ -19,48 +19,57 @@ import { cacheService } from '../shared/cacheService.ts'
 export const postService = {
   //me
   add: async (data: addPostInterface, user: TokenPayload, files) => {
-    const supabase = getSupabaseClient()
-
     const postResult = await postRepo.insert(user.userId, data.description)
     let dbPost = postResult.rows[0]
 
     if (files.length > 0) {
-      for (const [index, file] of files.entries()) {
-        const fileName = `${user.userId}-${Date.now()}-${file.originalname
-          .split('.')
-          .pop()}`
-
-        const { error: uploadError } = await supabase.storage
-          .from('posts_media')
-          .upload(fileName, file.buffer, {
-            contentType: file.mimetype,
-            upsert: false,
-          })
-
-        if (uploadError) {
-          throw new Error(uploadError.message)
-        }
-
-        const { data: urlData } = supabase.storage
-          .from('posts_media')
-          .getPublicUrl(fileName)
-
-        await postMediaRepo.addMediaToPost(
-          dbPost.id,
-          'image',
-          urlData.publicUrl,
-          index
-        )
-        if (index === 0) {
-          dbPost = await postRepo.updateCoverUrl(dbPost.id, urlData.publicUrl)
-        }
-      }
+      dbPost = await postService.uploadAndAttachPostMedia(
+        user.userId,
+        dbPost,
+        files
+      )
     }
 
     await cacheService.invalidateByPrefix('posts:*')
     await cacheService.invalidateByPrefix('users:*')
 
     return { created: dbPost }
+  },
+  uploadAndAttachPostMedia: async (userId: number, post: Post, files) => {
+    const supabase = getSupabaseClient()
+    let updatedPost = post
+
+    for (const [index, file] of files.entries()) {
+      const fileName = `${userId}-${Date.now()}-${file.originalname
+        .split('.')
+        .pop()}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('posts_media')
+        .upload(fileName, file.buffer, {
+          contentType: file.mimetype,
+          upsert: false,
+        })
+
+      if (uploadError) {
+        throw new Error(uploadError.message)
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('posts_media')
+        .getPublicUrl(fileName)
+
+      await postMediaRepo.addMediaToPost(
+        post.id,
+        'image',
+        urlData.publicUrl,
+        index
+      )
+      if (index === 0) {
+        updatedPost = await postRepo.updateCoverUrl(post.id, urlData.publicUrl)
+      }
+    }
+    return updatedPost
   },
   getAll: async (pagination: paginationDTO) => {
     const redis = getRedis()
