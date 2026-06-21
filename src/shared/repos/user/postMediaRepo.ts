@@ -25,4 +25,13 @@ export const postMediaRepo = {
     )
     return result.rows
   },
+  findWithPostById: async (mediaId: number) => {
+    const result = await pool.query(
+      `SELECT pm.*, p.user_id FROM post_media pm
+       JOIN posts p ON pm.post_id = p.id
+       WHERE pm.id = $1`,
+      [mediaId]
+    )
+    return result.rows[0]
+  },
 }

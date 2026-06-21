@@ -5,6 +5,7 @@ import type {
   paginationDTO,
   Post,
   PostFavorite,
+  PostMedia,
   updatePostDTO,
 } from '../../interfaces/user/postInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
@@ -151,6 +152,23 @@ export const postService = {
     return {
       updated: result.rows[0],
     }
+  },
+  updateCoverUrl: async ({ userId }: TokenPayload, mediaId: number) => {
+    const media: PostMedia = await postMediaRepo.findWithPostById(mediaId)
+
+    if (!media) {
+      throw ApiError('Post not found', 404)
+    }
+
+    if (media.user_id !== userId) {
+      throw ApiError('You are not allowed to modify this post', 403)
+    }
+
+    await cacheService.invalidateByPrefix('posts:*')
+    await cacheService.invalidateByPrefix('users:*')
+
+    const post = await postRepo.updateCoverUrl(media.post_id, media.url)
+    return { post }
   },
   delete: async (id: number, user: TokenPayload) => {
     const post = await postRepo.findById(id)

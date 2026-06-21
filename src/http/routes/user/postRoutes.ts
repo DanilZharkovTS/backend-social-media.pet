@@ -21,8 +21,8 @@ router.post(
   authMiddlewares.requireSessionType('normal'),
   upload.array('media', 10),
   (req, res, next) => {
-    console.log('FILES COUNT:', req.files?.length);
-    next();
+    console.log('FILES COUNT:', req.files?.length)
+    next()
   },
   postMiddlewares.add,
   postController.add
@@ -59,6 +59,14 @@ router.patch(
   setParamsId(['postId']),
   postMiddlewares.update,
   postController.update
+)
+
+router.patch(
+  '/:postId/covers/:mediaId',
+  rateLimiter(30, 60, 'togglePostLike'),
+  authMiddlewares.verifyAccessToken,
+  setParamsId(['postId', 'mediaId']),
+  postController.updateCover
 )
 
 router.delete(

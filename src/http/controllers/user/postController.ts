@@ -4,8 +4,8 @@ import { postService } from '../../../shared/services/user/postService.ts'
 export const postController = {
   add: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log(req.files);
-      
+      console.log(req.files)
+
       const result = await postService.add(req.body, req.user, req.files)
       return res.status(201).json(result)
     } catch (err) {
@@ -22,7 +22,10 @@ export const postController = {
   },
   getById: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.getById(req.user, req.paramsMap.postId)
+      const result = await postService.getById(
+        req.user,
+        req.paramsMap.postId as number
+      )
       res.status(200).json(result)
     } catch (err) {
       console.log(err)
@@ -32,7 +35,7 @@ export const postController = {
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await postService.update(
-        req.paramsMap.postId,
+        req.paramsMap.postId as number,
         req.body,
         req.user
       )
@@ -41,9 +44,25 @@ export const postController = {
       next(err)
     }
   },
+  updateCover: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await postService.updateCoverUrl(
+        req.user,
+        req.paramsMap.mediaId as number
+      )
+      res.status(200).json(result)
+    } catch (err) {
+      console.log(err);
+      
+      next(err)
+    }
+  },
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.delete(req.paramsMap.postId, req.user)
+      const result = await postService.delete(
+        req.paramsMap.postId as number,
+        req.user
+      )
       res.status(200).json(result)
     } catch (err) {
       console.log(err)
@@ -68,7 +87,9 @@ export const postController = {
   //admin
   deleteAsAdmin: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await postService.deleteAsAdmin(req.paramsMap.postId)
+      const result = await postService.deleteAsAdmin(
+        req.paramsMap.postId as number
+      )
       res.status(200).json(result)
     } catch (err) {
       next(err)
@@ -79,7 +100,7 @@ export const postController = {
     try {
       const result = await postService.toggleLike(
         req.user,
-        req.paramsMap.postId
+        req.paramsMap.postId as number
       )
       res.status(200).json(result)
     } catch (err) {
@@ -91,7 +112,7 @@ export const postController = {
     try {
       const result = await postService.toggleFavorite(
         req.user,
-        req.paramsMap.postId
+        req.paramsMap.postId as number
       )
       res.status(200).json(result)
     } catch (err) {
