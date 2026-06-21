@@ -9,20 +9,58 @@ import type {
 } from '../../interfaces/user/postInterfaces.ts'
 import { ApiError } from '../../lib/ApiErrors.ts'
 import { getRedis } from '../../lib/redisClient.ts'
+import { getSupabaseClient } from '../../lib/supabaseClient.ts'
 import { postFavoritiesRepo } from '../../repos/user/postFavoritiesRepo.ts'
 import { postLikesRepo } from '../../repos/user/postLikesRepo.ts'
+import { postMediaRepo } from '../../repos/user/postMediaRepo.ts'
 import { postRepo } from '../../repos/user/postRepo.ts'
 import { cacheService } from '../shared/cacheService.ts'
 
 export const postService = {
   //me
-  add: async (data: addPostInterface, user: TokenPayload) => {
-    const result = await postRepo.insert(user.userId, data.description)
+  add: async (data: addPostInterface, user: TokenPayload, files) => {
+    const supabase = getSupabaseClient()
+
+    const postResult = await postRepo.insert(user.userId, data.description)
+    let dbPost = postResult.rows[0]
+
+    if (files.length > 0) {
+      for (const [index, file] of files.entries()) {
+        const fileName = `${user.userId}-${Date.now()}-${file.originalname
+          .split('.')
+          .pop()}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('posts_media')
+          .upload(fileName, file.buffer, {
+            contentType: file.mimetype,
+            upsert: false,
+          })
+
+        if (uploadError) {
+          throw new Error(uploadError.message)
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('posts_media')
+          .getPublicUrl(fileName)
+
+        await postMediaRepo.addMediaToPost(
+          dbPost.id,
+          'image',
+          urlData.publicUrl,
+          index
+        )
+        if (index === 0) {
+          dbPost = await postRepo.updateCoverUrl(dbPost.id, urlData.publicUrl)
+        }
+      }
+    }
 
     await cacheService.invalidateByPrefix('posts:*')
     await cacheService.invalidateByPrefix('users:*')
 
-    return { created: result.rows[0] }
+    return { created: dbPost }
   },
   getAll: async (pagination: paginationDTO) => {
     const redis = getRedis()

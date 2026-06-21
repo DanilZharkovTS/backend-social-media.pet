@@ -20,6 +20,10 @@ router.post(
   authMiddlewares.verifyAccessToken,
   authMiddlewares.requireSessionType('normal'),
   upload.array('media', 10),
+  (req, res, next) => {
+    console.log('FILES COUNT:', req.files?.length);
+    next();
+  },
   postMiddlewares.add,
   postController.add
 )

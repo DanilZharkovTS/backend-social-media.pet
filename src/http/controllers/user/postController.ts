@@ -6,7 +6,7 @@ export const postController = {
     try {
       console.log(req.files);
       
-      const result = await postService.add(req.body, req.user)
+      const result = await postService.add(req.body, req.user, req.files)
       return res.status(201).json(result)
     } catch (err) {
       next(err)
