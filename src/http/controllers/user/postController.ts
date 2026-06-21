@@ -48,12 +48,10 @@ export const postController = {
     try {
       const result = await postService.updateCoverUrl(
         req.user,
-        req.paramsMap.mediaId as number
+        req.validBody.mediaId as number
       )
       res.status(200).json(result)
     } catch (err) {
-      console.log(err);
-      
       next(err)
     }
   },

@@ -4,6 +4,7 @@ import { ApiError } from '../../../shared/lib/ApiErrors.ts'
 import {
   validateAddPost,
   validateFindPost,
+  validateMediaIdBody,
   validateUpdatePost,
 } from '../../../shared/utils/validators/postValidator.ts'
 import { buildUpdatePostData } from '../../../shared/utils/helpers/builders/buildUpdatePostData.ts'
@@ -37,7 +38,15 @@ export const postMiddlewares = {
       next(err)
     }
   },
-
+  validateMediaId: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validData = validateMediaIdBody.parse(req.body)
+      req.validBody = { mediaId: validData.mediaId }
+      next()
+    } catch (err) {
+      next(err)
+    }
+  },
   find: (req: Request, res: Response, next: NextFunction) => {
     try {
       const validated = validateFindPost.parse(req.query)

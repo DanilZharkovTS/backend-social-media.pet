@@ -62,10 +62,11 @@ router.patch(
 )
 
 router.patch(
-  '/:postId/covers/:mediaId',
+  '/:postId/cover',
   rateLimiter(30, 60, 'togglePostLike'),
   authMiddlewares.verifyAccessToken,
-  setParamsId(['postId', 'mediaId']),
+  setParamsId(['postId']),
+  postMiddlewares.validateMediaId,
   postController.updateCover
 )
 
