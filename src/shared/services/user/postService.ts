@@ -105,6 +105,7 @@ export const postService = {
         user,
         postWithLike
       )
+
       const post = postWithFavorite[0]
 
       return { post }
@@ -118,7 +119,11 @@ export const postService = {
       throw ApiError('Post not found', 404)
     }
 
-    await redis.set(redisKey, JSON.stringify(dbPost), 'EX', 60)
+    const media = await postMediaRepo.findByPostId(postId)
+
+    const postWithMedia = { ...dbPost, media }
+
+    await redis.set(redisKey, JSON.stringify(postWithMedia), 'EX', 60)
 
     const postWithLike = await postService.attachUserLikes(user, [dbPost])
     const postWithFavorite = await postService.attachUserFavorities(
