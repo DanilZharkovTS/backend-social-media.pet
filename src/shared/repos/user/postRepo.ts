@@ -44,7 +44,7 @@ export const postRepo = {
   },
   findById: (id: number) => {
     return pool.query(
-      `SELECT posts.id, posts.user_id, posts.description, posts.likes_count,  posts.created_at, users.name, users.avatar_url
+      `SELECT posts.id, posts.user_id, posts.description, posts.likes_count, posts.cover_image_url, posts.created_at, users.name, users.avatar_url
      FROM posts
      JOIN users ON posts.user_id = users.id
      WHERE posts.id = $1`,
