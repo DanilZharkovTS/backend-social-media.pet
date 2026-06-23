@@ -126,7 +126,7 @@ export const postService = {
 
     await redis.set(redisKey, JSON.stringify(postWithMedia), 'EX', 60)
 
-    const postWithLike = await postService.attachUserLikes(user, [dbPost])
+    const postWithLike = await postService.attachUserLikes(user, [postWithMedia])
     const postWithFavorite = await postService.attachUserFavorities(
       user,
       postWithLike
