@@ -4,14 +4,14 @@ export const validateAddPost = z.object({
   description: z
     .string('Description of the post needs to be a string')
     .min(1, 'Min. description length is 1')
-    .max(40, 'Max. description length is 40 symbols'),
+    .max(4000, 'Max. description length is 4000 symbols'),
 })
 
 export const validateUpdatePost = z.object({
   description: z
     .string('Description of the post needs to be a string')
     .min(1, 'Min. description length is 1')
-    .max(40, 'Max. description length is 40 symbols')
+    .max(4000, 'Max. description length is 4000 symbols')
     .optional(),
 })
 
