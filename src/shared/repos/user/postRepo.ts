@@ -53,7 +53,7 @@ export const postRepo = {
   },
   findByIds: (postIds: number[], pagination: paginationDTO) => {
     return pool.query(
-      `SELECT posts.id, posts.user_id, posts.description, posts.created_at ,posts.likes_count, users.name, users.avatar_url
+      `SELECT posts.id, posts.user_id, posts.description, posts.created_at, posts.likes_count, posts.cover_image_url, users.name, users.avatar_url
       FROM posts
       JOIN users ON posts.user_id = users.id
       WHERE posts.id = ANY($1)
@@ -63,7 +63,7 @@ export const postRepo = {
   },
   findByUserId: (userId: number) => {
     return pool.query(
-      `SELECT posts.id, posts.user_id, posts.description, posts.created_at ,posts.likes_count, users.name, users.avatar_url FROM posts
+      `SELECT posts.id, posts.user_id, posts.description, posts.created_at, posts.likes_count, posts.cover_image_url, users.name, users.avatar_url FROM posts
       JOIN users ON posts.user_id = users.id
       WHERE user_id = $1`,
       [userId]
