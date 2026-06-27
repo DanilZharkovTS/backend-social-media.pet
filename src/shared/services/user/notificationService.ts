@@ -67,7 +67,15 @@ export const notificationService = {
 
     const notificationsCount = await cacheService.findByKey(redisKey)
 
-    return { newNotificationsCount: Number(notificationsCount) ?? 0 }
+    if (notificationsCount) {
+      return { newNotificationsCount: Number(notificationsCount) ?? 0 }
+    }
+
+    const dbNotificationCount = await notificationsRepo.getCountByUserId(userId)
+
+    await cacheService.set(redisKey, dbNotificationCount)
+
+    return { newNotificationsCount: Number(dbNotificationCount) }
   },
 
   openNotification: async (

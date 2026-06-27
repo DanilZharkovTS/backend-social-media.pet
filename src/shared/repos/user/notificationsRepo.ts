@@ -71,6 +71,17 @@ export const notificationsRepo = {
 
     return result.rows
   },
+
+  getCountByUserId: async (userId: number) => {
+    const result = await pool.query(
+      `SELECT COUNT(*) FROM notifications n
+        JOIN users u ON n.receiver_id = u.id
+        WHERE n.receiver_id = $1
+        AND u.last_read_notification_id < n.id`,
+      [userId]
+    )
+    return result.rows[0].count
+  },
   updateNotificationToOpened: async (id: number, userId: number) => {
     const result = await pool.query(
       `UPDATE notifications
