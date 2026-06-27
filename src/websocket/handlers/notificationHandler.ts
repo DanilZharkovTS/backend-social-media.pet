@@ -20,8 +20,12 @@ export const notificationHandler = {
       const result = await notificationService.getNotificationsCount(
         socket.user
       )
+      console.log(result);
+      
       socket.emit('notifications:countUpdated', result)
     } catch (err) {
+      console.log(err);
+      
       next(err)
     }
   },

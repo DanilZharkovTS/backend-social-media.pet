@@ -1,6 +1,16 @@
 import { getRedis } from '../../lib/redisClient'
 
 export const cacheService = {
+  set: async (key: string, value: string, ttl?: number) => {
+    const redis = getRedis()
+
+    if (ttl) {
+      await redis.set(key, value, 'EX', ttl)
+      return
+    }
+    
+    await redis.set(key, value)
+  },
   findByKey: async (key: string) => {
     const redis = getRedis()
     const result = await redis.get(key)

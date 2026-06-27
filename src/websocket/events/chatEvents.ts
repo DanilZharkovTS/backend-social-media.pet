@@ -5,6 +5,7 @@ import { resolveIds } from '../middlewares/helpers/resolveIds'
 import { ioChatMiddlewares } from '../middlewares/user/chatMiddlewares'
 import { chatPeepHandler } from '../handlers/chatPeepHandler'
 import { ioAuthMiddlewares } from '../middlewares/authMiddlewares'
+import { ioRateLimiter } from '../middlewares/helpers/rateLimiter'
 
 export const registerChatEvents = async (io: Server, socket: Socket) => {
   chatHandler.notifyOnlineOpponents(socket)
@@ -41,6 +42,7 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
     withMiddlewares(
       socket,
       [
+        ioRateLimiter(10, 60, 'set_chat_auto_delete'),
         resolveIds(['chatId']),
         ioAuthMiddlewares.requireRoomMember('chats', 'chatId'),
         ioChatMiddlewares.setChatAutoDeletePeeps,
@@ -56,6 +58,7 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
     withMiddlewares(
       socket,
       [
+        ioRateLimiter(30, 60, 'add_peep'),
         resolveIds(['chatId']),
         ioAuthMiddlewares.requireRoomMember('chats', 'chatId'),
         ioChatMiddlewares.addPeep,
@@ -68,7 +71,11 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
     'editPeep',
     withMiddlewares(
       socket,
-      [resolveIds(['peepId']), ioChatMiddlewares.editPeep],
+      [
+        ioRateLimiter(20, 60, 'edit_peep'),
+        resolveIds(['peepId']),
+        ioChatMiddlewares.editPeep,
+      ],
       chatPeepHandler.editPeep
     )
   )
@@ -78,6 +85,7 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
     withMiddlewares(
       socket,
       [
+        ioRateLimiter(60, 60, 'update_reaction'),
         resolveIds(['chatId', 'peepId']),
         ioAuthMiddlewares.requireRoomMember('chats', 'chatId'),
         ioChatMiddlewares.updateReaction,
@@ -90,7 +98,7 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
     'deletePeep',
     withMiddlewares(
       socket,
-      [resolveIds(['peepId'])],
+      [ioRateLimiter(20, 60, 'delete_peep'), resolveIds(['peepId'])],
       chatPeepHandler.deletePeep
     )
   )
@@ -99,7 +107,7 @@ export const registerChatEvents = async (io: Server, socket: Socket) => {
     'readPeeps',
     withMiddlewares(
       socket,
-      [resolveIds(['chatId', 'peepId'])],
+      [ioRateLimiter(100, 60, 'read_peeps'), resolveIds(['chatId', 'peepId'])],
       chatPeepHandler.markPeepsAsReadUpTo
     )
   )
