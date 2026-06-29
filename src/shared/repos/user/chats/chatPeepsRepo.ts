@@ -131,6 +131,21 @@ export const chatPeepsRepo = {
     )
     return result.rows[0]
   },
+  findLastPeepsByChatId: async (chatId: number, limit: number) => {
+    const result = await pool.query(
+      `SELECT 
+        id,
+        sender_id,
+        content,
+        created_at
+      FROM chat_peeps
+      WHERE chat_id = $1
+      ORDER BY created_at DESC
+      LIMIT $2`,
+      [chatId, limit]
+    )
+    return result.rows
+  },
   updatePeep: (content: string, peepId: number) => {
     return pool.query(
       `UPDATE chat_peeps 
