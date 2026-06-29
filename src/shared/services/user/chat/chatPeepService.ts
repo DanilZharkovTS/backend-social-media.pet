@@ -10,7 +10,6 @@ import {
   PeepWithReplyInfo,
   Reaction,
   ReactionActionType,
-  updateReactionDTO,
 } from '../../../interfaces/user/chat/chatInterfaces'
 import { Notification } from '../../../interfaces/user/notificationInterfaces'
 import { paginationDTO } from '../../../interfaces/user/postInterfaces'

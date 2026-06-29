@@ -4,7 +4,6 @@ import { ApiError } from '../../../lib/ApiErrors'
 import { getRedis } from '../../../lib/redisClient'
 import { chatParticipantsRepo } from '../../../repos/user/chats/chatParticipantsRepo'
 import { chatPeepsRepo } from '../../../repos/user/chats/chatPeepsRepo'
-import { cacheService } from '../../shared/cacheService'
 import { aiProvider } from './aiProvider'
 
 export const aiChatService = {

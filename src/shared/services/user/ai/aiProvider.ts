@@ -1,4 +1,3 @@
-import OpenAI from 'openai'
 import { openAiProvider } from './openAiProvider'
 
 const generateRepliesHandler = {
