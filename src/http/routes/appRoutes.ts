@@ -6,6 +6,7 @@ import chatRoutes from './user/chatRoutes.ts'
 import billingRoutes from './billing/billingRoutes.ts'
 import postRoutes from './user/postRoutes.ts'
 import notificationRoutes from './user/notificationRoutes.ts'
+import aiRoutes from './user/aiRoutes.ts'
 import { authMiddlewares } from '../middlewares/auth/authMiddlewares.ts'
 import { requiresRole } from '../middlewares/helpers/role.ts'
 
@@ -30,5 +31,9 @@ router.use('/notifications', notificationRoutes)
 router.use('/billing', billingRoutes)
 
 router.use('/posts', postRoutes)
+
+router.use('/comments', postRoutes)
+
+router.use('/ai', aiRoutes)
 
 export default router
