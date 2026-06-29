@@ -133,11 +133,7 @@ export const chatPeepsRepo = {
   },
   findLastPeepsByChatId: async (chatId: number, limit: number) => {
     const result = await pool.query(
-      `SELECT 
-        id,
-        sender_id,
-        content,
-        created_at
+      `SELECT *
       FROM chat_peeps
       WHERE chat_id = $1
       ORDER BY created_at DESC

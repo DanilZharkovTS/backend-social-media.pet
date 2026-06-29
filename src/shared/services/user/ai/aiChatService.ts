@@ -1,4 +1,5 @@
 import { TokenPayload } from '../../../interfaces/auth/authInterfaces'
+import { Peep } from '../../../interfaces/user/chat/chatInterfaces'
 import { ApiError } from '../../../lib/ApiErrors'
 import { chatParticipantsRepo } from '../../../repos/user/chats/chatParticipantsRepo'
 import { chatPeepsRepo } from '../../../repos/user/chats/chatPeepsRepo'
@@ -16,11 +17,23 @@ export const aiChatService = {
       throw ApiError('You do not have access to this chat', 403)
     }
 
-    const peeps = await chatPeepsRepo.findLastPeepsByChatId(data.chatId, 50)
-    const lastPeep = peeps[0]
+    const lastPeeps: Peep[] = await chatPeepsRepo.findLastPeepsByChatId(
+      data.chatId,
+      50
+    )
+    const lastOpponentPeeps = []
 
-    if (lastPeep.sender_id == userId) return
+    for (const p of lastPeeps) {
+      if (p.sender_id !== userId) {
+        lastOpponentPeeps.push(p.content)
+      } else {
+        break
+      }
+    }
 
-    return aiProvider.generateReplies(lastPeep.content, 3)
+
+    if (lastOpponentPeeps.length === 0) return
+
+    return aiProvider.generateReplies(lastOpponentPeeps, 3)
   },
 }

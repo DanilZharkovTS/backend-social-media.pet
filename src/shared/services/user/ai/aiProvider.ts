@@ -1,8 +1,8 @@
 import OpenAI from 'openai'
 
 export const aiProvider = {
-  generateReplies: async (peep: string, count: number) => {
-    console.log(process.env.AI_BASE_URL)
+  generateReplies: async (peeps: string[], count: number) => {
+    console.log(peeps)
 
     const client = new OpenAI({
       baseURL: process.env.AI_BASE_URL,
@@ -11,15 +11,19 @@ export const aiProvider = {
     const res = await client.responses.create({
       model: process.env.AI_MODEL,
       input: `
-     You are an AI assistant for a messenger.
+      You are an AI assistant for a messenger.
 
       You are NOT talking to the user.
 
       Your task is to generate reply suggestions that the sender could send to another person in a private chat.
 
+      If the last message asks about personal activities, events, experiences, or opinions (e.g. "What are you doing?", "How did your meeting go yesterday?"), generate generic, natural replies that do not invent specific facts unless they are provided in the conversation context.
+
+      Be friendly and like real person
+
       The other person wrote:
 
-      "${peep}"
+      "${peeps.join('\n')}"
 
       Generate exactly ${count} natural, short replies.
 
@@ -28,6 +32,7 @@ export const aiProvider = {
       - English
       - No markdown.
       - No explanations.
+      - Be very fast 
       - The format must be:
 
       {
