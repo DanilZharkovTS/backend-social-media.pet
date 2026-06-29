@@ -27,7 +27,9 @@ export const openAiProvider = {
 
       Rules:
       - Return only valid JSON.
-      - English
+      - Use the language that another person is using.
+      - Use slang when needed
+      - Use word shortening when needed
       - No markdown.
       - No explanations.
       - Be very fast 
